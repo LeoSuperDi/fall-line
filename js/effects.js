@@ -69,15 +69,17 @@ function updateSnowfall(dt, storm) {
   sfMat.opacity = 0.35 + storm * 0.6; sfMat.size = 0.14 + storm * 0.1;
 }
 // ski tracks: each ski cuts a real groove, with the snow pushed up into little berms either side
-const TRN = 360, NV = 5, trX = new Float32Array(TRN * 2), trZ = new Float32Array(TRN * 2), trY = new Float32Array(TRN * 2), trBrk = new Uint8Array(TRN), trWArr = new Float32Array(TRN), trDeep = new Float32Array(TRN), trCol = new Float32Array(TRN * 3);
+const TRN = 360, NV = 7, trX = new Float32Array(TRN * 2), trZ = new Float32Array(TRN * 2), trY = new Float32Array(TRN * 2), trBrk = new Uint8Array(TRN), trWArr = new Float32Array(TRN), trDeep = new Float32Array(TRN), trCol = new Float32Array(TRN * 3);
 let trCount = 0, trailBreak = true, trDist = 0, lastTrail = { x: 0, z: 0 }, trW = 0.06;
-const XS = [-1.7, -0.9, 0, 0.9, 1.7], XH = [0.02, 0.28, -0.04, 0.28, 0.02]; // across one groove: berm foot, berm top, groove, berm top, berm foot
+// across one track: snow surface, a thin lip of pushed-up snow, the shadowed inner wall, the pressed floor, and back out.
+// The mesh sits almost flat on the snow (it can't go below the ground), so the dent is told by light and shadow, not height.
+const XS = [-1.7, -1.2, -0.65, 0, 0.65, 1.2, 1.7], XH = [0.01, 0.05, 0.02, 0.012, 0.02, 0.05, 0.01], XC = ['foot', 'lip', 'wall', 'floor', 'wall', 'lip', 'foot'];
 const trGeo = new THREE.BufferGeometry(), trPosA = new Float32Array(TRN * 2 * NV * 3), trColA = new Float32Array(TRN * 2 * NV * 3);
 trGeo.setAttribute('position', new THREE.BufferAttribute(trPosA, 3)); trGeo.setAttribute('color', new THREE.BufferAttribute(trColA, 3));
 trGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(TRN * 2 * (NV - 1) * 6), 1));
 const trail = new THREE.Mesh(trGeo, new THREE.MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
 trail.frustumCulled = false; trail.renderOrder = 1; scene.add(trail);
-const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#f8fafd'), TR_FOOT = C('#dbe3ef'), TRAIL_COL = { groomed: C('#a7b6d4'), powder: C('#8ea2cf'), deep: C('#8499c9'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
+const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#fbfcfe'), TR_FOOT = C('#e1e7f1'), TR_WALL = C('#b9c5dc'), TRAIL_COL = { groomed: C('#a7b6d4'), powder: C('#8ea2cf'), deep: C('#8499c9'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
 function trailPush(p, nx, nz) {
   trDist += Math.hypot(p.x - lastTrail.x, p.z - lastTrail.z); lastTrail.x = p.x; lastTrail.z = p.z;
   if (trDist < 0.7 && !trailBreak) return; trDist = 0;
@@ -101,7 +103,8 @@ function rebuildTrail() {
       for (let q = 0; q < NV; q++) {
         const v = ((i * 2 + k) * NV + q) * 3, o = XS[q] * w;
         trPosA[v] = trX[j] - tz * o; trPosA[v + 1] = trY[j] + XH[q] * dp * (1 - fade * 0.7); trPosA[v + 2] = trZ[j] + tx * o;
-        const cr = q === 2 ? trCol[i * 3] : q % 2 ? TR_BERM.r : TR_FOOT.r, cg = q === 2 ? trCol[i * 3 + 1] : q % 2 ? TR_BERM.g : TR_FOOT.g, cb = q === 2 ? trCol[i * 3 + 2] : q % 2 ? TR_BERM.b : TR_FOOT.b;
+        const kc = XC[q], src = kc === 'lip' ? TR_BERM : kc === 'foot' ? TR_FOOT : kc === 'wall' ? TR_WALL : null;
+        const cr = src ? src.r : trCol[i * 3], cg = src ? src.g : trCol[i * 3 + 1], cb = src ? src.b : trCol[i * 3 + 2];
         trColA[v] = lerp(cr, TRAIL_FADE.r, fade); trColA[v + 1] = lerp(cg, TRAIL_FADE.g, fade); trColA[v + 2] = lerp(cb, TRAIL_FADE.b, fade);
       }
       if (i > 0 && !trBrk[i]) for (let q = 0; q < NV - 1; q++) { const a = ((i - 1) * 2 + k) * NV + q, b = (i * 2 + k) * NV + q; idx[ii++] = a; idx[ii++] = b; idx[ii++] = a + 1; idx[ii++] = a + 1; idx[ii++] = b; idx[ii++] = b + 1; }

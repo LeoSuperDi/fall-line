@@ -136,7 +136,7 @@ function Hm(x, z) {
     // only smooth out small bumps across the trail; never cut into the mountain or build it up
     const w = (1 - sstep(hw - 2, hw + 12, pn.d)) * (1 - sstep(1.5, 7, Math.abs(h - pn.hc)));
     h = lerp(h, pn.hc + SNOW_D, w);
-    h += -0.35 * (1 - sstep(hw - 2, hw + 1, pn.d)) + 0.6 * Math.exp(-Math.pow((pn.d - hw - 3) / 3.5, 2)); // packed trail, soft snowbanks along its edges
+    h += -0.35 * (1 - sstep(hw - 2, hw + 1, pn.d)) + 0.22 * Math.exp(-Math.pow((pn.d - hw - 3) / 4, 2)); // packed trail, a low soft snowbank along its edges
   } } }
   for (const f of FLATS) { const dx = x - f.x, dz = z - f.z; if (dx * dx + dz * dz < f.r * f.r) h = lerp(h, f.h, 1 - sstep(f.r * 0.5, f.r, Math.sqrt(dx * dx + dz * dz))); }
   const dl = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz);
