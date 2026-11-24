@@ -80,7 +80,7 @@ let frameMs = 16, prTimer = 0;
 function adaptResolution(dt) { // drop the resolution a little when frames get slow, raise it back when there is room
   frameMs += (dt * 1000 - frameMs) * 0.05; prTimer += dt;
   if (prTimer < 1.5) return;
-  if (frameMs > 24 && curPR > 0.6) { curPR = Math.max(0.6, curPR - 0.15); renderer.setPixelRatio(curPR); resize(); prTimer = 0; }
+  if (frameMs > 24 && curPR > MIN_PR) { curPR = Math.max(MIN_PR, curPR - 0.1); renderer.setPixelRatio(curPR); resize(); prTimer = 0; }
   else if (frameMs < 15 && curPR < MAX_PR) { curPR = Math.min(MAX_PR, curPR + 0.1); renderer.setPixelRatio(curPR); resize(); prTimer = -2; }
 }
 function frame(now) {
@@ -140,7 +140,7 @@ if (isTouch) $('tHelp').textContent = 'Hold the left or right side of the screen
 function init() {
   resize(); setMute(AU.muted);
   placeCrystals(); buildLandmarks(); buildCrystals(); buildNPCs();
-  updateTiles(-150, 300, true);
+  buildBorder(); updateTiles(-150, 300, true);
   playerModel = makePerson({ jacket: '#ff5a36', hat: '#26304a', scarf: '#f0b429', ski: '#ffd21f' }); scene.add(playerModel);
   playerModel.traverse(o => { if (o.isMesh) o.castShadow = true; });
   $('loading').classList.add('hidden');

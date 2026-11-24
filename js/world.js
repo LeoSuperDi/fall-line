@@ -37,11 +37,16 @@ function regionMix(x, z) { // nearest mountain, its neighbour, how far toward th
 }
 function mixNum(x, z, key, valleyVal) { const [a, b, w, vw] = regionMix(x, z); return lerp(lerp(a[key], b[key], w), valleyVal, vw); }
 const VALLEY_TREES = 0.32; // open valley floor so the peaks stay in view
+// the Frontier's outer range: big jagged peaks that ring the resort and rise from its edges
+const RIM = { x0: WORLD.x0 + 70, x1: WORLD.x1 - 70, z0: WORLD.z0 + 70, z1: WORLD.z1 - 70 };
+function outerH(x, z) {
+  const dx = Math.max(RIM.x0 - x, x - RIM.x1, 0), dz = Math.max(RIM.z0 - z, z - RIM.z1, 0); if (dx === 0 && dz === 0) return 0;
+  const d = Math.hypot(dx, dz), rn = 1 - Math.abs(vnoise(x * 0.0011 + 7, z * 0.0011 - 3)), rn2 = 1 - Math.abs(vnoise(x * 0.004 - 1, z * 0.004 + 5));
+  return Math.min(d * d * 0.012, 160) + sstep(60, 1500, d) * (600 + 1400 * rn * rn + 260 * rn2) + 40 * fbm(x * 0.01, z * 0.01) * sstep(0, 300, d);
+}
 function valleyH(x, z) {
   let h = -3 + 2.5 * fbm(x * 0.004 + 9, z * 0.004 + 2) - 2.5 * Math.exp(-Math.pow((z + 935) / 45, 2)); // a frozen creek down the middle
-  const e = Math.abs(x) - 3540; if (e > 0) h += Math.min(e * e * 0.03, 260);
-  const n = z - 1640, sN = -3500 - z; if (n > 0) h += Math.min(n * n * 0.03, 220); if (sN > 0) h += Math.min(sN * sN * 0.03, 220);
-  return h;
+  return h + outerH(x, z);
 }
 function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away from the summit on every side down to the valley
   const du = u - r.uS, dv = v - r.vS;
@@ -108,7 +113,7 @@ const POI = {}; POIS.forEach(p => POI[p.id] = p);
 const FLATS = POIS.filter(p => p.flat).map(p => ({ x: p.x, z: p.z, r: p.flat, h: Hraw(p.x, p.z) }));
 const SNOW_D = 0.5; // depth of the snow layer that sits on top of the ground
 function Hm(x, z) {
-  const h0 = Hraw(x, z); let h = h0 + SNOW_D * (1 - sstep(0.3, 0.55, thawAt(x, z, h0)));
+  const h0 = Hraw(x, z); let h = h0 + SNOW_D * (1 - sstep(0.15, 0.75, thawAt(x, z, h0)));
   if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const hw = RUNS[pn.run].w / 2; if (pn.d < hw + 22) h = lerp(h, pn.hc, 1 - sstep(hw - 2, hw + 22, pn.d)); } }
   for (const f of FLATS) { const dx = x - f.x, dz = z - f.z; if (dx * dx + dz * dz < f.r * f.r) h = lerp(h, f.h, 1 - sstep(f.r * 0.5, f.r, Math.sqrt(dx * dx + dz * dz))); }
   const dl = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz);

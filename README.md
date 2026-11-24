@@ -45,6 +45,7 @@ node check.js
 node screenshot.js village crater
 ```
 
+`closeups.js` frames the skier from the front (skiing, tucking, walking) and looks at the far view and the outer range.
 `check.js` loads the game in headless Chromium and confirms there are no errors, all 60 trails exist, and that
 skiing, jumping and the lamp quest work. `screenshot.js` saves pictures of named places to `tools/shots/`.
 

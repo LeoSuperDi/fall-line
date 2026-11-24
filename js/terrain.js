@@ -14,7 +14,7 @@ function treeChance(x, z, h) { // the same odds the forest generator uses, so di
   return d;
 }
 const TILE = 400, TX0 = -3600, TZ0 = -3600, NTX = 18, NTZ = 14;
-const HI_R = LOW ? 600 : 900, HI_SEG = LOW ? 40 : 60, LO_SEG = 12, TREE_VIS = LOW ? 480 : 720;
+const HI_R = LOW ? 520 : 720, HI_SEG = LOW ? 40 : 60, LO_SEG = 24, TREE_VIS = (LOW ? 520 : 720) + 170; // trees always cover every detailed tile, so no bare ring in the distance
 const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, map: paintTex });
 const TC = { grass: C('#4e9426'), grass2: C('#2f7a2c'), earth: C('#8a4a30'), heath: C('#86569a'), creek: C('#5fb6b2'), snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
 const REG_TINT = { pine: C('#ebeee9'), ember: C('#d9d8dc'), dunes: C('#e2bd84'), crags: C('#d8dde6'), aurora: C('#dfe8f6') };
@@ -33,14 +33,15 @@ function terrainColor(out, x, z, h, ny, far) {
   else if (st === 'blueice') out.lerp(TC.blue, 0.82 * sstep(0.1, 0.3, vnoise(x * 0.012 + 5, z * 0.012)) + 0.25);
   else if (st === 'windpack') out.lerp(TC.crust, 0.55);
   else if (st === 'ash') out.lerp(TC2.ash, 0.5 + 0.3 * vnoise(x * 0.02, z * 0.02));
-  else if (st === 'sand') { out.copy(TC2.sand).lerp(TC2.sand2, 0.5 + 0.5 * vnoise(x * 0.02 + 4, z * 0.02)); out.lerp(TC.shade, clamp((sl - 0.2) * 0.8, 0, 0.3)); }
+  { const [a, b, w, vw] = regionMix(x, z), sk = (a.id === 'dunes' ? 1 - w : b.id === 'dunes' ? w : 0) * (1 - vw); // sand fades in across the dunes' edge instead of stopping at a line
+    if (sk > 0.01 && !onP) { tmpG.copy(TC2.sand).lerp(TC2.sand2, 0.5 + 0.5 * vnoise(x * 0.02 + 4, z * 0.02)).lerp(TC.shade, clamp((sl - 0.2) * 0.8, 0, 0.3)); if (st === 'powder') tmpG.lerp(TC.snow, 0.7); out.lerp(tmpG, sstep(0.05, 0.6, sk)); } }
   if (onP && r && r.id === 'dunes') out.copy(TC2.sandPiste); else if (onP && r && r.id === 'ember') out.copy(TC2.ashPiste);
   if (r && r.id === 'ember') { const [u, v] = toLocal(r, x, z), dc = Math.hypot(u - r.uS, v) / 190; if (dc < 1) out.lerp(TC2.crater, 0.85 * (1 - sstep(0.75, 1, dc))); }
   const rk = mixNum(x, z, 'rockSl', 0.9); if (sl > rk) out.lerp(r && r.id === 'ember' ? TC2.basalt : r && r.id === 'dunes' ? TC2.sand2 : TC.rock, clamp((sl - rk) * 2, 0, 0.9));
   if (z < -600 && z > -840 && x > -560 && x < 160) out.lerp(TC.village, clamp((-600 - z) / 60, 0, 0.6));
   if (!onP && !(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1)) { // patches of meadow and red earth where the snow has thinned
     const th = thawAt(x, z, h);
-    if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, 0.95 * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
+    if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, (far ? 0.6 : 0.95) * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
   }
   if (!r) out.lerp(TC.creek, 0.9 * sstep(0.55, 0.85, Math.exp(-Math.pow((z + 935) / 16, 2)))); // the frozen creek
   if (far && !onP) out.lerp(TC.pine, clamp((treeChance(x, z, h) - 0.3) * 1.3, 0, 0.6)); // forests read as dark patches from afar
@@ -77,15 +78,30 @@ function* buildTileGen(t, seg, far) { // yields every few rows so building never
 }
 function drain(it) { let r; while (!(r = it.next()).done); return r.value; }
 const buildTileMesh = (t, seg, far) => drain(buildTileGen(t, seg, far));
+function buildBorder() { // four wide, coarse strips beyond the tiles so the outer range continues to the horizon
+  const ST = 60, X0 = TX0, X1 = TX0 + NTX * TILE, Z0 = TZ0, Z1 = TZ0 + NTZ * TILE, OUT = 3600, c = new THREE.Color();
+  for (const [ax, bx, az, bz] of [[X0 - OUT, X0 + 40, Z0 - OUT, Z1 + OUT], [X1 - 40, X1 + OUT, Z0 - OUT, Z1 + OUT], [X0, X1, Z1 - 40, Z1 + OUT], [X0, X1, Z0 - OUT, Z0 + 40]]) {
+    const nx = Math.round((bx - ax) / ST), nz = Math.round((bz - az) / ST), n = (nx + 1) * (nz + 1), pos = new Float32Array(n * 3), col = new Float32Array(n * 3), uv = new Float32Array(n * 2), idx = [];
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) { const k = j * (nx + 1) + i, x = ax + i * ST, z = az + j * ST, h = Hraw(x, z);
+      pos[k * 3] = x; pos[k * 3 + 1] = h - 0.8; pos[k * 3 + 2] = z; uv[k * 2] = x / 30; uv[k * 2 + 1] = z / 30;
+      const sl = Math.hypot(Hraw(x + ST, z) - h, Hraw(x, z + ST) - h) / ST;
+      c.copy(TC.snow).lerp(TC.shade, clamp((sl - 0.3) * 0.9, 0, 0.55)).lerp(TC.rock, clamp((sl - 0.75) * 1.6, 0, 0.75)).lerp(TC.pine, clamp(0.5 - h / 500, 0, 0.45) * sstep(0.3, 0.7, vnoise(x * 0.004, z * 0.004) + 0.5));
+      col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
+      if (i < nx && j < nz) idx.push(k, k + nx + 1, k + 1, k + 1, k + nx + 1, k + nx + 2); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); g.computeBoundingSphere();
+    scene.add(new THREE.Mesh(g, terrainMat));
+  }
+}
 function tileDist(t, x, z) { return Math.max(0, Math.hypot(t.cx - x, t.cz - z) - TILE * 0.7); }
 const frustum = new THREE.Frustum(), projM = new THREE.Matrix4();
-let job = null;
+let job = null; const loQueue = new Set(); // far tiles finish loading in the background after start-up
 function updateTiles(x, z, sync) {
   camera.updateMatrixWorld(); projM.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse); frustum.setFromProjectionMatrix(projM);
   let next = null, nd = 1e9;
   for (const t of tiles) {
-    if (!t.lo) t.lo = buildTileMesh(t, LO_SEG, true);
-    const d = tileDist(t, x, z), want = d < HI_R + (t.hi && t.hi.visible ? 140 : 0);
+    const d = tileDist(t, x, z);
+    if (!t.lo) { if (sync && d <= 2400) t.lo = buildTileMesh(t, LO_SEG, true); else { loQueue.add(t); continue; } }
+    const want = d < HI_R + (t.hi && t.hi.visible ? 140 : 0);
     if (want && (!t.hi || !t.trees)) { if (sync) { if (!t.hi) t.hi = buildTileMesh(t, HI_SEG, false); if (!t.trees) drain(genTreesGen(t)); } else if (d < nd && !(job && job.t === t)) { nd = d; next = t; } }
     if (t.hi) t.hi.visible = want;
     t.lo.visible = !(t.hi && t.hi.visible);
@@ -94,6 +110,7 @@ function updateTiles(x, z, sync) {
     if (t.cover) { const cv = seen && d < (LOW ? 150 : 240); for (const m of t.cover) m.visible = cv; }
   }
   if (sync) { job = null; return; }
+  if (!job && !next && loQueue.size) { const t = loQueue.values().next().value; loQueue.delete(t); job = { t, it: buildTileGen(t, LO_SEG, true), done: m => { t.lo = m; } }; }
   if (!job && next) { const t = next; job = !t.hi ? { t, it: buildTileGen(t, HI_SEG, false), done: m => { t.hi = m; m.visible = false; } } : { t, it: genTreesGen(t), done: () => { } }; }
   const t0 = performance.now(), budget = LOW ? 4 : 6;
   while (job && performance.now() - t0 < budget) { const r = job.it.next(); if (r.done) { job.done(r.value); job = null; } }

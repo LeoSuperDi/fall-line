@@ -31,7 +31,7 @@ function crashPlayer() {
   stats.crashes++;
   onCrash();
 }
-const GRAV = 16;
+const GRAV = 26; // a real person's arc: about a metre up, half a second in the air
 function land(p) { // touchdown: forgiving, never a crash
   const hard = -p.vy; p.air = false; p.vy = 0; p.jumped = false; p.airT = 0; p.gvPrev = 0; trailBreak = true;
   if (hard > 6) { emitBurst(p.x, p.y + 0.1, p.z, Math.min(40, 8 + hard * 1.5)); sfx.land(hard); camShake = Math.max(camShake, Math.min(0.35, hard / 40)); }
@@ -46,7 +46,7 @@ function groundStep(p, dt, gy, jumpV) { // returns true while airborne
   }
   const gv = (gy - p.y) / Math.max(dt, 1e-4);
   if (p.jumpBuf > 0) { p.air = true; p.jumped = true; p.vy = jumpV + Math.max(0, gv * 0.5); p.airT = 0; p.jumpBuf = 0; p.y = Math.max(p.y, gy); sfx.jump(); emitBurst(p.x, gy + 0.1, p.z, 10); return true; }
-  if (!p.foot && p.s > 13 && p.gvPrev - gv > 30 * dt && p.gvPrev - gv < 30) { p.air = true; p.jumped = false; p.vy = p.gvPrev; p.airT = 0; p.y = Math.max(p.y, gy); return true; } // crest: the ground drops away faster than you fall
+  if (!p.foot && p.s > 16 && p.gvPrev - gv > 44 * dt && p.gvPrev - gv < 30) { p.air = true; p.jumped = false; p.vy = Math.min(p.gvPrev, 6); p.airT = 0; p.y = Math.max(p.y, gy); return true; } // crest: the ground drops away faster than you fall
   p.gvPrev = gv; p.y = gy; return false;
 }
 function walkPlayer(dt, inp, gx, gz) {
@@ -65,7 +65,7 @@ function walkPlayer(dt, inp, gx, gz) {
   const hit = nearObs(p.x, p.z, o => { const ddx = p.x - o.x, ddz = p.z - o.z; return ddx * ddx + ddz * ddz < (o.r + 0.4) * (o.r + 0.4); });
   if (hit) { const ddx = p.x - hit.x, ddz = p.z - hit.z, d = Math.hypot(ddx, ddz) || 1; p.x = hit.x + ddx / d * (hit.r + 0.41); p.z = hit.z + ddz / d * (hit.r + 0.41); }
   for (const n of npcs) { const ddx = p.x - n.x, ddz = p.z - n.z, d = Math.hypot(ddx, ddz); if (d < 0.8 && d > 0) { p.x = n.x + ddx / d * 0.8; p.z = n.z + ddz / d * 0.8; } }
-  const inAir = groundStep(p, dt, H(p.x, p.z), 5.2);
+  const inAir = groundStep(p, dt, H(p.x, p.z), 4.6);
   const moved = inAir ? 0 : Math.abs(p.s) * dt; p.walkPh += moved * 3.4; p.stepAcc += moved;
   if (p.stepAcc > 0.85) { p.stepAcc = 0; sfx.step2(p.snow); }
   trailBreak = true;
@@ -144,7 +144,7 @@ function updatePlayer(dt, inp) {
   }
   for (const n of npcs) { const ddx = p.x - n.x, ddz = p.z - n.z, d = Math.hypot(ddx, ddz); if (d < 0.9 && d > 0) { p.x = n.x + ddx / d * 0.9; p.z = n.z + ddz / d * 0.9; p.s *= 0.5; } }
   if (p.crash > 0) return;
-  if (groundStep(p, dt, H(p.x, p.z), 7 + Math.min(4, p.s * 0.08))) { p.skidI = 0; trailBreak = true; return; }
+  if (groundStep(p, dt, H(p.x, p.z), 6.2 + Math.min(2, p.s * 0.03))) { p.skidI = 0; trailBreak = true; return; }
   p.skidI = clamp(skid * 1.2 + Math.abs(p.lat) / 6 + (brake && p.s > 2 ? p.brakeA : 0), 0, 1);
   // spray
   const deep = p.snow === 'powder' || p.snow === 'deep';
@@ -162,6 +162,7 @@ function updatePlayer(dt, inp) {
 const CAM = { mode: 'third', yaw: 0, pos: new THREE.Vector3(), look: new THREE.Vector3(), roll: 0 };
 let camShake = 0;
 function updateCamera(dt, snap) {
+  if (CAM.lock) { const L = CAM.lock; camera.position.set(L.pos.x, L.pos.y, L.pos.z); camera.lookAt(L.look.x, L.look.y, L.look.z); return; } // fixed shot (photo mode, tests)
   const p = P, sp = Math.hypot(p.vx, p.vz);
   if (p.crash <= 0) CAM.yaw += wrapA(p.h - CAM.yaw) * (1 - Math.exp(-(snap ? 99 : 5) * dt));
   const dx = Math.sin(CAM.yaw), dz = -Math.cos(CAM.yaw);
@@ -187,7 +188,7 @@ function updateCamera(dt, snap) {
 }
 function posePlayer(dt) {
   const m = playerModel, u = m.userData, p = P;
-  const sink = p.air || p.foot ? 0 : ({ powder: 0.12, deep: 0.2, sand: 0.08, ash: 0.06 }[p.snow] || 0);
+  const sink = p.air || p.foot ? 0 : ({ powder: 0.04, deep: 0.07, sand: 0.03, ash: 0.02 }[p.snow] || 0);
   m.position.set(p.x, p.y - sink, p.z);
   m.rotation.y = -p.h;
   const lean = p.crash > 0 ? 0 : clamp(p.w * p.s / 30, -0.55, 0.55);
@@ -197,11 +198,21 @@ function posePlayer(dt) {
   u.skis.rotation.y = p.brakeA * p.brakeSide * 0.9;
   u.skis.visible = !p.foot; u.poles.forEach(pl => pl.visible = !p.foot);
   const stride = p.foot ? Math.sin(p.walkPh) * clamp(Math.abs(p.s) / 3, 0, 1) : 0;
-  u.legs[0].rotation.x = stride * 0.55; u.legs[1].rotation.x = -stride * 0.55;
-  u.upper.position.y = 0.98 - 0.32 * p.tuck + (p.foot ? Math.abs(stride) * 0.04 : 0); u.upper.rotation.x = p.foot ? -0.05 : -0.55 * p.tuck - 0.12;
-  u.lower.scale.y = 1 - 0.3 * p.tuck;
+  // knees: a ready crouch on skis, deeper in a tuck or a hard stop, tucked up in the air; free swing when walking
+  const bend = p.foot ? 0.05 : p.air ? 0.95 : 0.3 + 0.6 * p.tuck + 0.18 * p.brakeA + 0.15 * Math.min(1, Math.abs(p.w) * p.s / 25);
+  for (let k = 0; k < 2; k++) {
+    const swing = p.foot ? (k ? -stride : stride) * 0.6 : 0;
+    u.legs[k].rotation.x = bend + swing;
+    u.knees[k].rotation.x = -2 * bend - (p.foot ? Math.max(0, -swing) * 1.3 : 0);
+    u.ankles[k].rotation.x = -(u.legs[k].rotation.x + u.knees[k].rotation.x); // boot stays level
+  }
+  const drop = 0.82 * (1 - Math.cos(bend));
+  u.lower.position.y = -drop; u.lower.scale.y = 1;
+  u.upper.position.y = 0.98 - drop + (p.foot ? Math.abs(stride) * 0.035 : 0);
+  u.upper.rotation.x = p.foot ? -0.06 : -(0.18 + 0.55 * p.tuck + 0.1 * p.brakeA);
+  u.elbows.forEach(e => e.rotation.x = p.foot ? -0.35 : p.air ? -0.7 : -0.55 + 0.15 * p.tuck);
   const pa = p.push ? Math.sin(p.pushT * 7) * 0.6 : 0;
-  if (p.air) { u.armL.rotation.x = -1.1; u.armR.rotation.x = -1.1; u.upper.position.y = 0.86; u.lower.scale.y = 0.8; } else if (p.foot) { u.armL.rotation.x = -stride * 0.5 - 0.05; u.armR.rotation.x = stride * 0.5 - 0.05; } else { u.armL.rotation.x = -0.45 - 0.5 * p.tuck + pa; u.armR.rotation.x = -0.45 - 0.5 * p.tuck + pa; }
+  if (p.air) { u.armL.rotation.x = -0.55; u.armR.rotation.x = -0.55; } else if (p.foot) { u.armL.rotation.x = -stride * 0.5 - 0.05; u.armR.rotation.x = stride * 0.5 - 0.05; } else { u.armL.rotation.x = -0.45 + 0.55 * p.tuck + pa; u.armR.rotation.x = -0.45 + 0.55 * p.tuck + pa; /* a tuck holds the hands forward and low, not overhead */ }
   u.tail.rotation.x = 0.4 + Math.min(1.1, p.s / 18) + Math.sin(gameT * 14) * 0.08 * Math.min(1, p.s / 10);
   if (p.crash > 0) { u.tilt.rotation.z = Math.sin(p.spin) * 1.2; u.tilt.rotation.x = Math.cos(p.spin * 0.7) * 0.8; m.position.y += Math.abs(Math.sin(p.spin)) * 0.3; }
   else u.tilt.rotation.x = 0;

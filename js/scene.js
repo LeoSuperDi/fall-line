@@ -6,7 +6,7 @@
 /* ================= renderer / scene ================= */
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, powerPreference: 'high-performance' });
-const MAX_PR = Math.min(window.devicePixelRatio || 1, LOW ? 1 : 1.5); let curPR = MAX_PR;
+const MAX_PR = Math.min(window.devicePixelRatio || 1, LOW ? 1 : 1.5), MIN_PR = Math.min(MAX_PR, LOW ? 0.8 : 1); let curPR = MAX_PR; // never drop below native size on a computer: low resolution means jagged edges
 renderer.setPixelRatio(curPR);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.06;
@@ -18,7 +18,7 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 22000);
 function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 60; camera.updateProjectionMatrix(); }
 window.addEventListener('resize', resize);
 
-const gradMap = (() => { const v = [80, 122, 164, 204, 238], d = new Uint8Array(v.length * 4); v.forEach((x, i) => { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = x; d[i * 4 + 3] = 255; }); const t = new THREE.DataTexture(d, v.length, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+const gradMap = (() => { const v = [84, 112, 140, 166, 190, 212, 230, 242], d = new Uint8Array(v.length * 4); v.forEach((x, i) => { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = x; d[i * 4 + 3] = 255; }); const t = new THREE.DataTexture(d, v.length, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.LinearFilter; /* blend between the shading steps: soft, painterly light with no hard contour lines */ t.generateMipmaps = false; t.needsUpdate = true; return t; })();
 const MC = {};
 function toon(c, extra) { const k = c + (extra ? JSON.stringify(extra) : ''); return MC[k] || (MC[k] = new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: gradMap }, extra || {}))); }
 const toonV = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap });

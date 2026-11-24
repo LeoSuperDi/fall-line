@@ -127,7 +127,7 @@ function updateNPCs(dt) {
     const target = d < 14 ? Math.atan2(P.x - n.x, -(P.z - n.z)) : n.yaw;
     n.yaw += wrapA(target - n.yaw) * (1 - Math.exp(-4 * dt));
     n.model.rotation.y = -n.yaw;
-    n.model.userData.upper.position.y = 0.98 + Math.sin(gameT * 2 + n.x) * 0.012;
+    n.model.userData.upper.position.y = 0.98 - 0.006 + Math.sin(gameT * 2 + n.x) * 0.012; // breathing
     const has = Object.keys(QUESTS).some(q => QUESTS[q].giver === n.id && canOffer(q));
     const turn = activeSteps().some(([, st]) => st.t === 'talk' && st.npc === n.id);
     n.mark.visible = has || turn; n.mark.material = turn ? MARK.turn : MARK.offer;
