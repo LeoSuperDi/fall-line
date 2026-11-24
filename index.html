@@ -17,7 +17,7 @@ LAYOUT: full-bleed world, compass bar top centre, quest card top left, journal a
 */
 :root{--ink:#26304a;--muted:#5d6888;--gold:#e9a23b;--panel:rgba(250,251,255,.9);--line:rgba(120,140,190,.25);color-scheme:light}
 *{box-sizing:border-box;margin:0;padding:0;min-width:0}
-html,body{height:100%;overflow:hidden;background:#cfdcef;font-family:Nunito,system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+html,body{height:100%;overflow:hidden;background:#9fb0cc;font-family:Nunito,system-ui,sans-serif;color:var(--ink);-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
 #c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .hidden{display:none!important}
 h1,h2,h3,.fd{font-family:Fredoka,system-ui,sans-serif;font-weight:600;letter-spacing:.2px}
@@ -100,10 +100,11 @@ button{font:inherit;color:inherit}
 #title .btns{display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap}
 #title .help{margin-top:18px;padding:14px 16px;font-size:14px;line-height:1.6;text-align:left}
 kbd{display:inline-block;background:#eef2fa;border:1px solid #cdd7ea;border-bottom-width:2px;border-radius:6px;padding:0 6px;font:800 12px/1.6 Nunito,sans-serif;color:var(--ink)}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse 120% 100% at 50% 45%,rgba(20,30,60,0) 55%,rgba(20,30,60,.28) 100%)}
 #danger{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,rgba(255,80,60,0) 55%,rgba(220,40,40,.55) 100%)}
 #timer.warn{background:#fff0e6;color:#a3330f}
 #fade{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .45s;z-index:7}
-#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:#cfdcef;font:600 22px Fredoka,sans-serif;color:var(--ink)}
+#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:20;background:#9fb0cc;font:600 22px Fredoka,sans-serif;color:var(--ink)}
 @media(max-width:640px){
   #quest{width:min(230px,52vw);padding:9px 11px}#quest b{font-size:15px}#quest p{font-size:13px}
   #compassWrap{top:calc(max(12px,env(safe-area-inset-top)) + 104px);left:max(12px,env(safe-area-inset-left));transform:none;width:min(230px,52vw);height:40px}
@@ -115,6 +116,7 @@ kbd{display:inline-block;background:#eef2fa;border:1px solid #cdd7ea;border-bott
 <body>
 <div id="loading">Painting the mountain…</div>
 <canvas id="c"></canvas>
+<div id="vig"></div>
 <div id="fade"></div>
 <div id="danger"></div>
 
@@ -338,7 +340,9 @@ function snowType(x, z, sl) {
 /* ================= renderer / scene ================= */
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.25 : 1.75));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.25 : 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.98;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
@@ -347,7 +351,7 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 4000);
 function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 60; camera.updateProjectionMatrix(); }
 window.addEventListener('resize', resize);
 
-const gradMap = (() => { const d = new Uint8Array([105, 105, 105, 255, 165, 165, 165, 255, 218, 218, 218, 255, 255, 255, 255, 255]); const t = new THREE.DataTexture(d, 4, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+const gradMap = (() => { const v = [78, 118, 158, 196, 226], d = new Uint8Array(v.length * 4); v.forEach((x, i) => { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = x; d[i * 4 + 3] = 255; }); const t = new THREE.DataTexture(d, v.length, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t; })();
 const MC = {};
 function toon(c, extra) { const k = c + (extra ? JSON.stringify(extra) : ''); return MC[k] || (MC[k] = new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: gradMap }, extra || {}))); }
 const toonV = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap });
@@ -356,16 +360,16 @@ function mkCanvas(w, h, f) { const c = document.createElement('canvas'); c.width
 
 /* painterly snow texture: soft brush strokes */
 const paintTex = new THREE.CanvasTexture(mkCanvas(256, 256, (g) => {
-  g.fillStyle = '#ffffff'; g.fillRect(0, 0, 256, 256);
+  g.fillStyle = '#f4f6fa'; g.fillRect(0, 0, 256, 256);
   const r = mulberry32(5);
   for (let i = 0; i < 420; i++) {
     const x = r() * 256, y = r() * 256, len = 8 + r() * 26, a = r() * Math.PI;
-    g.strokeStyle = r() < .5 ? `rgba(170,185,225,${0.05 + r() * 0.08})` : `rgba(215,200,235,${0.04 + r() * 0.07})`;
+    g.strokeStyle = r() < .5 ? `rgba(150,168,215,${0.08 + r() * 0.12})` : `rgba(200,185,228,${0.07 + r() * 0.1})`;
     g.lineWidth = 2 + r() * 5; g.lineCap = 'round';
     g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a) * len * .5 + 4, y + Math.sin(a) * len * .5 - 3, x + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke();
     for (const ox of [-256, 256]) { g.beginPath(); g.moveTo(x + ox, y); g.lineTo(x + ox + Math.cos(a) * len, y + Math.sin(a) * len); g.stroke(); }
   }
-  for (let i = 0; i < 160; i++) { g.fillStyle = 'rgba(255,255,255,.9)'; g.fillRect(r() * 256, r() * 256, 1.4, 1.4); }
+  for (let i = 0; i < 160; i++) { g.fillStyle = 'rgba(255,255,255,.75)'; g.fillRect(r() * 256, r() * 256, 1.2, 1.2); }
 }));
 paintTex.wrapS = paintTex.wrapT = THREE.RepeatWrapping;
 paintTex.anisotropy = 4;
@@ -380,7 +384,7 @@ const treeDensity = (x, z) => clamp(0.42 + 0.6 * fbm(x * 0.006 + 11, z * 0.006 -
   for (let i = 0; i < n; i++) { const x = pos.getX(i), z = pos.getZ(i) - 0; pos.setY(i, Hm(x, z)); }
   geo.computeVertexNormals();
   const nor = geo.attributes.normal;
-  const cSnow = C('#f6f7fc'), cShade = C('#dfe4f4'), cRock = C('#8c93ab'), cPiste = C('#fdfbf6'), cIce = C('#c9def0'), cLake = C('#b5dbec'), cForest = C('#e6e9f5'), cVillage = C('#f5efe7'), cEdge = C('#e9ecf6'), tmp = new THREE.Color();
+  const cSnow = C('#e8eef8'), cShade = C('#bccbe8'), cRock = C('#7a8299'), cPiste = C('#eef1f6'), cIce = C('#b4cee6'), cLake = C('#9fcbe0'), cForest = C('#d8deec'), cVillage = C('#e9e2d8'), cEdge = C('#dce2ee'), tmp = new THREE.Color();
   for (let i = 0; i < n; i++) {
     const x = pos.getX(i), z = pos.getZ(i), ny = nor.getY(i), sl = Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 0.05);
     tmp.copy(cSnow);
@@ -402,7 +406,7 @@ const treeDensity = (x, z) => clamp(0.42 + 0.6 * fbm(x * 0.006 + 11, z * 0.006 -
   const terrain = new THREE.Mesh(geo, mat); terrain.receiveShadow = true; scene.add(terrain);
   // distant valley floor below the base
   const vg = new THREE.PlaneGeometry(9000, 9000, 1, 1); vg.rotateX(-Math.PI / 2);
-  const valley = new THREE.Mesh(vg, toon('#c9d6ea')); valley.position.set(0, -34, -2000); scene.add(valley);
+  const valley = new THREE.Mesh(vg, toon('#b5c3db')); valley.position.set(0, -34, -2000); scene.add(valley);
 }
 
 /* ================= helpers to build stylized meshes ================= */
@@ -437,9 +441,9 @@ function treeGeo(variant) {
     const g = T(new THREE.ConeGeometry(r, h, 8, 1, true), 0, y, 0);
     const seed = ti * 7 + variant;
     parts.push({ geo: g, col: (c, x, yy, z, nx, ny, nz, f) => {
-      const top = f > 0.5; c.set(top ? '#f2f5fb' : greens[(seed + (x > 0 ? 1 : 0)) % 2]);
+      const top = f > 0.5; c.set(top ? '#e4e9f3' : greens[(seed + (x > 0 ? 1 : 0)) % 2]);
       if (top && ti < 1 && variant !== 2) c.lerp(C(greens[1]), 0.25);
-      if (!top) { const s = hsh(Math.round(x * 10) + seed, Math.round(z * 10)); if (s < snowy * 0.35) c.lerp(C('#e9eef8'), 0.85); }
+      if (!top) { const s = hsh(Math.round(x * 10) + seed, Math.round(z * 10)); if (s < snowy * 0.35) c.lerp(C('#dae1ee'), 0.85); }
     } });
   });
   return merge(parts);
@@ -448,7 +452,7 @@ function rockGeo(seed) {
   const g = new THREE.DodecahedronGeometry(1, 1), p = g.attributes.position, r = mulberry32(seed);
   for (let i = 0; i < p.count; i++) { const k = 0.8 + r() * 0.35; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.75, p.getZ(i) * k); }
   g.computeVertexNormals();
-  return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.55 ? '#f2f5fb' : ny > 0.1 ? '#8e97ad' : '#6f7891') }]);
+  return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.55 ? '#e4e9f3' : ny > 0.1 ? '#8e97ad' : '#6f7891') }]);
 }
 
 /* ================= obstacles grid ================= */
@@ -471,13 +475,13 @@ const sky = new THREE.Mesh(new THREE.SphereGeometry(3000, 32, 16), new THREE.Sha
       vec3 c = mix(hor, mid, smoothstep(0.0, 0.12, y)); c = mix(c, top, smoothstep(0.12, 0.6, y));
       if (y < 0.0) c = mix(hor, hor * 0.92, smoothstep(0.0, -0.3, y));
       float s = max(dot(d, sunDir), 0.0);
-      c += sunCol * (pow(s, 900.0) * 1.2 + pow(s, 40.0) * 0.25 + pow(s, 5.0) * 0.12);
+      c += sunCol * (pow(s, 900.0) * 0.9 + pow(s, 40.0) * 0.16 + pow(s, 5.0) * 0.07);
       c += (sin(d.x * 23.0 + d.z * 17.0 + y * 40.0) * 0.5 + 0.5) * 0.012;
       gl_FragColor = vec4(c, 1.0); }`
 }));
 sky.renderOrder = -1; scene.add(sky);
 
-const hemi = new THREE.HemisphereLight(0xc6d6ff, 0xe8d6c8, 0.5); scene.add(hemi);
+const hemi = new THREE.HemisphereLight(0xc6d6ff, 0xe8d6c8, 0.42); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff1d6, 1.15);
 sun.castShadow = true;
 sun.shadow.mapSize.set(LOW ? 1024 : 2048, LOW ? 1024 : 2048);
@@ -500,14 +504,14 @@ const clouds = [];
 {
   const r = mulberry32(21);
   for (let i = 0; i < 16; i++) {
-    const m = new THREE.SpriteMaterial({ map: cloudTex, fog: false, depthWrite: false, transparent: true, opacity: 0.85 });
+    const m = new THREE.SpriteMaterial({ map: cloudTex, fog: false, depthWrite: false, transparent: true, opacity: 0.85, toneMapped: false });
     const s = new THREE.Sprite(m); const sc = 520 + r() * 620; s.scale.set(sc, sc * 0.38, 1);
     s.userData = { a: r() * TAU, d: 2000 + r() * 500, y: 260 + r() * 420, sp: (0.004 + r() * 0.006) * (r() < .5 ? 1 : -1) };
     scene.add(s); clouds.push(s);
   }
 }
 // distant painted mountain ranges: two continuous rings around the world
-const peakMat = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide, transparent: true });
+const peakMat = new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide, transparent: true, toneMapped: false });
 function ridge(th, seed) {
   let h = 0, a = 1, f = 2;
   for (let o = 0; o < 5; o++) { h += a * Math.abs(Math.sin(th * f + seed * (o + 1) * 1.7 + Math.sin(th * f * 0.5 + seed) * 1.3)); a *= 0.5; f *= 2.3; }
@@ -1778,14 +1782,14 @@ function readInput() {
 
 /* ================= light & weather ================= */
 const PAL = [
-  { t: 0.0, top: '#3f7fd6', mid: '#86b3ea', hor: '#ecdfe6', fog: '#e3e2ee', sun: '#ffe9cf', si: 1.05, hs: '#c3d3ff', hg: '#e8d2c4', el: 0.32, az: -0.5 },
-  { t: 0.3, top: '#2f74d2', mid: '#7fb0ea', hor: '#dce9f7', fog: '#d9e5f2', sun: '#fffaf0', si: 1.25, hs: '#c6d8ff', hg: '#e6dcd0', el: 0.9, az: 0.25 },
-  { t: 0.6, top: '#4f72c8', mid: '#a3a9e0', hor: '#ffd2a6', fog: '#eedbd0', sun: '#ffcd94', si: 1.12, hs: '#c8c4f0', hg: '#f0c9a8', el: 0.3, az: 0.95 },
-  { t: 0.8, top: '#4d5a9c', mid: '#9c90c8', hor: '#f6aea2', fog: '#d9c0cd', sun: '#ff9f88', si: 0.8, hs: '#aaa4dc', hg: '#e8b3aa', el: 0.12, az: 1.25 },
-  { t: 1.0, top: '#3f7fd6', mid: '#86b3ea', hor: '#ecdfe6', fog: '#e3e2ee', sun: '#ffe9cf', si: 1.05, hs: '#c3d3ff', hg: '#e8d2c4', el: 0.32, az: -0.5 }
+  { t: 0.0, top: '#2f62b0', mid: '#6f98d0', hor: '#c9c3d6', fog: '#c4c8da', sun: '#ffe2c0', si: 1.05, hs: '#aebfe6', hg: '#cdb8ac', el: 0.32, az: -0.5 },
+  { t: 0.3, top: '#255fb2', mid: '#6895d0', hor: '#bccde3', fog: '#bfcbdd', sun: '#fff4e2', si: 1.2, hs: '#b2c3ea', hg: '#cfc4b8', el: 0.9, az: 0.25 },
+  { t: 0.6, top: '#3d5aa8', mid: '#8a8cc4', hor: '#e8b48c', fog: '#d1bcb4', sun: '#ffc184', si: 1.08, hs: '#b0aad6', hg: '#d6ae90', el: 0.3, az: 0.95 },
+  { t: 0.8, top: '#36406f', mid: '#7a6f9e', hor: '#d48f86', fog: '#ab98a8', sun: '#ff9278', si: 0.75, hs: '#8c87b8', hg: '#c69690', el: 0.12, az: 1.25 },
+  { t: 1.0, top: '#2f62b0', mid: '#6f98d0', hor: '#c9c3d6', fog: '#c4c8da', sun: '#ffe2c0', si: 1.05, hs: '#aebfe6', hg: '#cdb8ac', el: 0.32, az: -0.5 }
 ];
 const PALC = PAL.map(p => ({ t: p.t, top: C(p.top), mid: C(p.mid), hor: C(p.hor), fog: C(p.fog), sun: C(p.sun), hs: C(p.hs), hg: C(p.hg), si: p.si, el: p.el, az: p.az }));
-const STORM = { fog: C('#cfd5df'), top: C('#aab4c6'), mid: C('#c4ccd9'), hor: C('#d6dbe4') };
+const STORM = { fog: C('#b4bbc8'), top: C('#8a95a9'), mid: C('#a3acbb'), hor: C('#b8bfcb') };
 const tmpC = new THREE.Color(), tmpC2 = new THREE.Color();
 function applyLight(t, sf) {
   let i = 0; while (i < PALC.length - 2 && PALC[i + 1].t <= t) i++;
@@ -1795,14 +1799,14 @@ function applyLight(t, sf) {
   mix('fog', scene.fog.color).lerp(STORM.fog, sf);
   mix('sun', sun.color); mix('sun', skyU.sunCol.value).multiplyScalar(1 - sf * 0.9);
   mix('hs', hemi.color); mix('hg', hemi.groundColor);
-  sun.intensity = lerp(a.si, b.si, k) * 0.78 * (1 - sf * 0.55); hemi.intensity = 0.5 + sf * 0.3;
+  sun.intensity = lerp(a.si, b.si, k) * 0.78 * (1 - sf * 0.55); hemi.intensity = 0.42 + sf * 0.25;
   const el = lerp(a.el, b.el, k), az = lerp(a.az, b.az, k), dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
   skyU.sunDir.value.copy(dir);
   sun.position.set(P.x + dir.x * 300, P.y + dir.y * 300, P.z + dir.z * 300); sun.target.position.set(P.x, P.y, P.z);
   const far = LOW ? 520 : 760;
   scene.fog.near = lerp(70, 6, sf); scene.fog.far = lerp(far, 150, sf);
-  tmpC.copy(skyU.hor.value).lerp(C('#ffffff'), 0.25); peakMat.color.copy(tmpC).lerp(STORM.fog, sf * 0.9); peakMat.opacity = 1 - sf * 0.92;
-  tmpC2.copy(skyU.hor.value).lerp(C('#ffffff'), 0.55); clouds.forEach(c => { c.material.color.copy(tmpC2); c.material.opacity = 0.85 * (1 - sf * 0.6); });
+  tmpC.copy(skyU.hor.value).lerp(C('#dfe8ff'), 0.3); peakMat.color.copy(tmpC).lerp(STORM.fog, sf * 0.9); peakMat.opacity = 1 - sf * 0.92;
+  tmpC2.copy(skyU.hor.value).lerp(C('#ffffff'), 0.35); clouds.forEach(c => { c.material.color.copy(tmpC2); c.material.opacity = 0.7 * (1 - sf * 0.6); });
 }
 
 /* ================= main loop ================= */
