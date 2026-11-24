@@ -213,7 +213,7 @@ kbd{display:inline-block;background:rgba(238,243,248,.92);color:var(--pine);bord
 <div id="mapOv" class="ov hidden"><div class="paper" style="width:min(820px,100%)">
   <div class="head"><h2>Trail map</h2><button class="b ghost" id="mClose">Close</button></div>
   <p class="lede">The whole resort, north at the top. Tap a camp you've found to travel there.</p>
-  <canvas id="mapCv" width="760" height="650"></canvas>
+  <canvas id="mapCv" width="760" height="588"></canvas>
   <div class="legend"><span><i class="c" style="background:#2fa463"></i>Meadow Way</span><span><i style="background:#3d73d9"></i>Fox Run</span><span><i class="d" style="background:#1d2230"></i>The Wall</span><span><i class="d" style="background:#f2661c"></i>Quest</span><span><i class="c" style="background:#f2661c;box-shadow:0 0 0 2px #fff,0 0 0 3px #f2661c"></i>You</span></div>
 </div></div>
 
@@ -260,18 +260,18 @@ const LOW = isTouch && Math.min(screen.width, screen.height) < 900;
    One connected map. A valley runs east-west (z about -780 to -1100) with Lowpine Village on its north edge.
    Three mountains rise north of it (downhill is -z) and three rise south of it (downhill is +z).
    x: east(+)/west(-), y: up. Frostpeak, the original mountain, is centred on x = 0. */
-const WORLD = { x0: -2000, x1: 2000, z0: -2860, z1: 1000 };
+const WORLD = { x0: -3000, x1: 3000, z0: -3260, z1: 1380 };
 const PG = new Map(), PC = 32;
 const MTN_L = 1440, MTN_W = 1120;
 const REGIONS = [
-  { id: 'frost', name: 'Frostpeak', row: 1, cx: 0, peak: 430, kind: 'frost', treeMul: 1, treeline: 330, rockSl: 0.85, uS: 1465, vS: -420, rvN: 520, rvP: 1060, back: 300, exp: 1.35 },
-  { id: 'pine', name: 'Pine Ridge', row: 1, cx: -1400, peak: 340, kind: 'pine', treeMul: 1.55, treeline: 310, rockSl: 0.95, exp: 1.15 },
-  { id: 'powder', name: 'Powder Bowl', row: 1, cx: 1400, peak: 470, kind: 'bowl', treeMul: 0.5, treeline: 230, rockSl: 0.9, exp: 1.3 },
-  { id: 'glacier', name: 'The Glacier', row: -1, cx: -1400, peak: 540, kind: 'glacier', treeMul: 0.15, treeline: 110, rockSl: 0.8, exp: 1.2 },
-  { id: 'crags', name: 'Windswept Crags', row: -1, cx: 0, peak: 640, kind: 'crags', treeMul: 0.45, treeline: 240, rockSl: 0.55, exp: 1.45 },
-  { id: 'aurora', name: 'Aurora Peak', row: -1, cx: 1400, peak: 520, kind: 'aurora', treeMul: 0.85, treeline: 330, rockSl: 0.85, exp: 1.5 }
+  { id: 'frost', name: 'Frostpeak', row: 1, cx: 0, peak: 900, kind: 'frost', treeMul: 1, treeline: 450, rockSl: 0.85, uS: 1465, vS: -420, rvN: 520, rvP: 1060, back: 300, exp: 1.25 },
+  { id: 'pine', name: 'Pine Ridge', row: 1, cx: -2000, peak: 950, kind: 'pine', treeMul: 1.55, treeline: 520, rockSl: 0.95, exp: 1.1 },
+  { id: 'powder', name: 'Powder Bowl', row: 1, cx: 2000, peak: 1150, kind: 'bowl', treeMul: 0.5, treeline: 380, rockSl: 0.9, exp: 1.2 },
+  { id: 'glacier', name: 'The Glacier', row: -1, cx: -2000, peak: 1250, kind: 'glacier', treeMul: 0.15, treeline: 200, rockSl: 0.8, exp: 1.1 },
+  { id: 'crags', name: 'Windswept Crags', row: -1, cx: 0, peak: 1500, kind: 'crags', treeMul: 0.45, treeline: 380, rockSl: 0.6, exp: 1.3 },
+  { id: 'aurora', name: 'Aurora Peak', row: -1, cx: 2000, peak: 1300, kind: 'aurora', treeMul: 0.85, treeline: 500, rockSl: 0.85, exp: 1.35 }
 ];
-REGIONS.forEach(r => { if (r.uS) return; Object.assign(r, { uS: 1400, vS: 0, rvN: 760, rvP: 760, back: 380 }); });
+REGIONS.forEach(r => { if (r.uS) return; Object.assign(r, { uS: 1700, vS: 0, rvN: 950, rvP: 950, back: 420 }); });
 const REG = {}; REGIONS.forEach(r => { REG[r.id] = r; r.zb = r.row > 0 ? -760 : -1100; });
 // local mountain coordinates: u = metres up the fall line from the valley, v = metres across
 function toLocal(r, x, z) { return r.row > 0 ? [z - r.zb, x - r.cx] : [r.zb - z, r.cx - x]; }
@@ -279,20 +279,20 @@ function toWorld(r, u, v) { return r.row > 0 ? [r.cx + v, r.zb + u] : [r.cx - v,
 function regionAt(x, z) {
   const row = z > -930 ? 1 : -1; let best = null, bd = 1e9;
   for (const r of REGIONS) if (r.row === row) { const d = Math.abs(x - r.cx); if (d < bd) { bd = d; best = r; } }
-  if (bd > 700) return null;
+  if (bd > 1000) return null;
   return toLocal(best, x, z)[0] > -30 ? best : null;
 }
 function regionMix(x, z) { // nearest mountain, its neighbour, how far toward the neighbour (0..0.5), and how much valley
   const row = z > -930 ? 1 : -1, list = REGIONS.filter(r => r.row === row).sort((a, b) => Math.abs(x - a.cx) - Math.abs(x - b.cx));
-  const a = list[0], b = list[1], w = 0.5 * sstep(480, 700, Math.abs(x - a.cx)), u = toLocal(a, x, z)[0];
+  const a = list[0], b = list[1], w = 0.5 * sstep(720, 1000, Math.abs(x - a.cx)), u = toLocal(a, x, z)[0];
   return [a, b, w, 1 - sstep(-90, 30, u)];
 }
 function mixNum(x, z, key, valleyVal) { const [a, b, w, vw] = regionMix(x, z); return lerp(lerp(a[key], b[key], w), valleyVal, vw); }
 const VALLEY_TREES = 0.32; // open valley floor so the peaks stay in view
 function valleyH(x, z) {
   let h = -3 + 2.5 * fbm(x * 0.004 + 9, z * 0.004 + 2) - 2.5 * Math.exp(-Math.pow((z + 935) / 45, 2)); // a frozen creek down the middle
-  const e = Math.abs(x) - 1940; if (e > 0) h += Math.min(e * e * 0.03, 220);
-  const n = z - 960, sN = -2820 - z; if (n > 0) h += Math.min(n * n * 0.03, 220); if (sN > 0) h += Math.min(sN * sN * 0.03, 220);
+  const e = Math.abs(x) - 2940; if (e > 0) h += Math.min(e * e * 0.03, 260);
+  const n = z - 1340, sN = -3220 - z; if (n > 0) h += Math.min(n * n * 0.03, 220); if (sN > 0) h += Math.min(sN * sN * 0.03, 220);
   return h;
 }
 function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away from the summit on every side down to the valley
@@ -309,7 +309,7 @@ function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away fro
     h += k * wx * 52 * sstep(-170, 110, z) * (1 - sstep(110, 640, z)); // The Wall's shoulder on the east flank
   }
   else if (r.kind === 'pine') h += k * t * (14 * fbm(x * 0.006 + 3, z * 0.006) + 6 * Math.sin(x * 0.02 + Math.sin(z * 0.01) * 2) + 6 * fbm(x * 0.02, z * 0.02));
-  else if (r.kind === 'bowl') h += k * (5 * t * fbm(x * 0.008, z * 0.008) - r.peak * 0.2 * Math.exp(-Math.pow((dv - 260) / 300, 2)) * sstep(0.2, 0.55, t) * (1 - sstep(0.78, 0.95, t)));
+  else if (r.kind === 'bowl') h += k * (5 * t * fbm(x * 0.008, z * 0.008) - r.peak * 0.2 * Math.exp(-Math.pow((dv - 320) / 380, 2)) * sstep(0.2, 0.55, t) * (1 - sstep(0.78, 0.95, t)));
   else if (r.kind === 'glacier') h += k * t * (6 * fbm(x * 0.005, z * 0.005) + 4 * Math.sin(v * 0.012));
   else if (r.kind === 'crags') { const rn = 1 - Math.abs(vnoise(x * 0.006 + 4, z * 0.006 - 2)); h += k * t * (60 * rn * rn + 18 * fbm(x * 0.015, z * 0.015)); }
   else if (r.kind === 'aurora') h += k * t * 9 * fbm(x * 0.007, z * 0.007);
@@ -318,7 +318,7 @@ function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away fro
 function Hraw(x, z) {
   const base = valleyH(x, z); let m = 0;
   for (const r of REGIONS) {
-    if (Math.abs(x - r.cx) > 1250 || (r.row > 0 ? z < -800 : z > -1060)) continue;
+    if (Math.abs(x - r.cx) > 1300 || (r.row > 0 ? z < -800 : z > -1060)) continue;
     const [u, v] = toLocal(r, x, z);
     m = Math.max(m, mountainH(r, x, z, u, v));
   }
@@ -339,10 +339,10 @@ const POIS = [
   { id: 'spring', name: 'Hot Spring', x: -480, z: -430, r: 36, flat: 20 },
   { id: 'village', name: 'Lowpine Village', x: -300, z: -712, r: 40 }
 ];
-const LANDMARK = { pine: ['sawmill', 'Old Sawmill', 620, 260], powder: ['cornice', 'The Cornice', 1290, 120], glacier: ['icecave', 'Ice Cave', 800, 300], crags: ['cairn', 'Stone Cairn', 1000, 260], aurora: ['stargazer', 'Stargazer Hut', 900, 280] };
+const LANDMARK = { pine: ['sawmill', 'Old Sawmill', 760, 330], powder: ['cornice', 'The Cornice', 1590, 140], glacier: ['icecave', 'Ice Cave', 980, 370], crags: ['cairn', 'Stone Cairn', 1220, 320], aurora: ['stargazer', 'Stargazer Hut', 1100, 340] };
 REGIONS.forEach(r => {
   if (r.id === 'frost') return;
-  const [tx, tz] = toWorld(r, 1346, 22), [bx, bz] = toWorld(r, 88, 40), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2], lm[3]);
+  const [tx, tz] = toWorld(r, r.uS - 54, 22), [bx, bz] = toWorld(r, 88, 40), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2], lm[3]);
   POIS.push({ id: r.id + '_top', name: r.name + ' summit', x: tx, z: tz, r: 46, camp: true, flat: 40 },
             { id: r.id + '_base', name: r.name + ' base', x: bx, z: bz, r: 50, camp: true, flat: 24 },
             { id: lm[0], name: lm[1], x: lx, z: lz, r: 40, camp: r.id === 'aurora', flat: 16 });
@@ -395,23 +395,31 @@ const RUNS = [
   { id: 'blue', name: 'Fox Run', col: '#3d73d9', w: 34, pts: [[-330, 662], [-250, 540], [-150, 420], [-20, 290], [90, 175], [125, 100], [60, -90], [120, -280], [20, -450], [-120, -600], [-190, -650]] },
   { id: 'black', name: 'The Wall', col: '#1d2230', w: 28, pts: [[-282, 672], [-185, 572], [-45, 474], [120, 392], [262, 300], [340, 200], [300, -20], [360, -240], [250, -430], [60, -580], [-110, -655]] }
 ];
-// runs hug the summit ridge up top and fan out lower down, where the mountain is wide enough to hold them
-// each point is [how far across, as a share of the room available at that height, metres up the mountain]
-const RUN_SHAPES = {
-  A: [[0.05, 1330], [0.4, 1180], [0.15, 960], [0.5, 760], [0.25, 540], [0.55, 330], [0.3, 170], [0.2, 95]],
-  B: [[-0.05, 1332], [-0.35, 1210], [-0.6, 1020], [-0.3, 800], [-0.6, 560], [-0.35, 360], [-0.5, 200], [-0.25, 100]],
-  C: [[0.08, 1334], [0.65, 1270], [0.95, 1080], [0.75, 860], [1.0, 600], [0.85, 380], [0.6, 190], [0.35, 105]]
-};
+// ten trails per mountain: they leave the summit pad together, fan out across the face, and gather again at the base
 const runV = (r, f, u) => r.vS + f * (60 + 0.75 * (f < 0 ? r.rvN : r.rvP) * (1 - u / r.uS));
 const GREEN = '#2fa463', BLUE = '#3d73d9', BLACK = '#1d2230';
-[ ['pine', 'A', 'Timber Trail', GREEN, 44, 'circle'], ['pine', 'B', 'Sawmill Glade', BLUE, 34, 'square'], ['pine', 'C', 'Needle Chute', BLACK, 28, 'diamond'],
-  ['powder', 'A', 'Featherbed', BLUE, 40, 'square'], ['powder', 'C', 'Big Scoop', BLACK, 32, 'diamond'],
-  ['glacier', 'A', 'Icefield Express', BLUE, 40, 'square'], ['glacier', 'B', 'Crevasse Run', BLACK, 30, 'diamond'],
-  ['crags', 'A', 'Gale Traverse', BLUE, 36, 'square'], ['crags', 'B', 'Shattered Spur', BLACK, 28, 'diamond'], ['crags', 'C', 'The Knife', BLACK, 24, 'double'],
-  ['aurora', 'A', 'Starlight', GREEN, 44, 'circle'], ['aurora', 'B', 'Northern Lights', BLUE, 34, 'square'], ['aurora', 'C', 'Midnight Drop', BLACK, 28, 'diamond']
-].forEach(([rid, sh, name, col, w, shape], k) => {
-  const r = REG[rid], seed = k * 1.7;
-  RUNS.push({ id: rid + sh, name, col, w, shape, region: rid, lamps: rid === 'aurora', pts: RUN_SHAPES[sh].map(([f, u], i) => toWorld(r, u, runV(r, f, u) + (i > 1 && i < 7 ? 25 * Math.sin(u * 0.004 + seed) : 0))) });
+const DIFF = { g: [GREEN, 44, 'circle'], b: [BLUE, 36, 'square'], k: [BLACK, 30, 'diamond'], d: [BLACK, 24, 'double'] };
+const RUN_NAMES = {
+  frost: ['Snowdrift Lane', 'Lantern Line', 'Hare Hollow', 'Summit Express', 'Corkscrew', 'Ridge Runner', 'Last Light'],
+  pine: ['Timber Trail', 'Sawmill Glade', 'Needle Chute', 'Woodsmoke', 'Birch Bend', "Logger's Run", 'Owl Hollow', 'Pinecone Alley', 'Bark Trail', 'The Thicket'],
+  powder: ['Featherbed', 'Big Scoop', 'Cloud Nine', 'Pillow Line', 'Snowglobe', 'Soft Landing', 'Deep End', 'Marshmallow', 'Fluff Run', 'The Plunge'],
+  glacier: ['Icefield Express', 'Crevasse Run', 'Blue Highway', 'Serac Slalom', 'Frostbite', 'Polar Line', 'Meltwater', 'Ice Cap', 'Shatter', 'Cold Feet'],
+  crags: ['Gale Traverse', 'Shattered Spur', 'Windward', 'Stonefall', 'Granite Way', 'Howler', "Eagle's Drop", 'Scree Run', 'Broken Arrow', 'The Knife'],
+  aurora: ['Starlight', 'Northern Lights', 'Midnight Drop', 'Moonbeam', 'Comet Tail', 'Night Owl', 'Lantern Glide', 'Polaris', 'Stardust', 'Twilight']
+};
+REGIONS.forEach((r, ri) => {
+  const names = RUN_NAMES[r.id], n = names.length;
+  const lanes = r.id === 'frost' ? [-0.85, -0.45, 0.25, 0.42, 0.6, 0.78, 0.95] : [-0.95, -0.72, -0.5, -0.3, -0.12, 0.12, 0.3, 0.5, 0.72, 0.95];
+  const diffs = r.id === 'frost' ? ['g', 'b', 'k', 'g', 'b', 'k', 'd'] : ['g', 'b', 'k', 'g', 'b', 'k', 'g', 'b', 'k', 'd'];
+  for (let k = 0; k < n; k++) {
+    const lane = lanes[(k * 3 + ri) % n], [col, w, shape] = DIFF[diffs[k]], seed = ri * 7.3 + k * 2.1, top = r.uS - 60, pts = [];
+    for (let i = 0; i <= 10; i++) {
+      const f = i / 10, u = lerp(top, 95, f);
+      const fr = i === 0 ? Math.sign(lane) * 0.03 : lane * sstep(0, 0.3, f) * (1 - 0.55 * sstep(0.75, 1, f)) + (i < 10 ? 0.09 * Math.sin(i * 1.9 + seed) : 0);
+      pts.push(toWorld(r, u, runV(r, clamp(fr, -1, 1), u)));
+    }
+    RUNS.push({ id: r.id + k, name: names[k], col, w, shape, region: r.id, lamps: r.id === 'aurora', pts });
+  }
 });
 function sampleRun(pts) {
   const raw = [];
@@ -462,11 +470,17 @@ RUNS.forEach((r, ri) => r.path.forEach((p, k) => { const key = Math.floor(p.x / 
 function pisteInfo(x, z) { const p = pisteNear(x, z); return { d: p.d, run: p.run }; }
 function onPiste(x, z, pad) { const p = pisteInfo(x, z); return p.run >= 0 && p.d < RUNS[p.run].w / 2 + (pad || 0); }
 function slopeAt(x, z) { const e = 1.5; return Math.hypot(Hm(x + e, z) - Hm(x - e, z), Hm(x, z + e) - Hm(x, z - e)) / (2 * e); }
+function thawAt(x, z, h) { // 0 = full snow cover, 1 = bare grass and earth; only on the lower slopes and the valley
+  const low = 1 - sstep(25, 190, h); if (low <= 0) return 0;
+  const n = fbm(x * 0.0075 + 3, z * 0.0075 - 5) * 0.75 + vnoise(x * 0.03, z * 0.03) * 0.25; // broad meadows, soft edges
+  return sstep(-0.02, 0.2, n + low * 0.55 - 0.45);
+}
 function snowType(x, z, sl) {
   if (Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz) < 1) return 'ice';
   if (Math.hypot(x - POI.icefalls.x, z - POI.icefalls.z) < 40) return 'ice';
   if (inMoguls(x, z)) return 'moguls';
   if (onPiste(x, z)) return 'groomed';
+  if (!(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1) && thawAt(x, z, Hraw(x, z)) > 0.5) return 'thin';
   const r = regionAt(x, z);
   if (!r) return 'powder';
   if (r.id === 'powder') return 'deep';
@@ -481,12 +495,12 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: !LOW, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, LOW ? 1.25 : 2));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.98;
+renderer.toneMappingExposure = 1.06;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xdfe7f2, 60, 700);
-const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 12000);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 22000);
 function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 60; camera.updateProjectionMatrix(); }
 window.addEventListener('resize', resize);
 
@@ -536,11 +550,12 @@ function treeChance(x, z, h) { // the same odds the forest generator uses, so di
   if (Math.hypot((x + 230) / 360, (z + 715) / 120) < 1) d *= 0.08; // around the lodge and village
   return d;
 }
-const TILE = 400, TX0 = -2000, TZ0 = -3200, NTX = 10, NTZ = 11;
+const TILE = 400, TX0 = -3200, TZ0 = -3600, NTX = 16, NTZ = 13;
 const HI_R = LOW ? 620 : 950, HI_SEG = LOW ? 48 : 72, LO_SEG = 12, TREE_VIS = LOW ? 520 : 820;
 const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, map: paintTex });
-const TC = { snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
+const TC = { grass: C('#4e9426'), grass2: C('#2f7a2c'), earth: C('#8a4a30'), heath: C('#86569a'), creek: C('#5fb6b2'), snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
 const REG_TINT = { pine: C('#ebeee9'), powder: C('#f2f6fd'), glacier: C('#dceaf5'), crags: C('#d8dde6'), aurora: C('#e2e8f6') };
+const tmpG = new THREE.Color();
 function terrainColor(out, x, z, h, ny, far) {
   const sl = Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 0.05), r = regionAt(x, z);
   { const [a, b, w, vw] = regionMix(x, z); out.copy(REG_TINT[a.id] || TC.snow).lerp(REG_TINT[b.id] || TC.snow, w).lerp(TC.snow, vw); }
@@ -555,6 +570,11 @@ function terrainColor(out, x, z, h, ny, far) {
   else if (st === 'windpack') out.lerp(TC.crust, 0.55);
   const rk = mixNum(x, z, 'rockSl', 0.9); if (sl > rk) out.lerp(TC.rock, clamp((sl - rk) * 2, 0, 0.9));
   if (z < -600 && z > -840 && x > -560 && x < 160) out.lerp(TC.village, clamp((-600 - z) / 60, 0, 0.6));
+  if (!onP && !(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1)) { // patches of meadow and red earth where the snow has thinned
+    const th = thawAt(x, z, h);
+    if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, 0.95 * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
+  }
+  if (h < -4.3 && z < -900 && z > -970) out.lerp(TC.creek, sstep(-4.3, -5.2, h)); // the frozen creek
   if (far && !onP) out.lerp(TC.pine, clamp((treeChance(x, z, h) - 0.3) * 1.3, 0, 0.6)); // forests read as dark patches from afar
   const nv = vnoise(x * 0.05, z * 0.05) * 0.03, cw = fbm(x * 0.012 + 3, z * 0.012 - 7) * 0.035;
   out.r = clamp(out.r + nv + cw * 0.6, 0, 1); out.g = clamp(out.g + nv + cw * 0.2, 0, 1); out.b = clamp(out.b + nv * 0.5 - cw * 0.4, 0, 1);
@@ -594,7 +614,8 @@ function updateTiles(x, z, sync) {
     if (want && (!t.hi || !t.trees)) { if (sync) { if (!t.hi) t.hi = buildTileMesh(t, HI_SEG, false); if (!t.trees) genTrees(t); } else if (d < nd) { nd = d; next = t; } }
     if (t.hi) t.hi.visible = want;
     t.lo.visible = !(t.hi && t.hi.visible);
-    if (t.trees) { const vis = d < TREE_VIS, sh = d < 40; for (const m of t.trees) { m.visible = vis; m.castShadow = sh; } }
+    if (t.trees) { const vis = d < TREE_VIS, sh = d < 40; for (const m of t.trees) { m.visible = vis; if (m.isInstancedMesh) m.castShadow = sh; } }
+    if (t.cover) { const cv = d < (LOW ? 180 : 320); for (const m of t.cover) m.visible = cv; }
   }
   if (next) { if (!next.hi) next.hi = buildTileMesh(next, HI_SEG, false); else genTrees(next); } // one heavy job per frame keeps it smooth
 }
@@ -678,7 +699,7 @@ function clearOf(x, z, r) { return !nearObs(x, z, o => Math.hypot(o.x - x, o.z -
 
 /* ================= sky, light, distant peaks ================= */
 const skyU = { aur: { value: 0 }, time: { value: 0 }, top: { value: C('#5f9fe0') }, mid: { value: C('#9cc2ec') }, hor: { value: C('#e9eef8') }, sunDir: { value: new THREE.Vector3(0.3, 0.5, 0.8).normalize() }, sunCol: { value: C('#fff3dc') } };
-const sky = new THREE.Mesh(new THREE.SphereGeometry(9000, 32, 16), new THREE.ShaderMaterial({
+const sky = new THREE.Mesh(new THREE.SphereGeometry(15000, 32, 16), new THREE.ShaderMaterial({
   uniforms: skyU, side: THREE.BackSide, depthWrite: false, fog: false,
   vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
   fragmentShader: `uniform vec3 top; uniform vec3 mid; uniform vec3 hor; uniform vec3 sunDir; uniform vec3 sunCol; uniform float aur; uniform float time; varying vec3 vW;
@@ -725,8 +746,8 @@ const clouds = [];
   const r = mulberry32(21);
   for (let i = 0; i < 16; i++) {
     const m = new THREE.SpriteMaterial({ map: cloudTex, fog: false, depthWrite: false, transparent: true, opacity: 0.85, toneMapped: false });
-    const s = new THREE.Sprite(m); const sc = 1300 + r() * 1500; s.scale.set(sc, sc * 0.38, 1);
-    s.userData = { a: r() * TAU, d: 5200 + r() * 1000, y: 700 + r() * 900, sp: (0.004 + r() * 0.006) * (r() < .5 ? 1 : -1) };
+    const s = new THREE.Sprite(m); const sc = 2200 + r() * 2400; s.scale.set(sc, sc * 0.38, 1);
+    s.userData = { a: r() * TAU, d: 9500 + r() * 1500, y: 1700 + r() * 1400, sp: (0.004 + r() * 0.006) * (r() < .5 ? 1 : -1) };
     scene.add(s); clouds.push(s);
   }
 }
@@ -742,7 +763,7 @@ function rangeRing(R0, hBase, hVar, seed, cols) {
   for (let i = 0; i <= N; i++) {
     const th = i / N * TAU, sw = 0, pk = hBase + hVar * ridge(th, seed);
     for (let j = 0; j <= M; j++) {
-      const f = j / M, rr = R0 - f * 900 * (0.6 + 0.4 * ridge(th * 3, seed + 2));
+      const f = j / M, rr = R0 - f * 1400 * (0.6 + 0.4 * ridge(th * 3, seed + 2));
       const y = -300 + (pk + 300) * Math.pow(f, 0.85);
       pos.push(Math.sin(th) * rr, y, -930 + Math.cos(th) * rr);
       const snowLine = 0.5 + 0.16 * vnoise(th * 18, seed);
@@ -757,16 +778,37 @@ function rangeRing(R0, hBase, hVar, seed, cols) {
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx);
   const m = new THREE.Mesh(g, peakMat); scene.add(m); return m;
 }
-rangeRing(6400, 900, 1700, 4.1, ['#e9e8f6', '#c9cbe8', '#a9b2d6', '#97a2cc']);
-rangeRing(5000, 600, 1200, 1.3, ['#fbfaff', '#d6d8ef', '#8796c2', '#74839f']);
+rangeRing(9600, 1500, 2600, 4.1, ['#e9e8f6', '#c9cbe8', '#a9b2d6', '#97a2cc']);
+rangeRing(7800, 1000, 1900, 1.3, ['#fbfaff', '#d6d8ef', '#8796c2', '#74839f']);
 
 /* ================= trees, rocks ================= */
-const TREE_GEOS = []; for (let v = 0; v < 3; v++) for (let l = 0; l < SNOW_LV.length; l++) TREE_GEOS.push(treeGeo(v, l)); // index v * 4 + level
+function birchGeo(variant, lvl) { // white-barked tree with round, clumpy leaf clusters and a dusting of snow on top
+  const rnd = mulberry32(300 + variant * 31), lv = SNOW_LV[lvl], parts = [];
+  parts.push({ geo: T(new THREE.CylinderGeometry(0.16, 0.24, 6.2, 7), 0, 3.1, 0), col: (c, x, y, z) => c.set(hsh(Math.round(y * 4), Math.round(Math.atan2(z, x) * 3)) < 0.22 ? '#3b3532' : '#ece8e0') });
+  for (const [a, l, yy] of [[0.6, 2.2, 3.6], [2.6, 1.8, 4.4], [4.4, 1.6, 5.0]]) { const g = new THREE.CylinderGeometry(0.05, 0.08, l, 5); g.rotateZ(1.0); g.rotateY(a); T(g, Math.cos(a) * l * 0.35, yy, -Math.sin(a) * l * 0.35); parts.push({ geo: g, col: '#e6e1d8' }); }
+  const greens = [['#4f8a3e', '#7cb34e', '#a8d066'], ['#3f7a47', '#68a35a', '#97c470']][variant];
+  const blobs = variant ? 6 : 7;
+  for (let i = 0; i < blobs; i++) {
+    const a = i / blobs * TAU + rnd(), rr = i ? 1.3 + rnd() * 0.9 : 0, sz = 1.5 + rnd() * 0.8, g = new THREE.IcosahedronGeometry(sz, 1), P = g.attributes.position;
+    for (let k = 0; k < P.count; k++) { const j = 0.85 + hsh(k * 7 + i, variant) * 0.3; P.setXYZ(k, P.getX(k) * j, P.getY(k) * j * 0.85, P.getZ(k) * j); }
+    g.computeVertexNormals(); T(g, Math.cos(a) * rr, 6.4 + (i ? rnd() * 1.6 : 2.2), Math.sin(a) * rr);
+    parts.push({ geo: g, col: (c, x, y, z, nx, ny) => { c.set(greens[0]).lerp(C(greens[1]), clamp(ny * 0.6 + 0.5, 0, 1)).lerp(C(greens[2]), clamp(ny - 0.4, 0, 1) * 0.8); if (ny > 0.55 && lv > 0) c.lerp(C('#eef2f8'), lv * 0.85); } });
+  }
+  return merge(parts);
+}
+const TREE_GEOS = []; for (let v = 0; v < 3; v++) for (let l = 0; l < SNOW_LV.length; l++) TREE_GEOS.push(treeGeo(v, l)); // pines: index v * 4 + level
+for (let v = 0; v < 2; v++) for (let l = 0; l < SNOW_LV.length; l++) TREE_GEOS.push(birchGeo(v, l)); // birches: index (3 + v) * 4 + level
+const COVER_GEOS = { // little things on the ground, drawn only close to you
+  tuft: merge([0, 1, 2, 3, 4, 5].map(i => { const g = new THREE.ConeGeometry(0.05, 0.55 + (i % 3) * 0.18, 3); g.rotateZ((i - 2.5) * 0.18); g.rotateY(i * 1.1); return { geo: T(g, Math.cos(i * 2) * 0.12, 0.28, Math.sin(i * 2) * 0.12), col: (c, x, y, z, nx, ny, nz, f) => c.set('#3f7a22').lerp(C('#a8c84a'), f) }; })),
+  heath: merge([0, 1, 2, 3, 4].map(i => ({ geo: T(new THREE.IcosahedronGeometry(0.16 + (i % 2) * 0.05, 0), Math.cos(i * 1.3) * 0.22, 0.12, Math.sin(i * 1.3) * 0.22), col: i % 2 ? '#d98fb8' : '#a678c4' }))),
+  pebble: merge([{ geo: (() => { const g = new THREE.DodecahedronGeometry(0.22, 0); g.scale(1, 0.55, 0.8); return g; })(), col: (c, x, y, z, nx, ny) => c.set(ny > 0.6 ? '#b5b1ad' : '#7e7f86') }]),
+  mound: merge([{ geo: (() => { const g = new THREE.SphereGeometry(0.7, 8, 5, 0, TAU, 0, Math.PI / 2); g.scale(1, 0.4, 0.8); return g; })(), col: '#eef2f8' }])
+};
 const ROCK_GEOS = [rockGeo(1), rockGeo(2), rockGeo(3)];
 const LIFT_X = -470;
 /* one gondola per mountain, each running straight up the fall line */
 const LIFTS = [{ id: 'frost', x: LIFT_X, za: -648, zb: 664, top: 'summit', base: 'base' }];
-REGIONS.forEach(r => { if (r.id === 'frost') return; const [x, za] = toWorld(r, 70, r.vS), [, zb] = toWorld(r, 1372, r.vS); LIFTS.push({ id: r.id, x, za, zb, top: r.id + '_top', base: r.id + '_base' }); });
+REGIONS.forEach(r => { if (r.id === 'frost') return; const [x, za] = toWorld(r, 70, r.vS), [, zb] = toWorld(r, r.uS - 28, r.vS); LIFTS.push({ id: r.id, x, za, zb, top: r.id + '_top', base: r.id + '_base' }); });
 function nearLift(x, z, d) { for (const L of LIFTS) if (Math.abs(x - L.x) < d && z > Math.min(L.za, L.zb) - 12 && z < Math.max(L.za, L.zb) + 12) return true; return false; }
 const reserved = []; // circles kept free of trees
 function reserve(x, z, r) { reserved.push([x, z, r]); }
@@ -786,7 +828,8 @@ function genTrees(t) {
     if (inMoguls(px, pz) || isReserved(px, pz)) continue;
     if (slopeAt(px, pz) > 0.95) continue;
     const reg = regionAt(px, pz), s = (0.85 + r() * 0.75) * (reg && reg.id === 'pine' ? 1.15 : 1);
-    const v = reg && reg.id === 'pine' ? (r() < 0.6 ? 1 : 0) : r() < 0.12 ? 2 : r() < 0.5 ? 1 : 0;
+    const birch = h < 300 && r() < (reg && reg.id === 'glacier' ? 0.1 : reg && reg.id === 'pine' ? 0.25 : 0.45) * (1 - sstep(120, 300, h));
+    const v = birch ? (r() < 0.5 ? 3 : 4) : reg && reg.id === 'pine' ? (r() < 0.6 ? 1 : 0) : r() < 0.12 ? 2 : r() < 0.5 ? 1 : 0;
     const lvl = clamp(Math.round(((h - 20) / 300 + (r() - 0.5) * 0.3) * 3), 0, SNOW_LV.length - 1); // lower down, less snow
     T[v * SNOW_LV.length + lvl].push(px, h - 0.3, pz, s, r() * TAU);
     addObs(px, pz, 0.9 * s, 'tree');
@@ -803,7 +846,35 @@ function genTrees(t) {
     R[(r() * 3) | 0].push(px, Hm(px, pz) - s * 0.25, pz, s, r() * TAU);
     addObs(px, pz, s * 0.85, 'rock');
   }
+  // ground cover: grass tufts, heather and stones on the thawed patches, small drifts on the snow
+  const CV = { tuft: [], heath: [], pebble: [], mound: [] };
+  for (let i = 0; i < (LOW ? 1600 : 3200); i++) {
+    const px = t.x0 + r() * TILE, pz = t.z0 + r() * TILE; if (px < WORLD.x0 + 30 || px > WORLD.x1 - 30 || pz < WORLD.z0 + 30 || pz > WORLD.z1 - 30) continue;
+    const h = Hm(px, pz); if (h > 260) continue;
+    if (Math.hypot((px + 230) / 360, (pz + 715) / 120) < 1 || onPiste(px, pz, 1)) continue;
+    const th = thawAt(px, pz, h), q = r();
+    const kind = th > 0.45 ? (q < 0.72 ? 'tuft' : q < 0.88 ? 'heath' : 'pebble') : (q < 0.05 ? 'pebble' : q < 0.09 ? 'mound' : null);
+    if (kind) CV[kind].push(px, h - 0.05, pz, 0.7 + r() * 0.8, r() * TAU);
+  }
+  // rock outcrops in the valley and on the lower slopes, some carrying grass, some snow
+  const OUT = [];
+  for (let i = 0; i < 10; i++) {
+    const px = t.x0 + r() * TILE, pz = t.z0 + r() * TILE, h = Hm(px, pz);
+    if (h > 220 || px < WORLD.x0 + 40 || px > WORLD.x1 - 40 || pz < WORLD.z0 + 40 || pz > WORLD.z1 - 40) continue;
+    if (onPiste(px, pz, 12) || isReserved(px, pz) || nearLift(px, pz, 20) || !clearOf(px, pz, 6) || r() > 0.45) continue;
+    OUT.push([px, h, pz, 4 + r() * 5, r() * TAU, thawAt(px, pz, h) > 0.3]);
+  }
   t.trees = [];
+  for (const [px, h, pz, s, rot, grassy] of OUT) {
+    const m = new THREE.Mesh(ROCK_GEOS[(s * 7 | 0) % 3], toonV); m.scale.set(s, s * 0.75, s * 0.9); m.position.set(px, h - s * 0.15, pz); m.rotation.y = rot; m.castShadow = true; scene.add(m); t.trees.push(m);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 6, 0, TAU, 0, Math.PI / 2), toon(grassy ? '#6f9c4c' : '#eef2f8')); cap.scale.set(s * 0.78, s * 0.22, s * 0.7); cap.position.set(px, h + s * 0.48, pz); cap.rotation.y = rot; scene.add(cap); t.trees.push(cap);
+    addObs(px, pz, s * 0.9, 'rock');
+  }
+  t.cover = [];
+  for (const k in CV) { const arr = CV[k], n = arr.length / 5; if (!n) continue;
+    const m = new THREE.InstancedMesh(COVER_GEOS[k], toonV, n);
+    for (let i = 0; i < n; i++) { dummy.position.set(arr[i * 5], arr[i * 5 + 1], arr[i * 5 + 2]); dummy.rotation.set(0, arr[i * 5 + 4], 0); const sc = arr[i * 5 + 3]; dummy.scale.set(sc, sc, sc); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); }
+    m.instanceMatrix.needsUpdate = true; m.frustumCulled = false; scene.add(m); t.cover.push(m); }
   const add = (arr, geo) => {
     const n = arr.length / 5; if (!n) return;
     const m = new THREE.InstancedMesh(geo, toonV, n);
@@ -941,7 +1012,7 @@ function buildRegions() {
   for (const r of REGIONS) {
     if (r.id === 'frost') continue;
     const [sx, sz] = toWorld(r, 100, -110); signBoard(sx, sz, r.row > 0 ? 0 : Math.PI, r.name, 7);
-    const [hx, hz] = toWorld(r, 1352, 88); house(hx, hz, 8, 7, 4.2, '#b57c5b', r.row > 0 ? 0.2 : Math.PI + 0.2, { chimney: true });
+    const [hx, hz] = toWorld(r, r.uS - 48, 88); house(hx, hz, 8, 7, 4.2, '#b57c5b', r.row > 0 ? 0.2 : Math.PI + 0.2, { chimney: true });
     const lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2], lm[3]), ly = Hm(lx, lz);
     if (r.id === 'pine') { house(lx, lz, 12, 8, 5, '#8a6247', 0.4, { chimney: true }); for (let i = 0; i < 4; i++) for (let k = 0; k < 6; k++) { const c = cyl(0.35, 0.35, 6, '#7a5640', lx + 10 + (k % 3) * 0.75, ly + 0.4 + Math.floor(k / 3) * 0.65 + i * 0, lz - 8 + i * 3, null, 8); c.rotation.z = Math.PI / 2; } addObs(lx + 10, lz - 3, 4, 'logs'); }
     if (r.id === 'powder') { for (let i = 0; i < 14; i++) { const v = r.vS - 60 + i * 26, [cx, cz] = toWorld(r, r.uS + 18 + Math.sin(i) * 5, v), m = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), toon('#f3f6fc')); m.scale.set(22, 4 + (i % 3), 9); m.position.set(cx, Hm(cx, cz) + 1, cz); m.castShadow = true; scene.add(m); } }
@@ -949,14 +1020,14 @@ function buildRegions() {
       const arch = new THREE.Mesh(new THREE.TorusGeometry(8, 2.6, 8, 14, Math.PI), toon('#8fd0ec', { transparent: true, opacity: 0.92 })); arch.position.set(lx, ly - 0.5, lz); arch.castShadow = true; scene.add(arch); addObs(lx - 8, lz, 2.8, 'ice'); addObs(lx + 8, lz, 2.8, 'ice');
       const rr = mulberry32(77);
       for (let i = 0; i < 18; i++) { // crevasses: deep blue cracks across the fall line
-        const u = 250 + rr() * 1050, v = -260 + rr() * 720, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 18) || isReserved(cx, cz)) continue;
+        const u = (250 + rr() * 1050) * 1.21, v = (-260 + rr() * 720) * 1.25, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 18) || isReserved(cx, cz)) continue;
         const len = 14 + rr() * 16, rot = (rr() - 0.5) * 0.5, cy = Hm(cx, cz), m = new THREE.Mesh(new THREE.BoxGeometry(len, 0.6, 1.8), new THREE.MeshBasicMaterial({ color: 0x1f3f66 })); m.position.set(cx, cy - 0.15, cz); m.rotation.y = rot; scene.add(m);
         const lip = new THREE.Mesh(new THREE.BoxGeometry(len + 1, 0.4, 0.5), toon('#dff1fb')); lip.position.set(cx - Math.sin(rot) * 1.1, cy + 0.1, cz - Math.cos(rot) * 1.1); lip.rotation.y = rot; scene.add(lip);
         for (let k = -len / 2; k <= len / 2; k += 2) { const ox = cx + Math.cos(rot) * k, oz = cz - Math.sin(rot) * k; addObs(ox, oz, 1.1, 'crevasse'); }
         reserve(cx, cz, len / 2 + 4);
       }
       for (let i = 0; i < 34; i++) { // seracs: leaning towers of glacier ice
-        const u = 200 + rr() * 1150, v = -300 + rr() * 760, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 10) || isReserved(cx, cz)) continue;
+        const u = (200 + rr() * 1150) * 1.21, v = (-300 + rr() * 760) * 1.25, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 10) || isReserved(cx, cz)) continue;
         const w = 2.5 + rr() * 3, h = 4 + rr() * 7, m = new THREE.Mesh(new THREE.BoxGeometry(w, h, w * 0.8), toon(rr() < 0.5 ? '#a9dcf2' : '#c7ebf8')); m.position.set(cx, Hm(cx, cz) + h / 2 - 0.5, cz); m.rotation.set((rr() - .5) * 0.25, rr() * 3, (rr() - .5) * 0.25); m.castShadow = true; scene.add(m);
         const cap = new THREE.Mesh(new THREE.BoxGeometry(w * 1.05, 0.35, w * 0.85), toon('#f2f7fc')); cap.position.copy(m.position); cap.position.y += h / 2; cap.rotation.copy(m.rotation); scene.add(cap);
         addObs(cx, cz, w * 0.6, 'serac'); reserve(cx, cz, w + 3);
@@ -967,7 +1038,7 @@ function buildRegions() {
       for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(ROCK_GEOS[k % 3], toonV); m.position.set(lx + (k % 2) * 0.2, ly + 0.6 + k * 1.05, lz); m.scale.set(1.5 - k * 0.15, 0.9, 1.4 - k * 0.15); m.rotation.y = k; m.castShadow = true; scene.add(m); }
       addObs(lx, lz, 1.8, 'cairn');
       for (let i = 0; i < 46; i++) { // rock spires
-        const u = 300 + rr() * 1080, v = -470 + rr() * 940, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 12) || isReserved(cx, cz) || nearLift(cx, cz, 16)) continue;
+        const u = (300 + rr() * 1080) * 1.21, v = (-470 + rr() * 940) * 1.25, [cx, cz] = toWorld(r, u, v); if (onPiste(cx, cz, 12) || isReserved(cx, cz) || nearLift(cx, cz, 16)) continue;
         const s = 2 + rr() * 2.5, m = new THREE.Mesh(ROCK_GEOS[i % 3], toonV); m.scale.set(s, s * (3 + rr() * 3), s); m.position.set(cx, Hm(cx, cz) - 1, cz); m.rotation.y = rr() * 6; m.castShadow = true; scene.add(m);
         addObs(cx, cz, s * 0.85, 'rock'); reserve(cx, cz, s + 3);
       }
@@ -1159,13 +1230,14 @@ function makeCreature(id) {
 
 /* ================= player ================= */
 const SNOW = {
-  groomed: { name: 'Groomed corduroy', fric: 0.15, grip: 16, hold: 6.5, latFric: 6, turn: 1, resp: 1 },
-  powder: { name: 'Fresh powder', fric: 1.25, grip: 11, hold: 5, latFric: 8, turn: .85, resp: .6 },
-  ice: { name: 'Ice', fric: 0.04, grip: 4.5, hold: 1.8, latFric: 1.1, turn: .95, resp: 1 },
-  moguls: { name: 'Moguls', fric: 0.9, grip: 12, hold: 5.5, latFric: 6, turn: .9, resp: .85, jostle: true },
-  deep: { name: 'Bottomless powder', fric: 1.0, grip: 12, hold: 5.5, latFric: 9, turn: .8, resp: .5 },
-  blueice: { name: 'Blue glacier ice', fric: 0.02, grip: 3.8, hold: 1.6, latFric: 1, turn: .95, resp: 1 },
-  windpack: { name: 'Wind crust', fric: 0.45, grip: 10, hold: 5, latFric: 6, turn: .9, resp: .85, jostle: true }
+  groomed: { name: 'Groomed corduroy', fric: 0.05, grip: 16, hold: 6.5, latFric: 6, turn: 1, resp: 1 },
+  powder: { name: 'Fresh powder', fric: 0.55, grip: 11, hold: 5, latFric: 8, turn: .85, resp: .6 },
+  ice: { name: 'Ice', fric: 0.02, grip: 4.5, hold: 1.8, latFric: 1.1, turn: .95, resp: 1 },
+  moguls: { name: 'Moguls', fric: 0.5, grip: 12, hold: 5.5, latFric: 6, turn: .9, resp: .85, jostle: true },
+  deep: { name: 'Bottomless powder', fric: 0.5, grip: 12, hold: 5.5, latFric: 9, turn: .8, resp: .5 },
+  blueice: { name: 'Blue glacier ice', fric: 0.01, grip: 3.8, hold: 1.6, latFric: 1, turn: .95, resp: 1 },
+  windpack: { name: 'Wind crust', fric: 0.2, grip: 10, hold: 5, latFric: 6, turn: .9, resp: .85, jostle: true },
+  thin: { name: 'Thin snow over grass', fric: 0.7, grip: 12, hold: 6, latFric: 8, turn: .9, resp: .85 }
 };
 const P = { x: -425, z: 640, y: 0, h: 0, w: 0, s: 0, lat: 0, vx: 0, vz: 0, tuck: 0, brakeA: 0, brakeSide: 1, wasBrake: false, hold: 0, lastSign: 0, jt: 0,
   crash: 0, spin: 0, spinV: 0, cvx: 0, cvz: 0, inv: 0, snow: 'powder', skidI: 0, sprayAcc: 0, push: 0, pushT: 0, bump: 0,
@@ -1256,12 +1328,12 @@ function updatePlayer(dt, inp) {
   if (Math.abs(lg) > S.hold) p.lat += Math.sign(lg) * (Math.abs(lg) - S.hold) * dt;
   let scrub = 0;
   if (gm > 0.03) { const ca = clamp(-gd / gm, -1, 1), sa2 = 1 - ca * ca; scrub = 7 * sa2 * sa2 * clamp(gm / 0.2, 0, 1); }
-  const drag = 0.0046 - 0.0023 * p.tuck;
+  const drag = 0.0032 - 0.0016 * p.tuck;
   let dec = S.fric * (p.wax > 0 ? 0.45 : 1) + drag * (p.wax > 0 ? 0.8 : 1) * p.s * p.s + scrub;
   if (brake) dec += 9 * p.brakeA;
-  p.push = inp.push && !brake && p.s < 8;
-  if (p.push) { p.s += 3.6 * dt; p.pushT += dt; }
-  p.s = clamp(p.s - dec * dt, 0, p.wax > 0 ? 50 : 45);
+  p.push = inp.push && !brake && p.s < 18; // skate and pole hard: up to about 65 km/h on flat ground
+  if (p.push) { p.s += (p.s < 6 ? 9 : 6) * dt; p.pushT += dt; }
+  p.s = clamp(p.s - dec * dt, 0, p.wax > 0 ? 66 : 60);
   p.lat *= Math.exp(-(S.latFric + (brake ? 4 : 0)) * dt);
   p.vx = p.s * dx + p.lat * nx; p.vz = p.s * dz + p.lat * nz;
   const ox = p.x, oz = p.z;
@@ -1550,7 +1622,7 @@ QUESTS.lamps = { title: 'Lamps of Lowpine', giver: 'oskar',
   reward: { coins: 45, item: ['cocoa', 1] }, remind: 'Five lamps: around the square, by the shop, and along the lane to the lodge. Skis off, then walk up and press E.' };
 const COURSES = { fox: { run: 1, f0: 0.07, f1: 0.42, limit: 60, gates: true }, wall: { run: 2, f0: 0.045, f1: 0.965, limit: 110, gates: false } };
 const SPAWNS = { summit: [-432, 646, 0], base: [-250, -648, Math.PI], ranger: [466, -88, 0], hermit: [-486, 224, 0.5], village: [-246, -776, Math.PI] };
-REGIONS.forEach(r => { if (r.id === 'frost') return; const dh = r.row > 0 ? 0 : Math.PI, [tx, tz] = toWorld(r, 1318, 30), [bx, bz] = toWorld(r, 108, 60), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2] - 24, lm[3]);
+REGIONS.forEach(r => { if (r.id === 'frost') return; const dh = r.row > 0 ? 0 : Math.PI, [tx, tz] = toWorld(r, r.uS - 82, 30), [bx, bz] = toWorld(r, 108, 60), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2] - 24, lm[3]);
   SPAWNS[r.id + '_top'] = [tx, tz, dh]; SPAWNS[r.id + '_base'] = [bx, bz, dh + Math.PI]; SPAWNS[lm[0]] = [lx, lz, dh]; });
 
 /* ================= save ================= */
@@ -1589,7 +1661,7 @@ function placeCrystals() { // Frostpeak's 30 come first, in the same order as be
     crystalSpots.push([x, z]); reserve(x, z, 5);
   }
   for (const reg of REGIONS) { if (reg.id === 'frost') continue; let n = 0, k = 0; // eight more on each of the other mountains
-    while (n < 8 && k++ < 2000) { const [x, z] = toWorld(reg, 150 + r() * 1180, -470 + r() * 940);
+    while (n < 8 && k++ < 2000) { const [x, z] = toWorld(reg, (150 + r() * 1180) * 1.21, (-470 + r() * 940) * 1.25);
       if (onPiste(x, z, 10) || slopeAt(x, z) > 0.8 || isReserved(x, z) || crystalSpots.some(c => Math.hypot(c[0] - x, c[1] - z) < 80)) continue;
       crystalSpots.push([x, z]); reserve(x, z, 5); n++; } }
 }
@@ -2186,7 +2258,7 @@ function travel(to, viaLift, msg) {
 }
 
 /* ================= map ================= */
-const mapCv = $('mapCv'), MW = 760, MH = 650;
+const mapCv = $('mapCv'), MW = 760, MH = 588;
 const mu = x => (x - WORLD.x0) / (WORLD.x1 - WORLD.x0) * MW, mv = z => (WORLD.z1 - z) / (WORLD.z1 - WORLD.z0) * MH;
 let mapBase = null;
 function buildMapBase() {
@@ -2209,7 +2281,7 @@ function buildMapBase() {
     g.globalAlpha = 1; g.strokeStyle = '#3a4256'; g.setLineDash([5, 4]); g.lineWidth = 1.6;
     LIFTS.forEach(L => { g.beginPath(); g.moveTo(mu(L.x), mv(L.za)); g.lineTo(mu(L.x), mv(L.zb)); g.stroke(); }); g.setLineDash([]);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 22px "Barlow Condensed", sans-serif';
-    REGIONS.forEach(r => { const [x, z] = toWorld(r, 760, 60); g.lineWidth = 5; g.strokeStyle = 'rgba(238,243,248,.85)'; g.strokeText(r.name, mu(x), mv(z)); g.fillStyle = '#1d3a33'; g.fillText(r.name, mu(x), mv(z)); });
+    REGIONS.forEach(r => { const [x, z] = toWorld(r, r.uS * 0.5, 60); g.lineWidth = 5; g.strokeStyle = 'rgba(238,243,248,.85)'; g.strokeText(r.name, mu(x), mv(z)); g.fillStyle = '#1d3a33'; g.fillText(r.name, mu(x), mv(z)); });
   });
 }
 function drawMap() {
@@ -2325,11 +2397,11 @@ function readInput() {
 
 /* ================= light & weather ================= */
 const PAL = [
-  { t: 0.0, top: '#2f62b0', mid: '#6f98d0', hor: '#c9c3d6', fog: '#c4c8da', sun: '#ffe2c0', si: 1.05, hs: '#aebfe6', hg: '#cdb8ac', el: 0.32, az: -0.5 },
-  { t: 0.3, top: '#255fb2', mid: '#6895d0', hor: '#bccde3', fog: '#bfcbdd', sun: '#fff4e2', si: 1.2, hs: '#b2c3ea', hg: '#cfc4b8', el: 0.9, az: 0.25 },
-  { t: 0.6, top: '#3d5aa8', mid: '#8a8cc4', hor: '#e8b48c', fog: '#d1bcb4', sun: '#ffc184', si: 1.08, hs: '#b0aad6', hg: '#d6ae90', el: 0.3, az: 0.95 },
-  { t: 0.8, top: '#36406f', mid: '#7a6f9e', hor: '#d48f86', fog: '#ab98a8', sun: '#ff9278', si: 0.75, hs: '#8c87b8', hg: '#c69690', el: 0.12, az: 1.25 },
-  { t: 1.0, top: '#2f62b0', mid: '#6f98d0', hor: '#c9c3d6', fog: '#c4c8da', sun: '#ffe2c0', si: 1.05, hs: '#aebfe6', hg: '#cdb8ac', el: 0.32, az: -0.5 }
+  { t: 0.0, top: '#2a63c4', mid: '#6fa6e6', hor: '#cfe3e6', fog: '#bfd6dc', sun: '#ffe6c2', si: 1.2, hs: '#a9c6ef', hg: '#d2c3a6', el: 0.34, az: -0.5 },
+  { t: 0.3, top: '#1f66d2', mid: '#6aaeee', hor: '#d2ebec', fog: '#bcd8de', sun: '#fff6e2', si: 1.38, hs: '#aecdf2', hg: '#d6cbb0', el: 0.85, az: 0.25 },
+  { t: 0.6, top: '#3a5bb4', mid: '#8a95d4', hor: '#f0bf92', fog: '#d4c2b4', sun: '#ffbe7a', si: 1.2, hs: '#aaa8dc', hg: '#ddb08c', el: 0.3, az: 0.95 },
+  { t: 0.8, top: '#33407a', mid: '#7a6fa6', hor: '#e0938a', fog: '#ae9cae', sun: '#ff9278', si: 0.85, hs: '#8c87b8', hg: '#c69690', el: 0.12, az: 1.25 },
+  { t: 1.0, top: '#2a63c4', mid: '#6fa6e6', hor: '#cfe3e6', fog: '#bfd6dc', sun: '#ffe6c2', si: 1.2, hs: '#a9c6ef', hg: '#d2c3a6', el: 0.34, az: -0.5 }
 ];
 const PALC = PAL.map(p => ({ t: p.t, top: C(p.top), mid: C(p.mid), hor: C(p.hor), fog: C(p.fog), sun: C(p.sun), hs: C(p.hs), hg: C(p.hg), si: p.si, el: p.el, az: p.az }));
 const STORM = { fog: C('#b4bbc8'), top: C('#8a95a9'), mid: C('#a3acbb'), hor: C('#b8bfcb') };
@@ -2353,11 +2425,11 @@ function applyLight(t, sf) {
   mix('hs', hemi.color); mix('hg', hemi.groundColor);
   if (nk > 0.001) { skyU.top.value.lerp(NIGHT.top, nk); skyU.mid.value.lerp(NIGHT.mid, nk); skyU.hor.value.lerp(NIGHT.hor, nk); scene.fog.color.lerp(NIGHT.fog, nk);
     sun.color.lerp(NIGHT.sun, nk); skyU.sunCol.value.multiplyScalar(1 - nk); hemi.color.lerp(NIGHT.hs, nk); hemi.groundColor.lerp(NIGHT.hg, nk); }
-  sun.intensity = lerp(a.si, b.si, k) * 0.78 * (1 - sf * 0.55) * (1 - nk * 0.62); hemi.intensity = (0.42 + sf * 0.25) * (1 - nk * 0.35);
+  sun.intensity = lerp(a.si, b.si, k) * 0.8 * (1 - sf * 0.55) * (1 - nk * 0.62); hemi.intensity = (0.36 + sf * 0.3) * (1 - nk * 0.35);
   const el = lerp(lerp(a.el, b.el, k), 0.75, nk), az = lerp(lerp(a.az, b.az, k), -0.6, nk), dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
   skyU.sunDir.value.copy(dir);
   sun.position.set(P.x + dir.x * 300, P.y + dir.y * 300, P.z + dir.z * 300); sun.target.position.set(P.x, P.y, P.z);
-  const far = (LOW ? 2600 : 4600) / ENV.fogK * (1 - nk * 0.3);
+  const far = (LOW ? 3400 : 6500) / ENV.fogK * (1 - nk * 0.3);
   scene.fog.near = lerp(260, 6, sf); scene.fog.far = lerp(far, 150, sf);
   tmpC.copy(skyU.hor.value).lerp(C('#dfe8ff'), 0.3); peakMat.color.copy(tmpC).lerp(STORM.fog, sf * 0.9); peakMat.opacity = 1 - sf * 0.92;
   tmpC2.copy(skyU.hor.value).lerp(C('#ffffff'), 0.35); clouds.forEach(c => { c.material.color.copy(tmpC2); c.material.opacity = 0.7 * (1 - sf * 0.6); });

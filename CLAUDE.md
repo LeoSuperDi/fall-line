@@ -6,7 +6,7 @@ Published as a claude.ai artifact: https://claude.ai/artifact/2WBf8tn6SdUXG4n26v
 
 ## World
 One connected map (`WORLD`, about 4 km x 3.4 km). A valley runs east-west with Lowpine Village on its north edge.
-Six standalone peaks in `REGIONS`: north row Pine Ridge, Frostpeak (the original), Powder Bowl; south row
+Six standalone peaks (900-1500 m tall, 10 trails each) in `REGIONS`: north row Pine Ridge, Frostpeak (the original), Powder Bowl; south row
 The Glacier, Windswept Crags, Aurora Peak. Each is a cone-like peak (`mountainH`) with a summit at (uS, vS),
 slopes reaching rvN/rvP sideways and `back` behind; `exp` sets how pointed it is. Height is
 `valleyH + max(peaks)` in `Hraw`. Gondolas run straight up the front face to just below the summit.
