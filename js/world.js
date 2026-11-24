@@ -12,13 +12,15 @@ const PG = new Map(), PC = 32;
 const MTN_L = 1440, MTN_W = 1120;
 const REGIONS = [
   { id: 'frost', name: 'Frostpeak', row: 1, cx: 0, peak: 760, kind: 'frost', treeMul: 1, treeline: 450, rockSl: 0.85, uS: 1465, vS: -420, rvN: 520, rvP: 1060, back: 300, exp: 1.2 },
-  { id: 'pine', name: 'Pine Ridge', row: 1, cx: -2400, peak: 700, kind: 'pine', treeMul: 1.75, treeline: 600, rockSl: 0.95, exp: 1.02 },
+  { id: 'pine', name: 'Pine Ridge', row: 1, cx: -2400, peak: 700, kind: 'pine', treeMul: 1.75, treeline: 600, rockSl: 0.95, exp: 1.02, rvN: 700, rvP: 700, uS: 1900, vS: 0, back: 480 },
   { id: 'ember', name: 'Ember Peak', row: 1, cx: 2400, peak: 980, kind: 'volcano', treeMul: 0.18, treeline: 240, rockSl: 0.6, exp: 1.12 },
   { id: 'dunes', name: 'Sunset Dunes', row: -1, cx: -2400, peak: 600, kind: 'dunes', treeMul: 0.03, treeline: 120, rockSl: 0.9, exp: 1.0 },
   { id: 'crags', name: 'Windswept Crags', row: -1, cx: 0, peak: 1050, kind: 'crags', treeMul: 0.45, treeline: 380, rockSl: 0.55, exp: 1.22 },
-  { id: 'aurora', name: 'Aurora Peak', row: -1, cx: 2400, peak: 880, kind: 'aurora', treeMul: 0.6, treeline: 420, rockSl: 0.85, exp: 1.15 }
+  { id: 'aurora', name: 'Aurora Peak', row: -1, cx: 2400, peak: 880, kind: 'aurora', treeMul: 0.6, treeline: 420, rockSl: 0.85, exp: 1.45 }
 ];
 REGIONS.forEach(r => { if (r.uS) return; Object.assign(r, { uS: 1900, vS: 0, rvN: 1100, rvP: 1100, back: 480 }); });
+const REGIONS_BY_ROW = { 1: [], '-1': [] }; // the mountains in each row, west to east
+REGIONS.forEach(r => REGIONS_BY_ROW[r.row].push(r)); REGIONS_BY_ROW[1].sort((a, b) => a.cx - b.cx); REGIONS_BY_ROW[-1].sort((a, b) => a.cx - b.cx);
 REGIONS.forEach(r => { r.topU = r.kind === 'volcano' ? r.uS - 250 : r.uS - 54; r.rimH = r.peak * Math.pow(0.9, r.exp); });
 const REG = {}; REGIONS.forEach(r => { REG[r.id] = r; r.zb = r.row > 0 ? -760 : -1100; });
 // local mountain coordinates: u = metres up the fall line from the valley, v = metres across
@@ -52,10 +54,16 @@ function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away fro
   const du = u - r.uS, dv = v - r.vS;
   const ru = du < 0 ? du / r.uS : du / r.back, rv = dv < 0 ? dv / r.rvN : dv / r.rvP;
   const ang = Math.atan2(rv, ru);
-  const q = Math.hypot(ru, rv) * (1 + 0.07 * Math.sin(ang * 6 + r.cx * 0.01) + 0.05 * vnoise(ang * 3, r.peak)); // spurs and gullies
+  let q0 = Math.hypot(ru, rv);
+  if (r.kind === 'pine') q0 = Math.hypot(ru, rv * 0.62); // a long ridge rather than a cone
+  if (r.kind === 'aurora') q0 = lerp(q0, (Math.abs(ru) + Math.abs(rv)) * 0.8, 0.7); // a four-faced horn with sharp edges
+  const q = q0 * (1 + 0.07 * Math.sin(ang * 6 + r.cx * 0.01) + 0.05 * vnoise(ang * 3, r.peak)); // spurs and gullies
   if (q >= 1) return 0;
   const t = 1 - q, k = sstep(0, 0.12, t);
-  let h = r.peak * Math.pow(t, r.exp);
+  let h = r.kind === 'dunes' ? r.peak * sstep(0, 0.6, t) * (0.72 + 0.28 * t) : r.peak * Math.pow(t, r.exp); // the dunes sit on a flat-topped mesa
+  if (r.kind === 'pine') h *= 0.8 + 0.2 * Math.pow(Math.cos(dv * 0.0085), 2); // several rounded tops along the ridge
+  if (r.kind === 'crags') for (const [su, sv, sk] of [[-260, -360, 0.72], [-300, 380, 0.66], [-520, 40, 0.55], [-120, 620, 0.48]]) { // a crown of spikes around the summit
+    const ds = Math.hypot(du - su, dv - sv) / 320; if (ds < 1) h = Math.max(h, r.peak * sk * Math.pow(1 - ds, 1.5) + r.peak * 0.25 * Math.pow(t, 1.2)); }
   if (r.kind === 'frost') {
     h += k * t * (16 * fbm(x * 0.0045, z * 0.0045) + 3.5 * fbm(x * 0.03 + 7, z * 0.03) + 5 * Math.sin(x * 0.013 + Math.sin(z * 0.0035) * 2.2));
     const wx = sstep(80, 360, x) * (1 - sstep(500, 580, x));
@@ -77,12 +85,22 @@ function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away fro
   }
   return Math.max(0, h);
 }
+function shoulderH(r, u, v) { // each mountain's low outer shoulders; where two neighbours' shoulders meet they form a saddle ridge
+  const du = u - r.uS, dv = v - r.vS, q = Math.hypot(du < 0 ? du / r.uS : du / r.back, dv / 1100) / 1.75;
+  return q >= 1 ? 0 : r.peak * 0.36 * Math.pow(1 - q, 1.3);
+}
 function Hraw(x, z) {
   const base = valleyH(x, z); let m = 0;
-  for (const r of REGIONS) {
-    if (Math.abs(x - r.cx) > 1450 || (r.row > 0 ? z < -800 : z > -1060)) continue;
-    const [u, v] = toLocal(r, x, z);
-    m = Math.max(m, mountainH(r, x, z, u, v));
+  for (const row of [1, -1]) {
+    if (row > 0 ? z < -800 : z > -1060) continue;
+    let prev = null;
+    for (const r of REGIONS_BY_ROW[row]) {
+      const dx = Math.abs(x - r.cx); if (dx > 2300) { prev = null; continue; }
+      const [u, v] = toLocal(r, x, z), sh = shoulderH(r, u, v);
+      if (dx < 1450) m = Math.max(m, mountainH(r, x, z, u, v));
+      if (prev !== null) m = Math.max(m, Math.min(prev, sh) * (0.85 + 0.15 * fbm(x * 0.004, z * 0.004))); // saddle between neighbours
+      prev = sh;
+    }
   }
   return base + m;
 }
@@ -114,7 +132,12 @@ const FLATS = POIS.filter(p => p.flat).map(p => ({ x: p.x, z: p.z, r: p.flat, h:
 const SNOW_D = 0.5; // depth of the snow layer that sits on top of the ground
 function Hm(x, z) {
   const h0 = Hraw(x, z); let h = h0 + SNOW_D * (1 - sstep(0.15, 0.75, thawAt(x, z, h0)));
-  if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const hw = RUNS[pn.run].w / 2; if (pn.d < hw + 22) h = lerp(h, pn.hc, 1 - sstep(hw - 2, hw + 22, pn.d)); } }
+  if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const hw = RUNS[pn.run].w / 2; if (pn.d < hw + 16) {
+    // only smooth out small bumps across the trail; never cut into the mountain or build it up
+    const w = (1 - sstep(hw - 2, hw + 12, pn.d)) * (1 - sstep(1.5, 7, Math.abs(h - pn.hc)));
+    h = lerp(h, pn.hc + SNOW_D, w);
+    h += -0.35 * (1 - sstep(hw - 2, hw + 1, pn.d)) + 0.6 * Math.exp(-Math.pow((pn.d - hw - 3) / 3.5, 2)); // packed trail, soft snowbanks along its edges
+  } } }
   for (const f of FLATS) { const dx = x - f.x, dz = z - f.z; if (dx * dx + dz * dz < f.r * f.r) h = lerp(h, f.h, 1 - sstep(f.r * 0.5, f.r, Math.sqrt(dx * dx + dz * dz))); }
   const dl = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz);
   if (dl < 1.7) h = lerp(h, LAKE.h, 1 - sstep(1.0, 1.7, dl));
@@ -208,8 +231,8 @@ function sampleRun(pts) {
 }
 RUNS.forEach(r => {
   r.path = sampleRun(r.pts); r.len = r.path[r.path.length - 1].s;
-  r.path.forEach(p => p.hc = Hraw(p.x, p.z));
-  for (let i = 1; i < r.path.length; i++) { const p = r.path[i], q = r.path[i - 1], mx = q.hc - 0.12 * (p.s - q.s); if (p.hc > mx) p.hc = mx; } // runs always fall at least 12%
+  const raw = r.path.map(p => Hraw(p.x, p.z)); // the trail's height is the ground's own height, smoothed along its length
+  r.path.forEach((p, i) => { let s = 0, n = 0; for (let k = Math.max(0, i - 5); k <= Math.min(raw.length - 1, i + 5); k++) { s += raw[k]; n++; } p.hc = s / n; });
 });
 function runAt(run, f) { const p = run.path, s = f * run.len; let i = 0; while (i < p.length - 1 && p[i + 1].s < s) i++; return p[i]; }
 const PN = { d: 0, run: -1, hc: 0 };
@@ -249,8 +272,7 @@ function snowType(x, z, sl) {
   if (!r) return 'powder';
   if (r.id === 'ember') return 'ash';
   if (r.id === 'dunes') return vnoise(x * 0.006 + 2, z * 0.006) > 0.45 ? 'powder' : 'sand';
-  if (r.id === 'aurora') return vnoise(x * 0.012 + 5, z * 0.012) > 0.25 ? 'blueice' : 'powder';
-  if (r.id === 'crags') return sl > 0.5 && vnoise(x * 0.02 + 40, z * 0.02 - 13) > 0.3 ? 'ice' : 'windpack';
-  if (r.id === 'frost' && sl > 0.36 && vnoise(x * 0.02 + 40, z * 0.02 - 13) > 0.5) return 'ice';
+  if (r.id === 'aurora') return sl < 0.45 && fbm(x * 0.004 + 5, z * 0.004) > 0.22 ? 'blueice' : 'powder'; // broad glacier tongues on the gentler ground, not speckles
+  if (r.id === 'crags') return 'windpack';
   return 'powder';
 }

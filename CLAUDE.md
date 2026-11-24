@@ -14,7 +14,11 @@ Ember Peak (volcano with crater); south row Sunset Dunes (sand), Windswept Crags
 slopes reaching rvN/rvP sideways and `back` behind; `exp` sets how pointed it is. Height is
 `valleyH + max(peaks)` in `Hraw`. Gondolas run straight up the front face to just below the summit.
 Use `toWorld(region, u, v)` to place things: u = metres up the fall line from the valley, v = metres across.
-Runs are defined as shares of the room available at each height (`RUN_SHAPES`, `runV`), so they stay on the mountain.
+Runs are defined as shares of the room available at each height (`runV`), so they stay on the mountain. A trail's height
+is the ground's own height smoothed along it; `Hm` only flattens small bumps across a trail (never cuts walls), packs it
+0.35 m lower and adds soft snowbanks. Neighbouring peaks are joined by saddle ridges (`shoulderH`). Each `kind` has its
+own silhouette: pine ridge, aurora horn, dunes mesa, crags crown of spikes, volcano crater, frost classic.
+Only Space leaves the ground; there are no automatic launches. Before publishing, run `node tools/ride.js` too.
 Snow is a real 0.5 m layer (`SNOW_D` in `Hm`), thinner where meadows show through. Space jumps (`groundStep`), Shift stops.
 Terrain is 400 m tiles: a coarse mesh for every tile at start (so everything is visible), detailed mesh + trees
 built a few milliseconds per frame (generators drained by `updateTiles`) when the camera gets within `HI_R`;

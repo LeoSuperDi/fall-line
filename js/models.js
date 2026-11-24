@@ -68,7 +68,7 @@ function rockGeo(seed) {
   const g = new THREE.DodecahedronGeometry(1, 1), p = g.attributes.position, r = mulberry32(seed);
   for (let i = 0; i < p.count; i++) { const k = 0.8 + r() * 0.35; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.75, p.getZ(i) * k); }
   g.computeVertexNormals();
-  return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.55 ? '#e4e9f3' : ny > 0.1 ? '#8e97ad' : '#6f7891') }]);
+  return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.82 ? '#e8edf5' : '#8f97a8').lerp(C('#6a7183'), ny < 0.82 ? clamp(0.4 - ny * 0.6 + hsh(Math.round(x * 6), Math.round(z * 6)) * 0.25, 0, 0.8) : 0) }]); // grey stone, snow only on the very top
 }
 
 /* ================= obstacles grid ================= */

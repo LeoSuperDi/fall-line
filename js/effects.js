@@ -71,7 +71,7 @@ function updateSnowfall(dt, storm) {
 // ski tracks: each ski cuts a real groove, with the snow pushed up into little berms either side
 const TRN = 360, NV = 5, trX = new Float32Array(TRN * 2), trZ = new Float32Array(TRN * 2), trY = new Float32Array(TRN * 2), trBrk = new Uint8Array(TRN), trWArr = new Float32Array(TRN), trDeep = new Float32Array(TRN), trCol = new Float32Array(TRN * 3);
 let trCount = 0, trailBreak = true, trDist = 0, lastTrail = { x: 0, z: 0 }, trW = 0.06;
-const XS = [-1.5, -0.8, 0, 0.8, 1.5], XH = [0.015, 0.16, 0.02, 0.16, 0.015]; // across one groove: berm foot, berm top, groove, berm top, berm foot
+const XS = [-1.7, -0.9, 0, 0.9, 1.7], XH = [0.02, 0.28, -0.04, 0.28, 0.02]; // across one groove: berm foot, berm top, groove, berm top, berm foot
 const trGeo = new THREE.BufferGeometry(), trPosA = new Float32Array(TRN * 2 * NV * 3), trColA = new Float32Array(TRN * 2 * NV * 3);
 trGeo.setAttribute('position', new THREE.BufferAttribute(trPosA, 3)); trGeo.setAttribute('color', new THREE.BufferAttribute(trColA, 3));
 trGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(TRN * 2 * (NV - 1) * 6), 1));
@@ -87,8 +87,8 @@ function trailPush(p, nx, nz) {
   for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1, x = p.x + nx * off * sd, z = p.z + nz * off * sd; trX[i * 2 + k] = x; trZ[i * 2 + k] = z; trY[i * 2 + k] = H(x, z); }
   trBrk[i] = trailBreak ? 1 : 0; trailBreak = false;
   const c = TRAIL_COL[p.snow] || TRAIL_COL.powder; trCol[i * 3] = c.r; trCol[i * 3 + 1] = c.g; trCol[i * 3 + 2] = c.b;
-  trWArr[i] = 0.05 + p.brakeA * 0.08 + p.skidI * 0.05;
-  trDeep[i] = { powder: 1.5, deep: 1.9, sand: 1.3, ash: 1.2, ice: 0.4, blueice: 0.4, groomed: 0.8 }[p.snow] || 1;
+  trWArr[i] = (p.snow === 'powder' || p.snow === 'deep' ? 0.12 : 0.05) + p.brakeA * 0.08 + p.skidI * 0.05; // powder takes a wide bite
+  trDeep[i] = { powder: 1.6, deep: 2.1, sand: 1.2, ash: 1.1, thin: 0.6, ice: 0.25, blueice: 0.25, groomed: 0.45, windpack: 0.7 }[p.snow] || 1;
   rebuildTrail();
 }
 function rebuildTrail() {

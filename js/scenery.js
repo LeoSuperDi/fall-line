@@ -20,7 +20,7 @@ function birchGeo(variant, lvl) { // white-barked tree with round, clumpy leaf c
 }
 const TREE_GEOS = []; for (let v = 0; v < 3; v++) for (let l = 0; l < SNOW_LV.length; l++) TREE_GEOS.push(treeGeo(v, l)); // pines: index v * 4 + level
 for (let v = 0; v < 2; v++) for (let l = 0; l < SNOW_LV.length; l++) TREE_GEOS.push(birchGeo(v, l)); // birches: index (3 + v) * 4 + level
-function rockGeoC(seed, cols) { const g = new THREE.DodecahedronGeometry(1, 1), p = g.attributes.position, r = mulberry32(seed); for (let i = 0; i < p.count; i++) { const k = 0.8 + r() * 0.35; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.75, p.getZ(i) * k); } g.computeVertexNormals(); return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.6 ? cols[0] : ny > 0.1 ? cols[1] : cols[2]) }]); }
+function rockGeoC(seed, cols) { const g = new THREE.DodecahedronGeometry(1, 1), p = g.attributes.position, r = mulberry32(seed); for (let i = 0; i < p.count; i++) { const k = 0.8 + r() * 0.35; p.setXYZ(i, p.getX(i) * k, p.getY(i) * k * 0.75, p.getZ(i) * k); } g.computeVertexNormals(); return merge([{ geo: g, col: (c, x, y, z, nx, ny) => c.set(ny > 0.75 ? cols[0] : ny > 0.1 ? cols[1] : cols[2]) }]); }
 const SAND_ROCK = rockGeoC(8, ['#e4c08a', '#c98a55', '#a8673d']);
 const MARK_GEO = merge([{ geo: T(new THREE.CylinderGeometry(0.06, 0.06, 1.8, 5), 0, 0.9, 0), col: '#ffffff' }, { geo: T(new THREE.CylinderGeometry(0.07, 0.07, 0.45, 5), 0, 1.6, 0), col: '#ffffff' }]);
 const LAMP_POST = new THREE.CylinderGeometry(0.06, 0.07, 2.2, 5), LAMP_BULB = new THREE.SphereGeometry(0.18, 8, 6), LAMP_MAT = new THREE.MeshBasicMaterial({ color: 0xffcf7a, toneMapped: false });
@@ -58,11 +58,12 @@ function* genTreesGen(t) {
     const px = x + (r() - .5) * 7, pz = z + (r() - .5) * 7;
     if (px < WORLD.x0 + 30 || px > WORLD.x1 - 30 || pz < WORLD.z0 + 30 || pz > WORLD.z1 - 30) continue;
     const h = Hm(px, pz), dens = treeChance(px, pz, h);
-    if (r() > dens * 0.68) continue;
-    if (nearLift(px, pz, 14) || onPiste(px, pz, 5)) continue;
+    if (r() > sstep(0.36, 0.62, dens) * 0.85) continue; // trees gather in groves instead of a thin random sprinkle
+    if (Math.exp(-Math.pow((pz + 935) / 16, 2)) > 0.3 && !regionAt(px, pz)) continue; // not in the creek
+    if (nearLift(px, pz, 14) || onPiste(px, pz, 9)) continue;
     if (Math.hypot((px - LAKE.x) / LAKE.rx, (pz - LAKE.z) / LAKE.rz) < 1.15) continue;
     if (inMoguls(px, pz) || isReserved(px, pz)) continue;
-    if (slopeAt(px, pz) > 0.95) continue;
+    if (slopeAt(px, pz) > 0.62) continue; // nothing grows on cliffs
     const reg = regionAt(px, pz), s = (0.85 + r() * 0.75) * (reg && reg.id === 'pine' ? 1.15 : 1);
     const birch = h < 300 && r() < (reg && reg.id === 'aurora' ? 0.1 : reg && reg.id === 'pine' ? 0.25 : 0.45) * (1 - sstep(120, 300, h));
     const v = birch ? (r() < 0.5 ? 3 : 4) : reg && reg.id === 'pine' ? (r() < 0.6 ? 1 : 0) : r() < 0.12 ? 2 : r() < 0.5 ? 1 : 0;
@@ -76,7 +77,7 @@ function* genTreesGen(t) {
     if (r() > (reg && reg.id === 'crags' ? 0.9 : 0.25)) continue;
     if (!(sl > 0.55 || r() < 0.18)) continue;
     if (px < WORLD.x0 + 30 || px > WORLD.x1 - 30 || pz < WORLD.z0 + 30 || pz > WORLD.z1 - 30) continue;
-    if (onPiste(px, pz, 3) || isReserved(px, pz) || inMoguls(px, pz) || nearLift(px, pz, 12)) continue;
+    if (onPiste(px, pz, reg && reg.id === 'crags' ? 12 : 4) || isReserved(px, pz) || inMoguls(px, pz) || nearLift(px, pz, 12)) continue;
     if (Math.hypot((px - LAKE.x) / LAKE.rx, (pz - LAKE.z) / LAKE.rz) < 1.1) continue;
     if (!clearOf(px, pz, 2)) continue;
     const s = 0.8 + r() * (sl > 0.55 ? 2.2 : 1.2);
@@ -100,9 +101,8 @@ function* genTreesGen(t) {
     else if (th > 0.45) kind = q < 0.55 ? 'tuft' : q < 0.7 ? 'heath' : q < 0.8 ? 'pebble' : q < 0.88 ? 'bush' : null;
     else {
       const dens = treeDensity(px, pz), woods = id === 'pine' ? 2 : 1;
-      kind = q < 0.035 ? 'pebble' : q < 0.07 ? 'mound' : q < 0.07 + dens * 0.06 * woods ? 'bush' : q < 0.15 + dens * 0.012 * woods ? (q < 0.145 ? null : 'stump') : null;
+      kind = q < 0.035 ? 'pebble' : q < 0.07 + dens * 0.06 * woods ? 'bush' : q < 0.15 + dens * 0.012 * woods ? (q < 0.145 ? null : 'stump') : null;
       if (!kind && dens > 0.35 && q > 0.985 - 0.006 * woods) kind = 'log';
-      if (!kind && id === 'aurora' && q > 0.95 && q < 0.975) kind = 'shard';
       if (!kind && id === 'crags' && q > 0.8) kind = 'scree';
     }
     if (!kind) continue;

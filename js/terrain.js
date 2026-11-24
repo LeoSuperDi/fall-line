@@ -40,7 +40,7 @@ function terrainColor(out, x, z, h, ny, far) {
   const rk = mixNum(x, z, 'rockSl', 0.9); if (sl > rk) out.lerp(r && r.id === 'ember' ? TC2.basalt : r && r.id === 'dunes' ? TC2.sand2 : TC.rock, clamp((sl - rk) * 2, 0, 0.9));
   if (z < -600 && z > -840 && x > -560 && x < 160) out.lerp(TC.village, clamp((-600 - z) / 60, 0, 0.6));
   if (!onP && !(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1)) { // patches of meadow and red earth where the snow has thinned
-    const th = thawAt(x, z, h);
+    const th = thawAt(x, z, h) * (1 - sstep(0.4, 0.7, sl)); // no grass on steep walls
     if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, (far ? 0.6 : 0.95) * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
   }
   if (!r) out.lerp(TC.creek, 0.9 * sstep(0.55, 0.85, Math.exp(-Math.pow((z + 935) / 16, 2)))); // the frozen creek

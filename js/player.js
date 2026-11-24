@@ -13,7 +13,7 @@ const SNOW = {
   blueice: { name: 'Blue glacier ice', fric: 0.01, grip: 3.8, hold: 1.6, latFric: 1, turn: .95, resp: 1 },
   windpack: { name: 'Wind crust', fric: 0.2, grip: 10, hold: 5, latFric: 6, turn: .9, resp: .85, jostle: true },
   ash: { name: 'Ash and cinders', fric: 0.3, grip: 11, hold: 5.5, latFric: 7, turn: .9, resp: .85 },
-  sand: { name: 'Wind-blown sand', fric: 0.75, grip: 13, hold: 6, latFric: 8, turn: .9, resp: .8 },
+  sand: { name: 'Wind-blown sand', fric: 0.32, grip: 13, hold: 6, latFric: 8, turn: .9, resp: .8 },
   thin: { name: 'Thin snow over grass', fric: 0.7, grip: 12, hold: 6, latFric: 8, turn: .9, resp: .85 }
 };
 const P = { x: -425, z: 640, y: 0, h: 0, w: 0, s: 0, lat: 0, vx: 0, vz: 0, tuck: 0, brakeA: 0, brakeSide: 1, wasBrake: false, hold: 0, lastSign: 0, jt: 0,
@@ -46,7 +46,6 @@ function groundStep(p, dt, gy, jumpV) { // returns true while airborne
   }
   const gv = (gy - p.y) / Math.max(dt, 1e-4);
   if (p.jumpBuf > 0) { p.air = true; p.jumped = true; p.vy = jumpV + Math.max(0, gv * 0.5); p.airT = 0; p.jumpBuf = 0; p.y = Math.max(p.y, gy); sfx.jump(); emitBurst(p.x, gy + 0.1, p.z, 10); return true; }
-  if (!p.foot && p.s > 16 && p.gvPrev - gv > 44 * dt && p.gvPrev - gv < 30) { p.air = true; p.jumped = false; p.vy = Math.min(p.gvPrev, 6); p.airT = 0; p.y = Math.max(p.y, gy); return true; } // crest: the ground drops away faster than you fall
   p.gvPrev = gv; p.y = gy; return false;
 }
 function walkPlayer(dt, inp, gx, gz) {
@@ -188,7 +187,7 @@ function updateCamera(dt, snap) {
 }
 function posePlayer(dt) {
   const m = playerModel, u = m.userData, p = P;
-  const sink = p.air || p.foot ? 0 : ({ powder: 0.04, deep: 0.07, sand: 0.03, ash: 0.02 }[p.snow] || 0);
+  const sink = p.air || p.foot ? 0 : ({ powder: 0.2, deep: 0.3, sand: 0.08, thin: 0.04, ash: 0.04 }[p.snow] || 0) // boots and skis disappear into soft snow;
   m.position.set(p.x, p.y - sink, p.z);
   m.rotation.y = -p.h;
   const lean = p.crash > 0 ? 0 : clamp(p.w * p.s / 30, -0.55, 0.55);
