@@ -1,0 +1,14 @@
+{
+  "name": "frostpeak-tools",
+  "private": true,
+  "description": "Test and screenshot helpers for Frostpeak Frontier. The game itself needs no install or build.",
+  "scripts": {
+    "check": "node check.js",
+    "shots": "node screenshot.js"
+  },
+  "devDependencies": {
+    "@fontsource/barlow-condensed": "5.0.13",
+    "@fontsource/literata": "5.0.20",
+    "three": "0.128.0"
+  }
+}

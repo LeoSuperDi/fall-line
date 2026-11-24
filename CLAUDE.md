@@ -1,6 +1,9 @@
 # Frostpeak Frontier
 
-Single-file 3D skiing/exploration game: `index.html` (three.js r128 from cdnjs, no build step).
+3D skiing/exploration game (three.js r128 from cdnjs, no build step). `index.html` is markup only; styles are in
+`css/ui.css`; the game is in `js/*.js`, plain scripts sharing one global scope, loaded in the order listed in
+`index.html` (see README.md for what each file holds). Code that runs while a file loads may only use things
+defined in files listed above it.
 `legacy/fall-line-2d.html` is the older 2D game, kept for reference.
 Published as a claude.ai artifact: https://claude.ai/artifact/2WBf8tn6SdUXG4n26vdm9W
 
@@ -30,4 +33,9 @@ and a snowcat stop (`CATS`) for crossing the valley. Per-mountain mood lives in 
 - The one big UI moment is the discovery signpost (`bannerShow`). Keep other motion minimal.
 
 ## Testing
-cdnjs is blocked in the cloud sandbox: serve `three@0.128.0` from npm via Playwright `page.route`, and Barlow Condensed / Literata from `@fontsource`. Expose internals by injecting `window.__fl = {...}` before `function init()` in a test copy.
+`cd tools && npm install`, then `node check.js` (must pass before publishing) and `node screenshot.js <spawn names>`.
+`tools/harness.js` serves three.js and the fonts from npm (cdnjs and Google Fonts are blocked in the cloud sandbox)
+and exposes internals as `window.__fl` by injecting a line into `js/main.js` as it is served.
+
+## Publishing
+The artifact needs every file: publish `index.html` with `files` mapping `css/ui.css` and each `js/*.js`.
