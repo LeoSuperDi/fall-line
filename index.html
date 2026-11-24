@@ -452,7 +452,7 @@ function treeGeo(variant) {
   const dark = C(pal[0]), mid = C(pal[1]), lite = C(pal[2]), snowC = C('#e6ecf6'), snowS = C('#c8d4ea');
   const tiers = variant === 1 ? [[2.5, 3.0, 2.6], [2.05, 2.8, 4.1], [1.6, 2.5, 5.5], [1.15, 2.2, 6.8], [0.7, 1.8, 8.0], [0.35, 1.3, 9.0]]
                               : [[2.8, 3.4, 2.8], [2.2, 3.1, 4.5], [1.6, 2.7, 6.1], [1.0, 2.2, 7.5], [0.5, 1.6, 8.7]];
-  const snowAmt = variant === 2 ? 0.62 : 0.4;
+  const snowAmt = variant === 2 ? 0.5 : 0.36;
   tiers.forEach(([r, h, y], ti) => {
     const seg = 11, g = new THREE.ConeGeometry(r, h, seg, 2, false);
     const pos = g.attributes.position, ph = rnd() * TAU;
@@ -465,10 +465,17 @@ function treeGeo(variant) {
       const rr = Math.hypot(x, z) / r, a = Math.atan2(z, x);
       c.copy(dark).lerp(mid, clamp(f * 1.3, 0, 1)).lerp(lite, clamp((f - 0.55) * 1.6, 0, 0.6) * (0.5 + 0.5 * Math.max(0, nx * 0.6 + nz * 0.4)));
       if (rr > 0.85 && f < 0.25) c.lerp(dark, 0.5); // shadowed underside of each tier
-      const cap = sstep(1 - snowAmt - 0.08, 1 - snowAmt + 0.08, f + 0.1 * Math.sin(a * 4 + ti * 2.1) + 0.06 * hsh(Math.round(a * 9) + ti, ti));
-      if (ny > 0.25) c.lerp(snowC.clone().lerp(snowS, 0.5 - 0.5 * nx), cap);
-      if (rr > 0.8 && ny > 0.2 && hsh(Math.round(a * 13) + ti * 5, variant) < snowAmt * 0.6) c.lerp(snowC, 0.75); // snow resting on bough tips
     } });
+    // separate snow band on the exposed shoulder of this tier (above it, the next tier hides the cone), crisp drippy lower edge
+    const apex = y + h / 2, rim = y - h / 2, nt = tiers[ti + 1], top = nt ? Math.min(apex - 0.05, nt[2] - nt[1] / 2 + 0.25) : apex;
+    const band = (top - rim) * snowAmt * 1.25, bot = top - band, rAt = Y => r * (apex - Y) / h * 1.08;
+    const cg = new THREE.CylinderGeometry(nt ? rAt(top) : 0.001, rAt(bot), band, seg, 1, true), cp = cg.attributes.position, cph = rnd() * TAU;
+    for (let i = 0; i < cp.count; i++) {
+      const px = cp.getX(i), py = cp.getY(i), pz = cp.getZ(i);
+      if (py < 0) { const a = Math.atan2(pz, px), drip = 0.5 + 0.5 * Math.sin(a * 6 + cph); const k = 1 + drip * 0.35 * band / h; cp.setXYZ(i, px * k, py - drip * band * 0.35, pz * k); }
+    }
+    cg.computeVertexNormals(); T(cg, 0, (top + bot) / 2 + 0.03, 0);
+    parts.push({ geo: cg, col: (c, x, yy, z, nx) => c.copy(snowC).lerp(snowS, clamp(0.45 - 0.55 * nx, 0, 0.7)) });
   });
   return merge(parts);
 }
