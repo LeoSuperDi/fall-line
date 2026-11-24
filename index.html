@@ -1714,7 +1714,7 @@ QUESTS.lamps = { title: 'Lamps of Lowpine', giver: 'oskar',
 const COURSES = { fox: { run: 1, f0: 0.07, f1: 0.42, limit: 60, gates: true }, wall: { run: 2, f0: 0.045, f1: 0.965, limit: 110, gates: false } };
 const SPAWNS = { summit: [-432, 646, 0], base: [-250, -648, Math.PI], ranger: [466, -88, 0], hermit: [-486, 224, 0.5], village: [-246, -776, Math.PI] };
 REGIONS.forEach(r => { if (r.id === 'frost') return; const dh = r.row > 0 ? 0 : Math.PI, [tx, tz] = toWorld(r, r.topU - 28, 30), [bx, bz] = toWorld(r, 108, 60), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2] - 24, lm[3]);
-  SPAWNS[r.id + '_top'] = [tx, tz, dh]; SPAWNS[r.id + '_base'] = [bx, bz, dh + Math.PI]; SPAWNS[lm[0]] = [lx, lz, dh]; });
+  SPAWNS[r.id + '_top'] = [tx, tz, dh]; SPAWNS[r.id + '_base'] = [bx, bz, dh + Math.PI]; SPAWNS[lm[0]] = [lx, lz, dh]; if (r.id === 'ember') { const [rx, rz] = toWorld(r, r.uS - 186, 0); SPAWNS[lm[0]] = [rx, rz, dh + Math.PI]; } }); // the crater rim, looking in
 
 /* ================= save ================= */
 const SAVE_KEY = 'frostpeak_save_v1';
@@ -2258,7 +2258,7 @@ let lastHud = 0, hudTick = 0;
 function updateHUD() {
   $('spd').textContent = Math.round(speedKmh());
   $('coins').textContent = save.coins;
-  const surf = (SNOW[P.snow] || SNOW.powder).name;
+  const rgH = regionAt(P.x, P.z), surf = P.snow === 'groomed' && rgH && rgH.id === 'dunes' ? 'Groomed sand' : P.snow === 'groomed' && rgH && rgH.id === 'ember' ? 'Groomed ash' : (SNOW[P.snow] || SNOW.powder).name;
   $('snowChip').textContent = P.air ? 'Airborne' : P.foot ? 'On foot in ' + surf.toLowerCase() + (P.cocoa > 0 ? ', warm from cocoa' : '')
     : surf + (P.crash > 0 ? ', wipeout' : P.brakeA > 0.5 ? ', stopping' : P.tuck > 0.5 ? ', tucked' : P.skidI > 0.4 ? ', skidding' : Math.abs(P.w) > 0.6 && P.s > 8 ? ', carving' : '') + (P.wax > 0 ? ', fresh wax' : '');
   if ((hudTick = (hudTick + 1) % 3) === 0) drawCompass();
