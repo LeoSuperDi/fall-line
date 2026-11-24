@@ -7,8 +7,8 @@
 const PAL = [
   { t: 0.0, top: '#2a63c4', mid: '#6fa6e6', hor: '#cfe3e6', fog: '#bfd6dc', sun: '#ffe6c2', si: 1.2, hs: '#a9c6ef', hg: '#d2c3a6', el: 0.34, az: -0.5 },
   { t: 0.3, top: '#1f66d2', mid: '#6aaeee', hor: '#d2ebec', fog: '#bcd8de', sun: '#fff6e2', si: 1.38, hs: '#aecdf2', hg: '#d6cbb0', el: 0.85, az: 0.25 },
-  { t: 0.6, top: '#3a5bb4', mid: '#8a95d4', hor: '#f0bf92', fog: '#d4c2b4', sun: '#ffbe7a', si: 1.2, hs: '#aaa8dc', hg: '#ddb08c', el: 0.3, az: 0.95 },
-  { t: 0.8, top: '#33407a', mid: '#7a6fa6', hor: '#e0938a', fog: '#ae9cae', sun: '#ff9278', si: 0.85, hs: '#8c87b8', hg: '#c69690', el: 0.12, az: 1.25 },
+  { t: 0.6, top: '#3d63b8', mid: '#8fa0d6', hor: '#f2c9a0', fog: '#dcd6d6', sun: '#ffd8ae', si: 1.25, hs: '#bccaee', hg: '#e2cdb6', el: 0.3, az: 0.95 }, // late afternoon: warm light, snow still white
+  { t: 0.8, top: '#34457e', mid: '#7f7eb0', hor: '#e8a596', fog: '#bdb4c2', sun: '#ffb594', si: 0.95, hs: '#a3acd6', hg: '#d0aca6', el: 0.12, az: 1.25 },
   { t: 1.0, top: '#2a63c4', mid: '#6fa6e6', hor: '#cfe3e6', fog: '#bfd6dc', sun: '#ffe6c2', si: 1.2, hs: '#a9c6ef', hg: '#d2c3a6', el: 0.34, az: -0.5 }
 ];
 const PALC = PAL.map(p => ({ t: p.t, top: C(p.top), mid: C(p.mid), hor: C(p.hor), fog: C(p.fog), sun: C(p.sun), hs: C(p.hs), hg: C(p.hg), si: p.si, el: p.el, az: p.az }));

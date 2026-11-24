@@ -18,7 +18,7 @@ const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 22000);
 function resize() { const w = window.innerWidth, h = window.innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < h ? 72 : 60; camera.updateProjectionMatrix(); }
 window.addEventListener('resize', resize);
 
-const gradMap = (() => { const v = [84, 112, 140, 166, 190, 212, 230, 242], d = new Uint8Array(v.length * 4); v.forEach((x, i) => { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = x; d[i * 4 + 3] = 255; }); const t = new THREE.DataTexture(d, v.length, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.LinearFilter; /* blend between the shading steps: soft, painterly light with no hard contour lines */ t.generateMipmaps = false; t.needsUpdate = true; return t; })();
+const gradMap = (() => { const v = [118, 150, 182, 210, 232, 246, 253, 255], d = new Uint8Array(v.length * 4); v.forEach((x, i) => { d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = x; d[i * 4 + 3] = 255; }); const t = new THREE.DataTexture(d, v.length, 1, THREE.RGBAFormat); t.minFilter = t.magFilter = THREE.LinearFilter; /* blend between the shading steps: soft, painterly light with no hard contour lines */ t.generateMipmaps = false; t.needsUpdate = true; return t; })();
 const MC = {};
 function toon(c, extra) { const k = c + (extra ? JSON.stringify(extra) : ''); return MC[k] || (MC[k] = new THREE.MeshToonMaterial(Object.assign({ color: c, gradientMap: gradMap }, extra || {}))); }
 const toonV = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap });
