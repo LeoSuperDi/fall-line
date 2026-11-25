@@ -143,7 +143,7 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 .stats span { padding: 9px 0; border-bottom: 1px solid var(--line); }
 .stats span:nth-child(even) { text-align: right; font-weight: 700; }
 
-/* basecamp hub, panels, medals, lodge */
+/* basecamp hub, panels, medals */
 #hubHud { position: fixed; inset: 0; pointer-events: none; }
 #hubHud > * { pointer-events: auto; }
 #hhL { position: absolute; left: calc(var(--gx) + 14px); top: calc(var(--gy) + 14px); display: grid; gap: 6px; pointer-events: none; }
@@ -175,17 +175,6 @@ body.touch #hubPrompt { bottom: 130px; }
 #parN { font: 22px/1 var(--osd); letter-spacing: .5px; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
 #parN.late { opacity: .6; }
 #resNote { color: var(--amber); font-weight: 700; }
-.reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.reel { display: grid; place-items: center; height: 96px; border: 1px solid var(--line); border-radius: 4px; background: #0d0f13; }
-.reel svg { width: 58px; height: 58px; }
-.reel.win { border-color: var(--amber); }
-.bets { display: flex; gap: 8px; }
-.bets .btn.on { border-color: var(--amber); color: var(--amber); }
-.lgmsg { min-height: 1.5em; font-size: 17px; color: var(--paper); }
-.lgnote { font-size: 14px !important; }
-.pays { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size: 13px; color: var(--dim); text-align: center; }
-.pays span { display: grid; justify-items: center; gap: 2px; }
-.pays svg { width: 26px; height: 26px; }
 .prow { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; width: 100%; padding: 11px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
 .prow:hover:not(:disabled) { background: rgba(255, 255, 255, .05); }
 .prow:disabled { opacity: .45; cursor: not-allowed; }
@@ -959,12 +948,6 @@ function drawHub(VW) {
     for (let st = 0; st < 3; st++) { const b = save.best[i + '-' + st], m = b ? b.medal || 0 : 0; g.fillStyle = m === 3 ? '#ffcf3f' : m === 2 ? '#c9d0dc' : m === 1 ? '#c8814a' : 'rgba(20,22,46,.25)'; g.strokeStyle = ink; g.lineWidth = 2; g.beginPath(); g.arc(x - 18 + st * 18, y + 18, 6, 0, TAU); g.fill(); g.stroke(); }
     if (i === nx) { g.fillStyle = '#ff4a2b'; g.strokeStyle = ink; g.lineWidth = 2.5; const ay = y - 214 + Math.sin(t * 5) * 5; g.beginPath(); g.moveTo(x - 100, ay - 14); g.lineTo(x - 80, ay - 14); g.lineTo(x - 90, ay); g.closePath(); g.fill(); g.stroke(); }
   });
-  /* the Lucky Lodge */
-  if (vis(HUBX.lodge)) { const x = HUBX.lodge, y = baseAt(x); g.fillStyle = '#6b3f2a'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(x - 110, y - 100, 220, 104); g.strokeRect(x - 110, y - 100, 220, 104);
-    g.fillStyle = '#7a2a2a'; g.beginPath(); g.moveTo(x - 128, y - 98); g.lineTo(x, y - 156); g.lineTo(x + 128, y - 98); g.closePath(); g.fill(); g.stroke();
-    g.fillStyle = '#ffd88a'; g.strokeStyle = ink; rr(x - 70, y - 70, 44, 48, 4); g.fill(); g.stroke(); rr(x + 26, y - 70, 44, 48, 4); g.fill(); g.stroke();
-    for (let k = 0; k < 11; k++) { g.fillStyle = (k + Math.floor(t * 3)) % 2 ? '#ffcf3f' : '#ff4a2b'; g.beginPath(); g.arc(x - 100 + k * 20, y - 100 - Math.sin(k / 10 * Math.PI) * 4, 4, 0, TAU); g.fill(); }
-    board(x, y - 214, 170, 'Lucky Lodge', 'Play money only'); drawPerson(HUBX.bet, baseAt(HUBX.bet), '#245a3c', 'visor', '#2f7a55'); }
   /* Dawa's outfitters */
   if (vis(HUBX.shop)) { const x = HUBX.shop, y = baseAt(x); g.strokeStyle = ink; g.lineWidth = 3; g.fillStyle = '#5a3a22'; g.fillRect(x - 100, y - 100, 6, 100); g.fillRect(x + 94, y - 100, 6, 100); g.fillRect(x - 100, y - 70, 200, 5);
     for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff7e8' : '#c0392b'; g.beginPath(); g.moveTo(x - 110 + k * 27.5, y - 112); g.lineTo(x - 82.5 + k * 27.5, y - 112); g.lineTo(x - 90 + k * 27.5, y - 86); g.lineTo(x - 105 + k * 27.5 + 10, y - 86); g.closePath(); g.fill(); g.stroke(); }
@@ -1214,7 +1197,7 @@ function openAlbum() {
   const zones = CH.map((C, z) => `<section><h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of ${ITEMS.filter(it => it.zone === z).length}</small></h3><div class="notes">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i]
     ? `<div class="note" style="--r:${rot(i)}"><canvas width="240" height="180" data-i="${i}" data-f="1"></canvas><b>${it.name}</b><small class="q${it.r}">${RARITY[it.r].toLowerCase()}${save.album[i] > 1 ? ', \u00d7' + save.album[i] : ''}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`
     : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`).join('')}</div></section>`).join('');
-  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares go to Bet for shards.</p>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<div class="odt"><b style="font-weight:400;min-width:90px">${['One flip', 'Double flip', 'Triple flip'][n - 1]}</b><span style="--c:#d2c9b4">nothing ${pct(o.miss)}</span>${o.r.map((p, r) => `<span style="--c:${['#c4c6bc', '#4aa874', '#5d8fd0', '#e0b030', '#d050b0'][r]}">${RARITY[r].toLowerCase()} ${pct(p)}</span>`).join('')}</div>`; }).join('')}<div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
+  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<div class="odt"><b style="font-weight:400;min-width:90px">${['One flip', 'Double flip', 'Triple flip'][n - 1]}</b><span style="--c:#d2c9b4">nothing ${pct(o.miss)}</span>${o.r.map((p, r) => `<span style="--c:${['#c4c6bc', '#4aa874', '#5d8fd0', '#e0b030', '#d050b0'][r]}">${RARITY[r].toLowerCase()} ${pct(p)}</span>`).join('')}</div>`; }).join('')}<div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
   $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
 }
 
@@ -1266,13 +1249,13 @@ function endReel() {
 }
 
 /* ================= basecamp: the walkable hub ================= */
-const HUB_W = 5000, HUBX = { juni: 360, door: i => 760 + i * 470, lodge: 3700, bet: 3790, shop: 4300, dawa: 4390 };
-const CONES = [120, 430, 980, 1480, 1960, 2420, 2900, 3380, 3980, 4600, 4880, 3250];
+const HUB_W = 5000, HUBX = { juni: 360, door: i => 760 + i * 470, shop: 3900, dawa: 3990 };
+const CONES = [120, 430, 980, 1480, 1960, 2420, 2900, 3380, 4420, 4600, 4880, 3250];
 const hubHeight = x => Math.sin(x / 700) * 16 + Math.sin(x / 230) * 4;
 function buildHub() {
   const n = Math.round(HUB_W / STEP) + 2, gy = [], gap = [], deco = [], R = rng(77);
   for (let i = 0; i < n; i++) { gy.push(hubHeight(i * STEP)); gap.push(false); }
-  const spots = [HUBX.juni, HUBX.lodge, HUBX.shop, 140, 600].concat([0, 1, 2, 3, 4, 5].map(HUBX.door));
+  const spots = [HUBX.juni, HUBX.shop, 140, 600].concat([0, 1, 2, 3, 4, 5].map(HUBX.door));
   for (let x = 120; x < HUB_W; x += 70 + R() * 150) if (spots.every(sx => Math.abs(sx - x) > 140)) deco.push({ x, s: 0.7 + R() * 0.8, v: R() });
   L = { hub: true, ci: -1, si: 0, C: {}, S: {}, Z: ZONES.camp, gy, gap, obs: [], shards: [], kickers: [], cps: [200], deco, finish: 1e9, n, cp: 200, time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
 }
@@ -1280,7 +1263,7 @@ function hubStats() {
   let gold = 0, tot = 0; CH.forEach((C, ci) => C.stages.forEach((S, si) => { tot++; const b = save.best[ci + '-' + si]; if (b && b.medal === 3) gold++; }));
   $('hhMed').textContent = gold + ' of ' + tot + ' gold'; $('hhCone').textContent = save.cones.length + ' of ' + CONES.length; $('hhBank').textContent = save.bank;
   const nx = CH.findIndex((C, i) => tapeOpen(i) && !save.best[i + '-2']);
-  $('hhHint').textContent = nx >= 0 ? 'Next tape: ' + CH[nx].title + '.' : 'Every tape cleared. Go after gold times, pinecones and the lodge.';
+  $('hhHint').textContent = nx >= 0 ? 'Next tape: ' + CH[nx].title + '.' : 'Every tape cleared. Go after gold times, pinecones and the sketchbook.';
 }
 function startHub(from) {
   ['title', 'fail', 'results', 'pause', 'chapterCard', 'ending', 'dlg', 'lbTop', 'hud', 'hubPanel', 'hubPrompt'].forEach(i => show(i, false));
@@ -1293,7 +1276,7 @@ function hubDialog(lines, cb) { show('hubHud', false); show('hubPrompt', false);
 function hubTargets() {
   const t = [{ x: HUBX.juni + 20, kind: 'juni', label: 'Talk to Juni' }];
   CH.forEach((C, i) => t.push({ x: HUBX.door(i), kind: 'door', i, label: tapeOpen(i) ? 'Enter ' + C.title : 'Locked. Clear the last stage of tape ' + i + '.' }));
-  t.push({ x: HUBX.bet, kind: 'lodge', label: 'Talk to Bet at the Lucky Lodge' }, { x: HUBX.dawa, kind: 'shop', label: 'Talk to Dawa' });
+  t.push({ x: HUBX.dawa, kind: 'shop', label: 'Talk to Dawa' });
   return t;
 }
 function hubNear() { let b = null, bd = 70; for (const t of hubTargets()) { const d = Math.abs(t.x - P.x); if (d < bd) { bd = d; b = t; } } return b; }
@@ -1310,17 +1293,15 @@ function hubAct() {
   const t = state === 'hub' ? hubNear() : null; if (!t) return;
   if (t.kind === 'door') { if (tapeOpen(t.i)) openTape(t.i); else { popup(P.x, P.y - 90, 'Locked', '#ff9a6a'); sfx.land(); } }
   else if (t.kind === 'juni') { const first = !save.told.welcome; save.told.welcome = 1; persist(); hubDialog(first ? WELCOME : [JTIPS[(save.tipI = ((save.tipI || 0) + 1)) % JTIPS.length]]); }
-  else if (t.kind === 'lodge') { if (save.told.bet) openLodge(); else { save.told.bet = 1; persist(); hubDialog(BET_INTRO, openLodge); } }
   else if (t.kind === 'shop') { if (save.told.dawa) openShop(); else { save.told.dawa = 1; persist(); hubDialog(DAWA_INTRO, openShop); } }
 }
 const WELCOME = [[J, "Arlo, you made it to Basecamp. Radio check: can you hear me?"], [A, "Loud and clear. Day 212. Still no yeti."], [J, "Then start at the first door. Every stage has a gold, silver and bronze time, so go back and beat them whenever you like."], [T, "Left and right to walk, up at a door to go in. There are pinecones lying around camp, so look around."]];
-const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Bet runs the Lucky Lodge at the east end. Play money only. Shards are for fun and parkas, nothing else."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."]];
-const BET_INTRO = [['bet', "Welcome to the Lucky Lodge. Shards on the table, no real money, ever."], [A, "I'm not very lucky."], ['bet', "Nobody is. That's what makes the lights fun."]];
+const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."]];
 const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
 
 /* panels */
 function panel(html, cls) { $('hpBox').className = 'panel wide' + (cls ? ' ' + cls : ''); $('hpBox').innerHTML = html; show('hubPanel', true); show('hubPrompt', false); state = 'panel'; const c = $('hpClose'); if (c) c.onclick = closePanel; }
-function closePanel() { if (lg.spinning) return; show('hubPanel', false); backToHub(); }
+function closePanel() { show('hubPanel', false); backToHub(); }
 function openTape(ci) {
   const C = CH[ci];
   const rows = C.stages.map((S, si) => {
@@ -1333,67 +1314,6 @@ function openTape(ci) {
 function launch(ci, si) {
   audioInit(); show('hubPanel', false);
   if (si === 0 && !save.told['i' + ci]) { save.told['i' + ci] = 1; persist(); startChapter(ci); } else startStage(ci, si);
-}
-
-/* the Lucky Lodge: a slot machine and a coin flip, played with shards (play money earned by skiing) */
-const SYM = [
-  { w: 1, pay: 25, svg: '<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="16" fill="#eef3f8" stroke="#14162e" stroke-width="3"/><circle cx="18" cy="24" r="2.5" fill="#14162e"/><circle cx="30" cy="24" r="2.5" fill="#14162e"/><path d="M17 32q7 5 14 0" fill="none" stroke="#14162e" stroke-width="3" stroke-linecap="round"/><path d="M12 13l4 6M36 13l-4 6" stroke="#9fdcff" stroke-width="3" stroke-linecap="round"/></svg>' },
-  { w: 2, pay: 12, svg: '<svg viewBox="0 0 48 48"><polygon points="24,5 40,24 24,43 8,24" fill="#7fe3ff" stroke="#14162e" stroke-width="3" stroke-linejoin="round"/><polygon points="24,12 33,24 24,36 15,24" fill="#d8f8ff"/></svg>' },
-  { w: 3, pay: 8, svg: '<svg viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="24" rx="4" fill="#2b3040" stroke="#14162e" stroke-width="3"/><circle cx="24" cy="26" r="8" fill="#7fe3ff" stroke="#14162e" stroke-width="3"/><rect x="12" y="8" width="10" height="6" fill="#ff4a2b" stroke="#14162e" stroke-width="2"/></svg>' },
-  { w: 4, pay: 5, svg: '<svg viewBox="0 0 48 48"><ellipse cx="24" cy="27" rx="12" ry="17" fill="#a8703c" stroke="#14162e" stroke-width="3"/><path d="M14 21q10 6 20 0M13 29q11 6 22 0M16 36q8 5 16 0" fill="none" stroke="#5e3a1c" stroke-width="2.5"/><path d="M24 10V5" stroke="#14162e" stroke-width="3"/></svg>' },
-  { w: 5, pay: 3, svg: '<svg viewBox="0 0 48 48"><g stroke="#eef3f8" stroke-width="4" stroke-linecap="round"><path d="M24 6v36M8.4 15l31.2 18M8.4 33l31.2-18"/></g><circle cx="24" cy="24" r="3.5" fill="#7fe3ff"/></svg>' }
-];
-const SYMW = SYM.reduce((a, s) => a + s.w, 0);
-const lgPick = () => { let r = Math.random() * SYMW; for (let i = 0; i < SYM.length; i++) { r -= SYM[i].w; if (r < 0) return i; } return SYM.length - 1; };
-const lg = { bet: 10, spinning: false, pend: 0 };
-const lgMsg = t => { const m = $('lgMsg'); if (m) m.textContent = t; };
-function lgRefresh() {
-  const b = $('lgBank'); if (!b) return; b.textContent = save.bank;
-  if (save.bank < lg.bet) lg.bet = [100, 50, 10].find(v => v <= save.bank) || 10;
-  $('bets').innerHTML = [10, 50, 100].map(v => `<button class="btn ${v === lg.bet ? 'on' : ''}" data-b="${v}" ${save.bank < v || lg.spinning ? 'disabled' : ''}>${v}</button>`).join('');
-  $('bets').querySelectorAll('button').forEach(x => x.onclick = () => { lg.bet = +x.dataset.b; lgRefresh(); });
-  $('lgSpin').disabled = lg.spinning || save.bank < lg.bet; $('lgDbl').hidden = !(lg.pend > 0) || lg.spinning; $('lgLoan').hidden = !(save.bank < 10) || lg.spinning;
-  $('lgDbl').textContent = 'Double or nothing, ' + lg.pend; $('hpClose').disabled = lg.spinning; $('lgFilm').disabled = lg.spinning || save.bank < 40;
-}
-function openLodge() {
-  lg.spinning = false; lg.pend = 0;
-  panel(`<div class="top"><h2>The Lucky Lodge</h2><span class="bank" id="lgBank"></span></div>
-    <div class="reels" id="reels"><div class="reel">${SYM[0].svg}</div><div class="reel">${SYM[1].svg}</div><div class="reel">${SYM[2].svg}</div></div>
-    <div class="lgmsg" id="lgMsg">Pick a bet and spin.</div>
-    <div class="bets" id="bets"></div>
-    <div class="row"><button class="btn go" id="lgSpin">Spin</button><button class="btn" id="lgDbl" hidden>Double or nothing</button><button class="btn" id="lgLoan" hidden>Bet covers you, 20 shards</button><button class="btn" id="lgFilm">Develop a film roll, 40</button><button class="btn" id="hpClose">Leave</button></div>
-    <div class="pays">${SYM.map(s => `<span>${s.svg}${s.pay}×</span>`).join('')}</div>
-    <p class="lgnote">Film rolls turn up a random field find for your album, rare ones included. Three matching symbols pay the number shown. Any two matching pay 1.2×. Shards are play money you earn by skiing, and nothing here costs or pays out real money.</p>`);
-  $('lgFilm').onclick = () => { if (lg.spinning || save.bank < 40) return; save.bank -= 40; const f = rollFind(RW[0]); persist(); lgMsg('Developed: ' + findTxt(f)); (f.it.r >= 2 ? sfx.trick : sfx.shard)(); lgRefresh(); };
-  $('lgSpin').onclick = lgSpin; $('lgDbl').onclick = lgDouble; $('lgLoan').onclick = () => { save.bank += 20; persist(); lgMsg('Bet slides you 20 shards. Pay it forward.'); lgRefresh(); };
-  lgRefresh();
-}
-function lgSpin() {
-  if (lg.spinning || save.bank < lg.bet) return;
-  lg.spinning = true; save.bank -= lg.bet; lg.pend = 0; persist(); lgRefresh(); lgMsg('');
-  const res = [lgPick(), lgPick(), lgPick()], rs = [...document.querySelectorAll('#reels .reel')], done = [false, false, false];
-  rs.forEach(r => r.classList.remove('win'));
-  const iv = setInterval(() => { rs.forEach((r, i) => { if (!done[i]) r.innerHTML = SYM[Math.floor(Math.random() * SYM.length)].svg; }); tone(260 + Math.random() * 120, 0.03, 'square', 0.02); }, 70);
-  [550, 850, 1150].forEach((ms, i) => setTimeout(() => { done[i] = true; rs[i].innerHTML = SYM[res[i]].svg; sfx.blip(); if (i === 2) { clearInterval(iv); lgResolve(res, rs); } }, ms));
-}
-function lgResolve(res, rs) {
-  const [a, b, c] = res; let mult = 0;
-  if (a === b && b === c) mult = SYM[a].pay; else if (a === b || b === c || a === c) mult = 1.2;
-  const win = Math.floor(lg.bet * mult + 1e-9); lg.spinning = false;
-  if (win > 0) {
-    save.bank += win; lg.pend = win;
-    rs.forEach((r, i) => { if (mult > 1.2 || res.filter(v => v === res[i]).length > 1) r.classList.add('win'); });
-    lgMsg(mult > 1.2 ? 'Three in a row. Pays ' + win + '.' : 'A pair. Pays ' + win + '.'); if (mult > 1.2) sfx.trick(); else sfx.shard();
-  } else lgMsg('Nothing lined up. The house keeps the ' + lg.bet + '.');
-  persist(); lgRefresh();
-}
-function lgDouble() {
-  if (lg.spinning || !lg.pend) return; lg.spinning = true; lgMsg('The coin is in the air...'); lgRefresh(); tone(700, 0.5, 'triangle', 0.04, 1400);
-  setTimeout(() => {
-    if (Math.random() < 0.5) { save.bank += lg.pend; lg.pend *= 2; lgMsg('Heads. Doubled to ' + lg.pend + '.'); sfx.trick(); }
-    else { save.bank -= lg.pend; lgMsg('Tails. The ' + lg.pend + ' goes back to the house.'); lg.pend = 0; sfx.crash(); }
-    lg.spinning = false; persist(); lgRefresh();
-  }, 900);
 }
 
 /* Dawa's outfitters: parkas for shards, or for pinecones */
@@ -1499,6 +1419,6 @@ function frame(now) {
 }
 startTitle();
 requestAnimationFrame(frame);
-window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, startReel, endReel, openAlbum, openFinale, rollFind, ITEMS, END, albumCount, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
+window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, startReel, endReel, openAlbum, openFinale, rollFind, ITEMS, END, albumCount, openTape, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
 })();
 </script>
