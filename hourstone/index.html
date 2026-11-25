@@ -348,7 +348,7 @@ body.still #game { transition: filter .3s; }
 
 <div id="pause" class="ov dim hidden"><div class="panel">
   <h2>Paused</h2>
-  <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Land on rails to grind. Chain tricks for a combo, and hold <kbd>Shift</kbd> to spend boost.</p>
+  <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Chain tricks for a combo, and hold <kbd>Shift</kbd> to spend boost.</p>
   <div class="stats" id="pGoals"></div>
   <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Back to basecamp</button></div>
 </div></div>
@@ -464,14 +464,11 @@ function buildLevel(ci, si) {
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
   const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
   const placeShards = (x0, x1) => { if (x1 - x0 > 600) cand.push({ x: x0 + 150 + R() * (x1 - x0 - 450), dy: -34 }); };
-  const rails = [], RAILP = { forest: 0.12, cave: 0.08, expedition: 0.18, glacier: 0.12, globe: 0.1, volcano: 0.08 }[C.zone] || 0.1;
-  const railSeg = () => { seg(260, () => STEP * 0.16); const a = X(); seg(560 + R() * 300, () => STEP * 0.14); const b = X(); rails.push([a + 30, b - 30]); cand.push({ x: (a + b) / 2, dy: -70 }); seg(240, () => STEP * 0.18); };
-  seg(800, () => STEP * 0.07); cps.push(300); railSeg(); /* every stage opens with a rail to learn on */
+  seg(800, () => STEP * 0.07); cps.push(300);
   let lastCp = 0;
   while (X() < S.len) {
     const x0 = X(), r = R();
     if (X() - lastCp > 5200) { cps.push(X() + 60); lastCp = X(); seg(300, () => STEP * 0.12); continue; }
-    if (R() < RAILP) { railSeg(); continue; }
     if (r < 0.32) { const len = 900 + R() * 1300, gr = 0.16 + R() * (0.16 + diff * 0.12); seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
     else if (r < 0.56) {
       seg(280, () => STEP * 0.22);
@@ -488,7 +485,7 @@ function buildLevel(ci, si) {
     for (const sh of shards) { const o = obs.find(o => !o.fly && !o.vx && Math.abs(o.x - sh.x) < o.w / 2 + 44); if (o) sh.dy = Math.min(sh.dy, -((o.k === 'geyser' ? 84 : o.h) + 64)); } } /* never inside an obstacle: hang it above, where the jump over it passes */
   const finish = X() + 300; seg(1600, () => STEP * 0.05);
   for (let x = 200; x < X(); x += 90 + R() * 260) deco.push({ x, s: 0.7 + R() * 0.7, v: R() });
-  L = { finds: [], rails, recent: [], combo: 0, comboT: 0, maxCombo: 0, boost: 0, st: { doubles: 0, grabs: 0, grind: 0, boostT: 0, close: 0 }, goals: goalsFor(ci, si), goalDone: [false, false, false], ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
+  L = { finds: [], recent: [], combo: 0, comboT: 0, maxCombo: 0, boost: 0, st: { doubles: 0, grabs: 0, boostT: 0, close: 0 }, goals: goalsFor(ci, si), goalDone: [false, false, false], ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
   if (S.kind === 'chase' || S.kind === 'escape') L.yeti = { x: 900, y: 0, s: 400, ph: 0, air: 0, vy: 0, friendly: S.kind === 'escape' };
   if (S.kind === 'escape') L.lava = { x: -900, s: 430 };
   L.chaseBase = 560 + ci * 18;
@@ -501,19 +498,19 @@ function stalDepth(x) { const k = Math.round(x / STEP / 18) * 18, dx = Math.abs(
 
 /* ================= player ================= */
 const P = { x: 0, y: 0, vx: 0, vy: 0, s: 0, ground: true, rot: 0, trick: 0, grabT: 0, crouch: 0.3, crash: 0, inv: 0, coyote: 0, jumpBuf: 0, hearts: 3, t: 0 };
-const MINS = 270, MAXS = 900, MAXB = 1120, JUMPV = 640, RAIL_H = 46; // top speed leaves about 0.75 s of warning on screen
+const MINS = 270, MAXS = 900, MAXB = 1120, JUMPV = 640; // top speed leaves about 0.75 s of warning on screen
 let cam = { x: 0, y: 0 }, shake = 0, demo = false;
 function respawn(full) {
   const cpx = full ? L.cps[0] : L.cp;
   P.x = cpx; P.y = groundAt(cpx); if (isNaN(P.y)) P.y = baseAt(cpx);
-  P.s = 330; P.vx = P.s; P.vy = 0; P.ground = true; P.grind = null; P.boosting = false; P.rot = slopeAt(cpx);
+  P.s = 330; P.vx = P.s; P.vy = 0; P.ground = true; P.boosting = false; P.rot = slopeAt(cpx);
   for (const o of L.obs) if (o.vx && o.x0 > cpx) o.x = o.x0; /* moving obstacles ahead start over */ P.trick = 0; P.grabT = 0; P.crash = 0; P.inv = full ? 0 : 1.5;
   if (L.yeti) { L.yeti.x = P.x + (L.yeti.friendly ? 380 : 520); L.yeti.s = L.chaseBase; L.yeti.air = 0; L.lostT = 0; }
   if (L.lava) L.lava.x = P.x - 1000;
 }
 function crash(why) {
   if (P.crash > 0 || (P.inv > 0 && why !== 'fall') || demo) { if (demo && why === 'fall') respawn(true); return; }
-  L.whys = (L.whys || []).concat(why); L.combo = 0; L.comboT = 0; P.grind = null; P.crash = 1.1; P.hearts--; L.crashes++; P.spin = (Math.random() < 0.5 ? -1 : 1) * 9;
+  L.whys = (L.whys || []).concat(why); L.combo = 0; L.comboT = 0; P.crash = 1.1; P.hearts--; L.crashes++; P.spin = (Math.random() < 0.5 ? -1 : 1) * 9;
   shake = 1; burst(P.x, P.y - 16, 34, '#ffffff'); sfx.crash();
 }
 function jump() { P.ground = false; P.vy = P.vy - JUMPV; P.coyote = 0; P.jumpBuf = 0; P.trick = 0; P.grabT = 0; sfx.jump(); burst(P.x, P.y, 8, L.Z.top); }
@@ -537,30 +534,23 @@ function registerTrick(name, base, kind) {
   L.combo = L.comboT > 0 ? L.combo + 1 : 1; L.comboT = 2.6; L.maxCombo = Math.max(L.maxCombo, L.combo);
   const mult = Math.min(3, 1 + 0.5 * (L.combo - 1)), pts = Math.round(base * mult / (1 + rep));
   L.score += pts; L.tricks++;
-  L.boost = Math.min(1, L.boost + 0.1 + (kind.flips || 0) * 0.12 + (kind.grind ? 0.15 : 0) + (rep ? 0 : 0.08));
+  L.boost = Math.min(1, L.boost + 0.1 + (kind.flips || 0) * 0.12 + (rep ? 0 : 0.08));
   if (kind.flips >= 2) L.st.doubles++; if (kind.grab) L.st.grabs++;
   popup(P.x, P.y - 70, name + '  +' + pts, rep ? '#c9c2a2' : '#ffcf3f');
   if (L.combo > 1) popup(P.x, P.y - 96, 'Combo ×' + mult, '#8fe6ff'); else if (rep) popup(P.x, P.y - 96, 'Same trick again, half points', '#b0b4c0');
   checkGoals(false);
 }
-function stepGrind(dt) {
-  const [a0, a1] = P.grind, a = slopeAt(P.x);
-  P.s = clamp(P.s + 1750 * L.Z.g * 0.35 * Math.sin(a) * dt - 15 * dt, 320, MAXB);
-  P.x += P.s * Math.cos(a) * dt; P.y = baseAt(P.x) - RAIL_H; P.rot = a; P.grindT += dt; L.st.grind += dt; P.crouch = lerp(P.crouch, 0.7, 1 - Math.exp(-10 * dt));
-  if (Math.random() < 0.7) parts.push({ x: P.x - 4, y: P.y, vx: -90 - Math.random() * 140, vy: -60 - Math.random() * 140, life: 0.35, col: Math.random() < 0.5 ? '#ffcf3f' : '#ffffff', r: 1.4 + Math.random() * 1.4 });
-  if (P.x > a1 || P.jumpBuf > 0) { const jumped = P.jumpBuf > 0, t = P.grindT; P.grind = null; P.grindT = 0; P.ground = false; P.vx = P.s * Math.cos(a); P.vy = P.s * Math.sin(a); if (t > 0.25) registerTrick('Rail grind', Math.round(150 + t * 450), { grind: t }); if (jumped) jump(); else P.vy -= 140; }
-}
 /* stage goals, Alto's Adventure style: three fixed goals per stage */
 const GOALT = {
   shards: ['Collect all 3 shards', L => L.got >= L.shards.length], clean: ['Finish without crashing', L => L.crashes === 0, true],
   silver: ['Finish at silver pace or faster', L => medalOf(L.S, L.time) >= 2, true], photo: ['Keep the yeti in camera range for 4 seconds', L => L.st.close >= 4],
-  double: ['Land a double flip', L => L.st.doubles > 0], combo3: ['Chain a 3-trick combo', L => L.maxCombo >= 3], grind2: ['Grind rails for 2 seconds in total', L => L.st.grind >= 2],
+  double: ['Land a double flip', L => L.st.doubles > 0], combo3: ['Chain a 3-trick combo', L => L.maxCombo >= 3],
   grabs3: ['Land 3 grabs', L => L.st.grabs >= 3], tricks8: ['Land 8 tricks', L => L.tricks >= 8], boost3: ['Boost for 3 seconds', L => L.st.boostT >= 3]
 };
 function goalsFor(ci, si) {
   const R = rng(900 + ci * 31 + si * 17), kind = CH[ci].stages[si].kind;
   const first = kind === 'chase' ? 'photo' : kind === 'escape' ? 'clean' : ['shards', 'clean', 'silver'][Math.floor(R() * 3)];
-  const pool = ['double', 'combo3', 'grind2', 'grabs3', 'tricks8', 'boost3'], a = pool.splice(Math.floor(R() * pool.length), 1)[0];
+  const pool = ['double', 'combo3', 'grabs3', 'tricks8', 'boost3'], a = pool.splice(Math.floor(R() * pool.length), 1)[0];
   return [first, a, pool[Math.floor(R() * pool.length)]];
 }
 function checkGoals(final) {
@@ -597,8 +587,7 @@ function stepPlayer(dt) {
   }
   const k = input(), Z = L.Z, G = 1750 * Z.g;
   P.jumpBuf -= dt; P.coyote -= dt;
-  if (P.grind) stepGrind(dt);
-  else if (P.ground) {
+  if (P.ground) {
     if (L.comboT > 0 && (L.comboT -= dt) <= 0) { if (L.combo > 1) popup(P.x, P.y - 80, 'Combo over', '#8fe6ff'); L.combo = 0; }
     const a = Math.atan2(baseAt(P.x) - baseAt(P.x - 8), 8); let s = P.s; /* slope behind the skis, so a lip or drop-off launches you instead of steering you down the wall */
     s += G * 0.45 * Math.sin(a) * dt;
@@ -626,8 +615,6 @@ function stepPlayer(dt) {
     else { const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-3 * dt); }
     if (k.d) P.grabT += dt;
     P.crouch = lerp(P.crouch, k.d ? 1.2 : 0.55, 1 - Math.exp(-10 * dt));
-    if (P.vy > 0) for (const [a0, a1] of L.rails) if (P.x > a0 && P.x < a1) { const ry = baseAt(P.x) - RAIL_H; if (P.y >= ry && P.y - P.vy * dt <= ry + 8) { if (Math.abs(wrapA(P.rot - slopeAt(P.x))) > 1.2) crash('rail'); else { airTricks(); P.grind = [a0, a1]; P.grindT = 0; P.y = ry; P.s = clamp(Math.hypot(P.vx, P.vy), 340, MAXB); P.vy = 0; sfx.land(); tone(1800, 0.12, 'sawtooth', 0.02, 900); } } break; }
-    if (P.grind) return;
     if (Z.ceiling) { const c = ceilAt(P.x) + 48 + stalDepth(P.x); if (P.y < c) { P.y = c; if (P.vy < 0) P.vy *= -0.2; } }
     const gy = groundAt(P.x);
     if (!isNaN(gy) && P.y >= gy) land(gy);
@@ -909,15 +896,6 @@ function drawPortal(cx, cy, rx, ry, c0, c1, t, small) {
   if (!small) for (let i = 0; i < 10; i++) { const ang = t * (0.8 + hash(i) * 0.6) + i / 10 * TAU, r = 1.12 + hash(i + 4) * 0.25; g.fillStyle = i % 2 ? '#ffffff' : c0; g.beginPath(); g.arc(cx + Math.cos(ang) * rx * r, cy + Math.sin(ang) * ry * r, 2 + hash(i + 9) * 2, 0, TAU); g.fill(); }
   g.restore();
 }
-function drawRails(VW) {
-  for (const [a0, a1] of L.rails || []) {
-    if (a1 < cam.x - 40 || a0 > cam.x + VW + 40) continue;
-    g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.fillStyle = '#5b6274';
-    for (let x = a0 + 20; x < a1; x += 90) { const y = baseAt(x); g.fillRect(x - 3, y - RAIL_H, 6, RAIL_H); g.strokeRect(x - 3, y - RAIL_H, 6, RAIL_H); }
-    g.beginPath(); for (let x = a0; x <= a1; x += 20) { const y = baseAt(x) - RAIL_H; x === a0 ? g.moveTo(x, y) : g.lineTo(x, y); } g.lineTo(a1, baseAt(a1) - RAIL_H);
-    g.lineCap = 'round'; g.lineWidth = 9; g.strokeStyle = '#14162e'; g.stroke(); g.lineWidth = 5; g.strokeStyle = '#c9ced8'; g.stroke(); g.lineWidth = 1.5; g.strokeStyle = '#fff'; g.stroke();
-  }
-}
 function drawMarkers() {
   if (L.hub) return;
   for (const c of L.cps) { if (c < 400) continue; const y = baseAt(c); g.fillStyle = '#d7dbe8'; g.fillRect(c - 2, y - 80, 4, 80); g.fillStyle = c <= L.cp ? '#7fe3ff' : '#ff5d3a'; g.beginPath(); g.moveTo(c + 2, y - 80); g.lineTo(c + 34, y - 70); g.lineTo(c + 2, y - 58); g.fill(); g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.stroke(); }
@@ -960,7 +938,7 @@ function render(dt) {
   drawBackground(VW);
   const sh = reduced ? 0 : shake * 6;
   g.save(); g.translate(-cam.x + (Math.random() - 0.5) * sh, -cam.y + (Math.random() - 0.5) * sh);
-  drawDeco(VW); drawTerrain(VW); drawRails(VW); drawMarkers(); drawShards(); if (L.hub) drawHub(VW);
+  drawDeco(VW); drawTerrain(VW); drawMarkers(); drawShards(); if (L.hub) drawHub(VW);
   for (const o of L.obs) if (o.x > cam.x - 120 && o.x < cam.x + VW + 120) drawObs(o);
   if (L.yeti) drawYeti(L.yeti.x, L.yeti.y, L.yeti.ph, L.yeti.s > 40, 1, L.ci > 0 || L.si === 2);
   if (L.hub) { WALK = P.walkT || 0; g.save(); g.translate(P.x, 0); g.scale(P.face || 1, 1); g.translate(-P.x, 0); drawArlo(P.x, P.y, P.rot * (P.face || 1), 0.1, false, P.t, false, 1); g.restore(); WALK = null; }
@@ -1418,7 +1396,7 @@ function hubAct() {
   else if (t.kind === 'shop') { if (save.told.dawa) openShop(); else { save.told.dawa = 1; persist(); hubDialog(DAWA_INTRO, openShop); } }
 }
 const WELCOME = [[J, "Arlo, you made it to Basecamp. Radio check: can you hear me?"], [A, "Loud and clear. Day 212. Still no yeti."], [J, "Then start at the first door. Every stage has a gold, silver and bronze time, so go back and beat them whenever you like."], [T, "Left and right to walk, up at a door to go in. There are pinecones lying around camp, so look around."]];
-const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."], [J, "Hit the rails. Land on one and you grind it. Jump off the end straight into a flip and the combo keeps going."], [J, "Every trick charges your boost. Hold Shift to burn it. Mixing up your tricks charges it faster."], [J, "Each stage has three goals. Do all three and you get a guaranteed rare find."]];
+const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."], [J, "Every trick charges your boost. Hold Shift to burn it. Mixing up your tricks charges it faster."], [J, "Each stage has three goals. Do all three and you get a guaranteed rare find."]];
 const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
 
 /* panels */
