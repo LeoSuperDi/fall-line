@@ -14,5 +14,6 @@ const list = places.length ? places : ['village', 'summit', 'pine_top', 'ember_t
   await page.click('#tNew'); await page.waitForTimeout(800);
   await page.evaluate(() => { __fl.save.time = 0.3; });
   for (const p of list) { await travelTo(page, p); await page.waitForTimeout(3000); await page.screenshot({ path: path.join(dir, p + (mobile ? '-mobile' : '') + '.png') }); console.log('saved', p); }
+  await page.evaluate(() => __fl.openOv('mapOv')); await page.waitForTimeout(6000); await page.screenshot({ path: path.join(dir, 'map.png') });
   console.log('errors', errors); await browser.close();
 })();

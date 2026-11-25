@@ -67,7 +67,7 @@ function updateHUD() {
 }
 
 /* ================= interaction + dialog ================= */
-const STATIONS = []; LIFTS.forEach(L => { const sg = Math.sign(L.zb - L.za); STATIONS.push({ x: L.x, z: L.za + 8 * sg, to: L.top, label: 'Ride the gondola up' }, { x: L.x, z: L.zb - 9 * sg, to: L.base, label: 'Ride the gondola down' }); });
+const STATIONS = []; LIFTS.forEach(L => STATIONS.push({ x: L.xa + L.ux * 8, z: L.za + L.uz * 8, to: L.top, label: 'Ride the gondola up' }, { x: L.xb - L.ux * 9, z: L.zb - L.uz * 9, to: L.base, label: 'Ride the gondola down' }));
 function currentInteract() {
   if (P.crash > 0) return null;
   let best = null, bd = 1e9;
@@ -150,7 +150,7 @@ function travel(to, viaLift, msg) {
 }
 
 /* ================= map ================= */
-const mapCv = $('mapCv'), MW = 760, MH = 552;
+const mapCv = $('mapCv'), MW = 660, MH = 660;
 const mu = x => (x - WORLD.x0) / (WORLD.x1 - WORLD.x0) * MW, mv = z => (WORLD.z1 - z) / (WORLD.z1 - WORLD.z0) * MH;
 let mapBase = null;
 function buildMapBase() {
@@ -174,9 +174,9 @@ function buildMapBase() {
     RUNS.forEach(run => { if (!run.link) return; for (let k = 0; k < run.path.length - 1; k++) { const p = run.path[k], q = run.path[k + 1]; if (!p.mode) continue;
       g.lineCap = 'butt'; g.setLineDash(p.mode === 'tunnel' ? [3, 3] : []); g.strokeStyle = p.mode === 'tunnel' ? '#2b2f3a' : '#f4efe6'; g.lineWidth = p.mode === 'tunnel' ? 4 : 6;
       g.beginPath(); g.moveTo(mu(p.x), mv(p.z)); g.lineTo(mu(q.x), mv(q.z)); g.stroke(); } }); g.setLineDash([]); g.lineCap = 'round';
-    g.strokeStyle = '#5fb6b2'; g.lineWidth = 3; g.beginPath(); for (let x = WORLD.x0; x <= WORLD.x1; x += 40) { const z = -870 - 18 * Math.sin(x * 0.004) - 8 * Math.sin(x * 0.011 + 1); x === WORLD.x0 ? g.moveTo(mu(x), mv(z)) : g.lineTo(mu(x), mv(z)); } g.stroke();
+    g.fillStyle = '#8fd0e0'; g.beginPath(); g.arc(mu(RING.cx), mv(RING.cz), 118 / (WORLD.x1 - WORLD.x0) * MW, 0, TAU); g.fill(); // the tarn
     g.strokeStyle = '#3a4256'; g.setLineDash([5, 4]); g.lineWidth = 1.6;
-    LIFTS.forEach(L => { g.beginPath(); g.moveTo(mu(L.x), mv(L.za)); g.lineTo(mu(L.x), mv(L.zb)); g.stroke(); }); g.setLineDash([]);
+    LIFTS.forEach(L => { g.beginPath(); g.moveTo(mu(L.xa), mv(L.za)); g.lineTo(mu(L.xb), mv(L.zb)); g.stroke(); }); g.setLineDash([]);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 22px "Barlow Condensed", sans-serif';
     REGIONS.forEach(r => { const [x, z] = toWorld(r, r.uS * 0.5, 60); g.lineWidth = 5; g.strokeStyle = 'rgba(238,243,248,.85)'; g.strokeText(r.name, mu(x), mv(z)); g.fillStyle = '#1d3a33'; g.fillText(r.name, mu(x), mv(z)); });
   });

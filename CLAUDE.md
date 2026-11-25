@@ -25,6 +25,7 @@ Connector trails (`LINKS` in world.js, `link: true`) ring the six mountains and 
 `mode`. `H(x, z, yHint)` returns bridge decks / tunnel floors via `linkDeck`, otherwise the drawn mesh height (`meshH`).
 Obstacles may carry a `y` (rails, tunnel walls) and `kind: 'rail'` pushes without crashing. `node tools/features.js`
 (MODE=bridge|tunnel BACK=n) screenshots them.
+In the air, ←/→ spin and ↑/↓ flip (`spinA`, `flipA`); landing within ~60° of upright scores, otherwise you crash.
 Only Space leaves the ground; there are no automatic launches. Before publishing, run `node tools/ride.js` too.
 Snow is a real 0.5 m layer (`SNOW_D` in `Hm`), thinner where meadows show through. Space jumps (`groundStep`), Shift stops.
 Terrain is 400 m tiles: a coarse mesh for every tile at start (so everything is visible), detailed mesh + trees

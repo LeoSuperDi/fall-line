@@ -379,7 +379,7 @@ function updateEvents(dt) {
   evTimer -= dt; if (evTimer > 0) return;
   const pool = ['herd', 'golden', 'lost', 'storm', 'herd', 'golden'];
   const here = regionAt(P.x, P.z);
-  if (here && here.row > 0 && P.z > -250 && P.s > 8) pool.push('avalanche');
+  if (here && here.id === 'frost' && P.z > -250 && P.s > 8) pool.push('avalanche');
   if (here && here.id === 'crags') pool.push('storm');
   if (P.s > 6 && P.z > -300) pool.push('rival', 'rival');
   const type = pool[(Math.random() * pool.length) | 0];

@@ -36,6 +36,12 @@ const COVER_GEOS = { // little things on the ground, drawn only close to you
   deadtree: merge([{ geo: T(new THREE.CylinderGeometry(0.12, 0.22, 4, 6), 0, 2, 0), col: '#5a4636' }].concat([0.5, 2.2, 3.9, 5.3].map((a, i) => { const g = new THREE.CylinderGeometry(0.04, 0.08, 1.6 - i * 0.2, 4); g.rotateZ(0.9); g.rotateY(a); return { geo: T(g, Math.cos(a) * 0.5, 2.4 + i * 0.45, -Math.sin(a) * 0.5), col: '#5a4636' }; }))),
   lavarock: merge([{ geo: (() => { const g = new THREE.DodecahedronGeometry(0.55, 0); g.scale(1, 0.7, 0.9); return T(g, 0, 0.25, 0); })(), col: (c, x, y, z, nx, ny, nz) => c.set(hsh(Math.round(nx * 9), Math.round(nz * 9)) < 0.18 ? '#ff7a2a' : '#2e2a2b') }]),
   shard: merge([{ geo: (() => { const g = new THREE.OctahedronGeometry(0.4, 0); g.scale(0.6, 2.2, 0.6); g.rotateZ(0.25); return T(g, 0, 0.7, 0); })(), col: (c, x, y, z, nx, ny) => c.set(ny > 0.3 ? '#dff4fc' : '#8fd0ec') }]),
+  cactus: merge([{ geo: T(new THREE.CylinderGeometry(0.22, 0.26, 3.2, 8), 0, 1.6, 0), col: '#4f8a4a' }, { geo: T(new THREE.SphereGeometry(0.22, 8, 6), 0, 3.2, 0), col: '#5d9a55' },
+    { geo: (() => { const g = new THREE.CylinderGeometry(0.15, 0.16, 1.1, 7); return T(g, 0.55, 2.1, 0); })(), col: '#4f8a4a' }, { geo: T(new THREE.CylinderGeometry(0.15, 0.15, 0.5, 7).rotateZ(Math.PI / 2), 0.32, 1.6, 0), col: '#4f8a4a' },
+    { geo: (() => { const g = new THREE.CylinderGeometry(0.14, 0.15, 0.8, 7); return T(g, -0.5, 1.9, 0); })(), col: '#4f8a4a' }, { geo: T(new THREE.CylinderGeometry(0.14, 0.14, 0.45, 7).rotateZ(Math.PI / 2), -0.3, 1.5, 0), col: '#4f8a4a' }]),
+  sulphur: merge([{ geo: (() => { const g = new THREE.CircleGeometry(0.55, 9); g.rotateX(-Math.PI / 2); return T(g, 0, 0.06, 0); })(), col: '#e8d03a' }, { geo: T(new THREE.IcosahedronGeometry(0.22, 0), 0.3, 0.12, 0.2), col: '#f2e05a' }]),
+  fern: merge([0, 1, 2, 3, 4, 5].map(i => { const g = new THREE.ConeGeometry(0.12, 0.9, 3); g.scale(1, 1, 0.25); g.rotateZ(0.9); g.rotateY(i * 1.05); return { geo: T(g, Math.cos(i * 1.05) * 0.3, 0.3, -Math.sin(i * 1.05) * 0.3), col: (c, x, y, z, nx, ny, nz, f) => c.set('#3f6b2e').lerp(C('#7fae4a'), f) }; })),
+  mossrock: merge([{ geo: (() => { const g = new THREE.DodecahedronGeometry(0.9, 1); g.scale(1.2, 0.7, 1); return T(g, 0, 0.35, 0); })(), col: (c, x, y, z, nx, ny) => c.set(ny > 0.5 ? '#5e7f3d' : '#6d7180') }]),
   scree: merge([0, 1, 2, 3].map(i => ({ geo: (() => { const g = new THREE.DodecahedronGeometry(0.18 + (i % 2) * 0.12, 0); g.scale(1, 0.6, 0.9); return T(g, Math.cos(i * 1.7) * 0.4, 0.08, Math.sin(i * 1.7) * 0.4); })(), col: i % 2 ? '#8e8f97' : '#6e7079' })))
 };
 const tileBuckets = new Map();
@@ -43,9 +49,10 @@ function tileBucket(x, z) { const k = Math.floor((x - TX0) / TILE) + Math.floor(
 const ROCK_GEOS = [rockGeo(1), rockGeo(2), rockGeo(3)];
 const LIFT_X = -470;
 /* one gondola per mountain, each running straight up the fall line */
-const LIFTS = [{ id: 'frost', x: LIFT_X, za: -648, zb: 664, top: 'summit', base: 'base' }];
-REGIONS.forEach(r => { if (r.id === 'frost') return; const [x, za] = toWorld(r, 70, r.vS), [, zb] = toWorld(r, r.topU + 26, r.vS); LIFTS.push({ id: r.id, x, za, zb, top: r.id + '_top', base: r.id + '_base' }); });
-function nearLift(x, z, d) { for (const L of LIFTS) if (Math.abs(x - L.x) < d && z > Math.min(L.za, L.zb) - 12 && z < Math.max(L.za, L.zb) + 12) return true; return false; }
+const LIFTS = [{ id: 'frost', xa: LIFT_X, za: -648, xb: LIFT_X, zb: 664, top: 'summit', base: 'base' }];
+REGIONS.forEach(r => { if (r.id === 'frost') return; const [xa, za] = toWorld(r, 70, r.vS), [xb, zb] = toWorld(r, r.topU + 26, r.vS); LIFTS.push({ id: r.id, xa, za, xb, zb, top: r.id + '_top', base: r.id + '_base' }); });
+LIFTS.forEach(L => { L.len = Math.hypot(L.xb - L.xa, L.zb - L.za); L.ux = (L.xb - L.xa) / L.len; L.uz = (L.zb - L.za) / L.len; L.rot = Math.atan2(L.ux, L.uz); L.x = (L.xa + L.xb) / 2; L.z = (L.za + L.zb) / 2; });
+function nearLift(x, z, d) { for (const L of LIFTS) { const t = (x - L.xa) * L.ux + (z - L.za) * L.uz; if (t < -12 || t > L.len + 12) continue; if (Math.abs((x - L.xa) * L.uz - (z - L.za) * L.ux) < d) return true; } return false; }
 const reserved = []; // circles kept free of trees
 function reserve(x, z, r) { reserved.push([x, z, r]); }
 POIS.forEach(p => reserve(p.x, p.z, p.id === 'lake' ? 0 : Math.min(p.r * 0.8, 40)));
@@ -96,8 +103,11 @@ function* genTreesGen(t) {
     if (h > 1000 && q > 0.25) continue;
     let kind = null;
     const th = thawAt(px, pz, Hraw(px, pz));
-    if (id === 'dunes') kind = q < 0.1 ? 'drygrass' : q < 0.112 ? 'deadtree' : q < 0.14 ? 'scree' : null;
-    else if (id === 'ember') kind = q < 0.09 ? 'lavarock' : q < 0.15 ? 'scree' : q < 0.16 ? 'deadtree' : null;
+    const gk = snowType(px, pz, 0.3);
+    if (id === 'dunes') kind = q < 0.1 ? 'drygrass' : q < 0.112 ? 'deadtree' : q < 0.14 ? 'scree' : q < 0.152 ? 'cactus' : null;
+    else if (id === 'ember') kind = q < 0.09 ? 'lavarock' : q < 0.15 ? 'scree' : q < 0.16 ? 'deadtree' : q < 0.19 ? 'sulphur' : null;
+    else if (gk === 'forest') kind = q < 0.22 ? 'fern' : q < 0.28 ? 'mossrock' : q < 0.31 ? 'stump' : q < 0.33 ? 'log' : null;
+    else if (gk === 'rock') kind = q < 0.25 ? 'scree' : q < 0.29 ? 'mossrock' : null;
     else if (th > 0.45) kind = q < 0.55 ? 'tuft' : q < 0.7 ? 'heath' : q < 0.8 ? 'pebble' : q < 0.88 ? 'bush' : null;
     else {
       const dens = treeDensity(px, pz), woods = id === 'pine' ? 2 : 1;
@@ -106,9 +116,9 @@ function* genTreesGen(t) {
       if (!kind && id === 'crags' && q > 0.8) kind = 'scree';
     }
     if (!kind) continue;
-    if ((kind === 'log' || kind === 'deadtree') && (onPiste(px, pz, 6) || isReserved(px, pz) || !clearOf(px, pz, 1.5))) continue;
+    if ((kind === 'log' || kind === 'deadtree' || kind === 'cactus') && (onPiste(px, pz, 6) || isReserved(px, pz) || !clearOf(px, pz, 1.5))) continue;
     CV[kind].push(px, h - 0.05, pz, 0.7 + r() * 0.8, r() * TAU);
-    if (kind === 'log') addObs(px, pz, 1.2, 'log'); else if (kind === 'deadtree') addObs(px, pz, 0.5, 'tree');
+    if (kind === 'log') addObs(px, pz, 1.2, 'log'); else if (kind === 'deadtree' || kind === 'cactus') addObs(px, pz, 0.5, 'tree');
   }
   yield;
   // rock outcrops in the valley and on the lower slopes, some carrying grass, some snow
@@ -153,11 +163,12 @@ const dummy = new THREE.Object3D();
 /* ================= moguls ================= */
 {
   const list = [];
-  for (let j = 0; j < MOG.nj; j++) for (let i = 0; i < MOG.ni; i++) { const a = MOG.amp[j * MOG.ni + i]; if (a) list.push([MOG.x0 + i * MOG.sx + (j % 2) * MOG.sx / 2, MOG.z0 + j * MOG.sz, a]); }
-  const g = new THREE.SphereGeometry(1, 12, 6, 0, TAU, 0, Math.PI / 2);
-  const m = new THREE.InstancedMesh(g, toon('#f4f6fc'), list.length);
-  list.forEach(([x, z, a], i) => { dummy.position.set(x, Hm(x, z) - 0.05, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(MOG_R, a, MOG_R * 0.95); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix); });
-  m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; scene.add(m);
+  for (const F of MOGS) for (let j = 0; j < F.nj; j++) for (let i = 0; i < F.ni; i++) { const a = F.amp[j * F.ni + i]; if (a) list.push([F.x0 + i * F.sx + (j % 2) * F.sx / 2, F.z0 + j * F.sz, a]); }
+  const g = new THREE.SphereGeometry(1, 12, 6, 0, TAU, 0, Math.PI / 2), cc = new THREE.Color();
+  const m = new THREE.InstancedMesh(g, new THREE.MeshToonMaterial({ gradientMap: gradMap }), list.length);
+  list.forEach(([x, z, a], i) => { dummy.position.set(x, Hm(x, z) - 0.05, z); dummy.rotation.set(0, 0, 0); dummy.scale.set(MOG_R, a, MOG_R * 0.95); dummy.updateMatrix(); m.setMatrixAt(i, dummy.matrix);
+    const rg = regionAt(x, z); m.setColorAt(i, cc.set(rg && rg.id === 'dunes' ? '#f0c27a' : rg && rg.id === 'ember' ? '#5a4545' : '#f4f6fc')); });
+  if (m.instanceColor) m.instanceColor.needsUpdate = true; m.castShadow = true; m.receiveShadow = true; m.frustumCulled = false; scene.add(m);
 }
 
 /* ================= buildings & landmarks ================= */
@@ -241,16 +252,16 @@ function buildLandmarks() {
 }
 let campfire = null, shrineCrystal = null, emberLava = null;
 const cabG = merge([{ geo: T(new THREE.BoxGeometry(1.8, 1.8, 2), 0, -2.2, 0), col: (c, x, y, z, nx, ny) => c.set(Math.abs(y + 1.9) < 0.35 && Math.abs(ny) < 0.5 ? '#cfe6f7' : '#e0573f') }, { geo: T(new THREE.CylinderGeometry(0.05, 0.05, 1.4, 4), 0, -0.7, 0), col: '#3a4256' }]);
-function buildLift(L) {
-  const X = L.x, sg = Math.sign(L.zb - L.za); L.line = [];
-  for (let k = 0; k <= 12; k++) { const z = L.za + (L.zb - L.za) * k / 12, y = Hm(X, z); L.line.push([z, y + 15]); cyl(0.45, 0.7, 15, '#6f7a8e', X, y + 7.5, z); box(8, 0.5, 0.6, '#6f7a8e', X, y + 15, z); addObs(X, z, 1.2, 'tower'); }
-  const pts = [], pts2 = []; for (const [z, y] of L.line) { pts.push(new THREE.Vector3(X + 3, y, z)); pts2.push(new THREE.Vector3(X - 3, y, z)); }
+function buildLift(L) { // towers up the fall line, two cables, cabins, and a station at each end
+  const px = L.uz, pz = -L.ux; L.line = [];
+  for (let k = 0; k <= 12; k++) { const t = L.len * k / 12, x = L.xa + L.ux * t, z = L.za + L.uz * t, y = Hm(x, z); L.line.push([x, z, y + 15]);
+    cyl(0.45, 0.7, 15, '#6f7a8e', x, y + 7.5, z); const arm = box(8, 0.5, 0.6, '#6f7a8e', x, y + 15, z); arm.rotation.y = L.rot; addObs(x, z, 1.2, 'tower'); }
   const cm = new THREE.LineBasicMaterial({ color: 0x3a4256 });
-  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), cm)); scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2), cm));
+  for (const sd of [1, -1]) scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(L.line.map(([x, z, y]) => new THREE.Vector3(x + px * 3 * sd, y, z + pz * 3 * sd))), cm));
   L.cabins = new THREE.InstancedMesh(cabG, toonV, 22); L.cabins.frustumCulled = false; scene.add(L.cabins);
-  for (const [z, rot] of [[L.za + 4 * sg, 0], [L.zb - 4 * sg, Math.PI]]) { const g = new THREE.Group(); g.position.set(X, Hm(X, z), z); g.rotation.y = rot; scene.add(g);
+  for (const [t, rot] of [[4, L.rot], [L.len - 4, L.rot + Math.PI]]) { const X = L.xa + L.ux * t, Z = L.za + L.uz * t, g = new THREE.Group(); g.position.set(X, Hm(X, Z), Z); g.rotation.y = rot; scene.add(g);
     box(12, 0.6, 14, '#8b7d78', 0, 7, 0, g); roof(13, 15, 3, '#4f6688', 0, 9, 0, g); roof(13.4, 15.4, 2.6, '#f4f6fb', 0, 9.3, 0, g);
-    for (const sx of [-5.5, 5.5]) for (const sz of [-6, 6]) { cyl(0.35, 0.35, 7, '#6f7a8e', sx, 3.5, sz, g); addObs(X + sx, z + sz, 0.6, 'post'); } }
+    for (const sx of [-5.5, 5.5]) for (const sz of [-6, 6]) { cyl(0.35, 0.35, 7, '#6f7a8e', sx, 3.5, sz, g); addObs(X + sx * Math.cos(rot) + sz * Math.sin(rot), Z - sx * Math.sin(rot) + sz * Math.cos(rot), 0.6, 'post'); } }
 }
 function buildLinks() {
   for (const R of RUNS) { if (!R.link) continue; const P = R.path; let i = 0;
@@ -309,8 +320,8 @@ function buildRegions() {
   CATS.forEach(buildCat);
   for (const r of REGIONS) {
     if (r.id === 'frost') continue;
-    const [sx, sz] = toWorld(r, 100, -110); signBoard(sx, sz, r.row > 0 ? 0 : Math.PI, r.name, 7);
-    const [hx, hz] = toWorld(r, r.topU + 6, 88); house(hx, hz, 8, 7, 4.2, '#b57c5b', r.row > 0 ? 0.2 : Math.PI + 0.2, { chimney: true });
+    const [sx, sz] = toWorld(r, 100, -110); signBoard(sx, sz, r.dh, r.name, 7);
+    const [hx, hz] = toWorld(r, r.topU + 6, 88); house(hx, hz, 8, 7, 4.2, '#b57c5b', r.dh + 0.2, { chimney: true });
     const lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2], lm[3]), ly = Hm(lx, lz);
     if (r.id === 'pine') { house(lx, lz, 12, 8, 5, '#8a6247', 0.4, { chimney: true }); for (let i = 0; i < 4; i++) for (let k = 0; k < 6; k++) { const c = cyl(0.35, 0.35, 6, '#7a5640', lx + 10 + (k % 3) * 0.75, ly + 0.4 + Math.floor(k / 3) * 0.65 + i * 0, lz - 8 + i * 3, null, 8); c.rotation.z = Math.PI / 2; } addObs(lx + 10, lz - 3, 4, 'logs'); }
     if (r.id === 'ember') { // the crater: a glowing lava lake, steam rising from the rim and flanks
@@ -347,7 +358,7 @@ function buildRegions() {
         addObs(cx, cz, w * 0.6, 'serac'); reserve(cx, cz, w + 3);
       }
     }
-    { const [hx2, hz2] = toWorld(r, r.uS * 0.5, 260); house(hx2, hz2, 7, 6, 4, ['#b9563f', '#6f8fa6', '#d8b26a', '#7d9a7a', '#3d5a80'][REGIONS.indexOf(r) % 5], r.row > 0 ? 0.4 : Math.PI + 0.4, { chimney: true }); } // a halfway hut on every mountain
+    { const [hx2, hz2] = toWorld(r, r.uS * 0.5, 260); house(hx2, hz2, 7, 6, 4, ['#b9563f', '#6f8fa6', '#d8b26a', '#7d9a7a', '#3d5a80'][REGIONS.indexOf(r) % 5], r.dh + 0.4, { chimney: true }); } // a halfway hut on every mountain
     if (r.id === 'crags') {
       const rr = mulberry32(31);
       for (let k = 0; k < 6; k++) { const m = new THREE.Mesh(ROCK_GEOS[k % 3], toonV); m.position.set(lx + (k % 2) * 0.2, ly + 0.6 + k * 1.05, lz); m.scale.set(1.5 - k * 0.15, 0.9, 1.4 - k * 0.15); m.rotation.y = k; m.castShadow = true; scene.add(m); }

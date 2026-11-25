@@ -98,7 +98,7 @@ QUESTS.lamps = { title: 'Lamps of Lowpine', giver: 'oskar',
   reward: { coins: 45, item: ['cocoa', 1] }, remind: 'Five lamps: around the square, by the shop, and along the lane to the lodge. Skis off, then walk up and press E.' };
 const COURSES = { fox: { run: 1, f0: 0.07, f1: 0.42, limit: 60, gates: true }, wall: { run: 2, f0: 0.045, f1: 0.965, limit: 110, gates: false } };
 const SPAWNS = { summit: [-432, 646, 0], base: [-250, -648, Math.PI], ranger: [466, -88, 0], hermit: [-486, 224, 0.5], village: [-246, -776, Math.PI] };
-REGIONS.forEach(r => { if (r.id === 'frost') return; const dh = r.row > 0 ? 0 : Math.PI, [tx, tz] = toWorld(r, r.topU - 28, 30), [bx, bz] = toWorld(r, 108, 60), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2] - 24, lm[3]);
+REGIONS.forEach(r => { if (r.id === 'frost') return; const dh = r.dh, [tx, tz] = toWorld(r, r.topU - 28, 30), [bx, bz] = toWorld(r, 108, 60), lm = LANDMARK[r.id], [lx, lz] = toWorld(r, lm[2] - 24, lm[3]);
   SPAWNS[r.id + '_top'] = [tx, tz, dh]; SPAWNS[r.id + '_base'] = [bx, bz, dh + Math.PI]; SPAWNS[lm[0]] = [lx, lz, dh]; if (r.id === 'ember') { const [rx, rz] = toWorld(r, r.uS - 186, 0); SPAWNS[lm[0]] = [rx, rz, dh + Math.PI]; } }); // the crater rim, looking in
 
 /* ================= save ================= */

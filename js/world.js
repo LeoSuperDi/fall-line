@@ -4,38 +4,41 @@
 'use strict';
 
 /* ================= the world =================
-   One connected map. A narrow valley runs east-west (z about -780 to -980) with Lowpine Village on its north edge.
-   Three mountains rise north of it (downhill is -z) and three rise south of it (downhill is +z).
-   x: east(+)/west(-), y: up. Frostpeak, the original mountain, is centred on x = 0. */
-const WORLD = { x0: -3600, x1: 3600, z0: -3540, z1: 1680 };
+   One connected map: six mountains stand in a ring around a round central valley and face inward toward it.
+   Neighbouring mountains overlap at their edges, so together they form one continuous range joined by saddles.
+   x: east(+)/west(-), z: north(+)/south(-), y: up. Frostpeak, the original mountain, is the northern one; Lowpine Village sits at its foot. */
+const RING = { cx: 0, cz: -1460, R0: 700 }; // the valley is a circle of radius R0 around (cx, cz)
+const WORLD = { x0: RING.cx - 3500, x1: RING.cx + 3500, z0: RING.cz - 3500, z1: RING.cz + 3500 };
 const PG = new Map(), PC = 32;
-const MTN_L = 1440, MTN_W = 1120;
-const REGIONS = [
-  { id: 'frost', name: 'Frostpeak', row: 1, cx: 0, peak: 760, kind: 'frost', treeMul: 1, treeline: 450, rockSl: 0.85, uS: 1465, vS: -420, rvN: 520, rvP: 1060, back: 300, exp: 1.2 },
-  { id: 'pine', name: 'Pine Ridge', row: 1, cx: -2400, peak: 700, kind: 'pine', treeMul: 1.75, treeline: 600, rockSl: 0.95, exp: 1.02, rvN: 700, rvP: 700, uS: 1900, vS: 0, back: 480 },
-  { id: 'ember', name: 'Ember Peak', row: 1, cx: 2400, peak: 980, kind: 'volcano', treeMul: 0.18, treeline: 240, rockSl: 0.6, exp: 1.12 },
-  { id: 'dunes', name: 'Sunset Dunes', row: -1, cx: -2400, peak: 600, kind: 'dunes', treeMul: 0.03, treeline: 120, rockSl: 0.9, exp: 1.0 },
-  { id: 'crags', name: 'Windswept Crags', row: -1, cx: 0, peak: 1050, kind: 'crags', treeMul: 0.45, treeline: 380, rockSl: 0.55, exp: 1.22 },
-  { id: 'aurora', name: 'Aurora Peak', row: -1, cx: 2400, peak: 880, kind: 'aurora', treeMul: 0.6, treeline: 420, rockSl: 0.85, exp: 1.45 }
+const REGIONS = [ // ang: compass bearing of the mountain from the valley centre, clockwise from north
+  { id: 'frost', name: 'Frostpeak', ang: 0, peak: 760, kind: 'frost', treeMul: 1, treeline: 450, rockSl: 0.85, uS: 1465, vS: -420, rvN: 520, rvP: 1060, back: 300, exp: 1.2 },
+  { id: 'ember', name: 'Ember Peak', ang: 60, peak: 980, kind: 'volcano', treeMul: 0.12, treeline: 240, rockSl: 0.6, exp: 1.12 },
+  { id: 'aurora', name: 'Aurora Peak', ang: 120, peak: 880, kind: 'aurora', treeMul: 0.6, treeline: 420, rockSl: 0.85, exp: 1.45 },
+  { id: 'crags', name: 'Windswept Crags', ang: 180, peak: 1050, kind: 'crags', treeMul: 0.4, treeline: 380, rockSl: 0.5, exp: 1.22 },
+  { id: 'dunes', name: 'Sunset Dunes', ang: 240, peak: 600, kind: 'dunes', treeMul: 0.03, treeline: 120, rockSl: 0.9, exp: 1.0 },
+  { id: 'pine', name: 'Pine Ridge', ang: 300, peak: 700, kind: 'pine', treeMul: 1.75, treeline: 600, rockSl: 0.95, exp: 1.02, rvN: 700, rvP: 700, uS: 1900, vS: 0, back: 480 }
 ];
-REGIONS.forEach(r => { if (r.uS) return; Object.assign(r, { uS: 1900, vS: 0, rvN: 1100, rvP: 1100, back: 480 }); });
-const REGIONS_BY_ROW = { 1: [], '-1': [] }; // the mountains in each row, west to east
-REGIONS.forEach(r => REGIONS_BY_ROW[r.row].push(r)); REGIONS_BY_ROW[1].sort((a, b) => a.cx - b.cx); REGIONS_BY_ROW[-1].sort((a, b) => a.cx - b.cx);
+REGIONS.forEach(r => { if (!r.uS) Object.assign(r, { uS: 1900, vS: 0, rvN: 1100, rvP: 1100, back: 480 }); });
 REGIONS.forEach(r => { r.topU = r.kind === 'volcano' ? r.uS - 250 : r.uS - 54; r.rimH = r.peak * Math.pow(0.9, r.exp); });
-const REG = {}; REGIONS.forEach(r => { REG[r.id] = r; r.zb = r.row > 0 ? -760 : -980; });
-// local mountain coordinates: u = metres up the fall line from the valley, v = metres across
-function toLocal(r, x, z) { return r.row > 0 ? [z - r.zb, x - r.cx] : [r.zb - z, r.cx - x]; }
-function toWorld(r, u, v) { return r.row > 0 ? [r.cx + v, r.zb + u] : [r.cx - v, r.zb - u]; }
+const REG = {}; REGIONS.forEach((r, i) => { REG[r.id] = r; r.i = i; const a = r.ang * Math.PI / 180;
+  r.dx = Math.sin(a); r.dz = Math.cos(a); r.fx = RING.cx + r.dx * RING.R0; r.fz = RING.cz + r.dz * RING.R0; // the foot of the mountain on the valley's edge
+  r.cx = r.fx; r.dh = Math.atan2(-r.dx, r.dz); }); // dh: the heading that faces downhill, toward the valley
+const NEXT = r => REGIONS[(r.i + 1) % REGIONS.length]; // clockwise neighbour
+// local mountain coordinates: u = metres up the fall line from the valley's edge, v = metres across (positive toward the clockwise neighbour)
+function toLocal(r, x, z) { const a = x - r.fx, b = z - r.fz; return [a * r.dx + b * r.dz, a * r.dz - b * r.dx]; }
+function toWorld(r, u, v) { return [r.fx + r.dx * u + r.dz * v, r.fz + r.dz * u - r.dx * v]; }
+function bearing(x, z) { let a = Math.atan2(x - RING.cx, z - RING.cz) * 180 / Math.PI; return a < 0 ? a + 360 : a; }
+const angDiff = (a, b) => { const d = Math.abs(a - b) % 360; return d > 180 ? 360 - d : d; };
 function regionAt(x, z) {
-  const row = z > -870 ? 1 : -1; let best = null, bd = 1e9;
-  for (const r of REGIONS) if (r.row === row) { const d = Math.abs(x - r.cx); if (d < bd) { bd = d; best = r; } }
-  if (bd > 1200) return null;
-  return toLocal(best, x, z)[0] > -30 ? best : null;
+  if (Math.hypot(x - RING.cx, z - RING.cz) < RING.R0 - 30) return null; // the valley floor
+  const b = bearing(x, z); let best = null, bd = 1e9;
+  for (const r of REGIONS) { const d = angDiff(b, r.ang); if (d < bd) { bd = d; best = r; } }
+  return best;
 }
 function regionMix(x, z) { // nearest mountain, its neighbour, how far toward the neighbour (0..0.5), and how much valley
-  const row = z > -870 ? 1 : -1, list = REGIONS.filter(r => r.row === row).sort((a, b) => Math.abs(x - a.cx) - Math.abs(x - b.cx));
-  const a = list[0], b = list[1], w = 0.5 * sstep(900, 1200, Math.abs(x - a.cx)), u = toLocal(a, x, z)[0];
-  return [a, b, w, 1 - sstep(-90, 30, u)];
+  const b = bearing(x, z), list = REGIONS.slice().sort((p, q) => angDiff(b, p.ang) - angDiff(b, q.ang));
+  const a = list[0], n = list[1], w = 0.5 * sstep(16, 30, angDiff(b, a.ang)), u = toLocal(a, x, z)[0];
+  return [a, n, w, 1 - sstep(-90, 30, u)];
 }
 function mixNum(x, z, key, valleyVal) { const [a, b, w, vw] = regionMix(x, z); return lerp(lerp(a[key], b[key], w), valleyVal, vw); }
 const VALLEY_TREES = 0.32; // open valley floor so the peaks stay in view
@@ -47,15 +50,10 @@ function outerH(x, z) {
   return Math.min(d * d * 0.012, 160) + sstep(60, 1500, d) * (600 + 1400 * rn * rn + 260 * rn2) + 40 * fbm(x * 0.01, z * 0.01) * sstep(0, 300, d);
 }
 // the creek winds down the middle of the valley in a small gorge; trails cross it on bridges
-function creekD(x, z) { return Math.abs(z + 870 + 18 * Math.sin(x * 0.004) + 8 * Math.sin(x * 0.011 + 1)); }
-function creekH(x, z) { const d = creekD(x, z); return -11 * (1 - sstep(7, 22, d)) - 1.5 * Math.exp(-Math.pow(d / 50, 2)); }
+function creekD(x, z) { return Math.max(0, Math.hypot(x - RING.cx, z - RING.cz) - 118); } // distance from the frozen tarn in the middle of the valley
+function creekH(x, z) { const d = Math.hypot(x - RING.cx, z - RING.cz); return -3.5 * (1 - sstep(105, 140, d)); }
 // landforms placed on purpose between neighbouring mountains, so each connector trail meets something: a ravine, ridges of rock
-const FEATS = [
-  { a: [-1250, -560], b: [-1250, 620], h: -42, w: 30 },             // Pine Gap ravine: bridged
-  { a: [1250, -640], b: [1250, 680], h: 24, w: 46, rough: 0.35 },   // Echo ridge: cut by a canyon
-  { a: [1150, -1060], b: [1150, -2400], h: 70, w: 70, rough: 0.3 },  // Crystal ridge: tunnelled through
-  { a: [-1300, -1050], b: [-1300, -2300], h: 22, w: 42, rough: 0.4 } // Red rock ridge: cut by a canyon
-];
+const FEATS = []; // filled in below, one landform in each gap between neighbouring mountains
 function featH(x, z) {
   let s = 0;
   for (const f of FEATS) {
@@ -106,23 +104,18 @@ function mountainH(r, x, z, u, v) { // one standalone peak: slopes fall away fro
   return Math.max(0, h);
 }
 function shoulderH(r, u, v) { // each mountain's low outer shoulders; where two neighbours' shoulders meet they form a saddle ridge
-  const du = u - r.uS, dv = v - r.vS, q = Math.hypot(du < 0 ? du / r.uS : du / r.back, dv / 1100) / 1.75;
-  return q >= 1 ? 0 : r.peak * 0.36 * Math.pow(1 - q, 1.3);
+  const du = u - r.uS, dv = v - r.vS, q = Math.hypot(du < 0 ? du / r.uS : du / r.back, dv / 1300) / 1.6;
+  return q >= 1 ? 0 : r.peak * 0.62 * Math.pow(1 - q, 1.15); // high shoulders: neighbours meet in a raised ridge, not a deep pocket
 }
 function Hraw(x, z) { return Hbase(x, z) + creekH(x, z) + featH(x, z); }
-function Hbase(x, z) { // the land without the creek gorge or the placed landforms: connector trails are graded to this
-  const base = valleyH(x, z); let m = 0;
-  for (const row of [1, -1]) {
-    if (row > 0 ? z < -830 : z > -910) continue;
-    let prev = null;
-    for (const r of REGIONS_BY_ROW[row]) {
-      const dx = Math.abs(x - r.cx); if (dx > 2300) { prev = null; continue; }
-      const [u, v] = toLocal(r, x, z), sh = shoulderH(r, u, v);
-      if (dx < 1450) m = Math.max(m, mountainH(r, x, z, u, v));
-      if (prev !== null) m = Math.max(m, Math.min(prev, sh) * (0.85 + 0.15 * fbm(x * 0.004, z * 0.004))); // saddle between neighbours
-      prev = sh;
-    }
+function Hbase(x, z) { // the land without the tarn or the placed landforms: connector trails are graded to this
+  const base = valleyH(x, z); let m = 0; const sh = [];
+  for (const r of REGIONS) {
+    const [u, v] = toLocal(r, x, z);
+    if (u < -120 || u > r.uS + r.back + 40 || Math.abs(v) > 2100) { sh.push(0); continue; }
+    m = Math.max(m, mountainH(r, x, z, u, v)); sh.push(shoulderH(r, u, v));
   }
+  for (let i = 0; i < sh.length; i++) { const j = (i + 1) % sh.length; if (sh[i] && sh[j]) m = Math.max(m, Math.min(sh[i], sh[j]) * (0.85 + 0.15 * fbm(x * 0.004, z * 0.004))); } // saddle ridges join neighbours
   return base + m;
 }
 const LAKE = { x: -380, z: -120, rx: 72, rz: 52, h: 0 };
@@ -150,9 +143,22 @@ REGIONS.forEach(r => {
 });
 const POI = {}; POIS.forEach(p => POI[p.id] = p);
 const FLATS = POIS.filter(p => p.flat).map(p => ({ x: p.x, z: p.z, r: p.flat, h: Hraw(p.x, p.z) }));
+// Each surface is a real layer at its own height: a thick snow cover with a visible edge, rock pushing up in outcrops,
+// wind ripples in the sand, lumpy ash, and grass and forest floor lowest of all.
+function surfLift(x, z, h0) {
+  const r = regionAt(x, z), bn = fbm(x * 0.006 + 7, z * 0.006 - 3);
+  const snow = 1.1 * (1 - sstep(0.3, 0.5, thawAt(x, z, h0))); // the snow layer, ending in a short bank where the ground shows through
+  if (!r) return snow;
+  if (r.id === 'dunes') { const [u, v] = toLocal(r, x, z); return 0.7 + 0.6 * Math.sin(u * 0.09 + 1.5 * vnoise(x * 0.004, z * 0.004) + v * 0.02); }
+  if (r.id === 'ember') return 0.3 + 0.9 * Math.max(0, vnoise(x * 0.06 + 2, z * 0.06));
+  const rockOut = 0.6 + 1.4 * Math.max(0, vnoise(x * 0.045 + 9, z * 0.045 - 4)); // knobbly rock standing proud of the snow
+  if (r.id === 'crags') return lerp(rockOut, snow + 0.4, sstep(-12, 12, h0 - (300 + bn * 160)));
+  if (r.id === 'pine') return lerp(0.15 * vnoise(x * 0.08, z * 0.08), snow, sstep(-15, 15, h0 - (r.peak * 0.5 + bn * 140)));
+  return snow;
+}
 const SNOW_D = 0.5; // depth of the snow layer that sits on top of the ground
 function Hm(x, z) {
-  const h0 = Hraw(x, z); let h = h0 + SNOW_D * (1 - sstep(0.15, 0.75, thawAt(x, z, h0)));
+  const h0 = Hraw(x, z); let h = h0 + surfLift(x, z, h0);
   if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const R = RUNS[pn.run], hw = R.w / 2;
     if (!R.link) h -= 0.3 * (1 - sstep(hw - 3, hw + 2, pn.d)); // ordinary trails follow the ground, just packed a little lower
     else { // connectors: cut a canyon or build an embankment to their grade; past those limits a tunnel or bridge takes over
@@ -166,36 +172,29 @@ function Hm(x, z) {
   if (dl < 1.7) h = lerp(h, LAKE.h, 1 - sstep(1.0, 1.7, dl));
   return h;
 }
-/* moguls: a real field of bumps on Fox Run */
-const MOG = { cx: 125, cz: 110, rx: 55, rz: 125, sx: 6.4, sz: 5.6 };
-MOG.x0 = MOG.cx - MOG.rx; MOG.z0 = MOG.cz - MOG.rz;
-MOG.ni = Math.ceil(MOG.rx * 2 / MOG.sx) + 2; MOG.nj = Math.ceil(MOG.rz * 2 / MOG.sz) + 2;
-MOG.amp = new Float32Array(MOG.ni * MOG.nj);
-{
-  const r = mulberry32(99);
-  for (let j = 0; j < MOG.nj; j++) for (let i = 0; i < MOG.ni; i++) {
-    const x = MOG.x0 + i * MOG.sx + (j % 2) * MOG.sx / 2, z = MOG.z0 + j * MOG.sz;
-    const e = Math.hypot((x - MOG.cx) / MOG.rx, (z - MOG.cz) / MOG.rz);
-    MOG.amp[j * MOG.ni + i] = e < 0.92 ? 0.55 + r() * 0.3 : 0;
-  }
+/* moguls: fields of bumps, one on Frostpeak's Fox Run and one on a black run of every other mountain (added once the runs exist) */
+const MOG_R = 2.9, MOGS = [];
+function mogulField(cx, cz, rx, rz, seed) {
+  const F = { cx, cz, rx, rz, sx: 6.4, sz: 5.6 }; F.x0 = cx - rx; F.z0 = cz - rz;
+  F.ni = Math.ceil(rx * 2 / F.sx) + 2; F.nj = Math.ceil(rz * 2 / F.sz) + 2; F.amp = new Float32Array(F.ni * F.nj);
+  const r = mulberry32(seed);
+  for (let j = 0; j < F.nj; j++) for (let i = 0; i < F.ni; i++) { const x = F.x0 + i * F.sx + (j % 2) * F.sx / 2, z = F.z0 + j * F.sz; F.amp[j * F.ni + i] = Math.hypot((x - cx) / rx, (z - cz) / rz) < 0.92 ? 0.55 + r() * 0.3 : 0; }
+  MOGS.push(F); return F;
 }
-const MOG_R = 2.9;
+const MOG = mogulField(125, 110, 55, 125, 99);
 function mogulH(x, z) {
-  if (x < MOG.x0 - 4 || x > MOG.cx + MOG.rx + 4 || z < MOG.z0 - 4 || z > MOG.cz + MOG.rz + 4) return 0;
-  const j0 = Math.round((z - MOG.z0) / MOG.sz); let h = 0;
-  for (let j = j0 - 1; j <= j0 + 1; j++) {
-    if (j < 0 || j >= MOG.nj) continue;
-    const off = (j % 2) * MOG.sx / 2, i0 = Math.round((x - MOG.x0 - off) / MOG.sx);
-    for (let i = i0 - 1; i <= i0 + 1; i++) {
-      if (i < 0 || i >= MOG.ni) continue;
-      const a = MOG.amp[j * MOG.ni + i]; if (!a) continue;
-      const dx = x - (MOG.x0 + i * MOG.sx + off), dz = z - (MOG.z0 + j * MOG.sz), q = 1 - (dx * dx + dz * dz) / (MOG_R * MOG_R);
-      if (q > 0) h = Math.max(h, a * q);
-    }
+  let h = 0;
+  for (const F of MOGS) {
+    if (x < F.x0 - 4 || x > F.cx + F.rx + 4 || z < F.z0 - 4 || z > F.cz + F.rz + 4) continue;
+    const j0 = Math.round((z - F.z0) / F.sz);
+    for (let j = j0 - 1; j <= j0 + 1; j++) { if (j < 0 || j >= F.nj) continue;
+      const off = (j % 2) * F.sx / 2, i0 = Math.round((x - F.x0 - off) / F.sx);
+      for (let i = i0 - 1; i <= i0 + 1; i++) { if (i < 0 || i >= F.ni) continue; const a = F.amp[j * F.ni + i]; if (!a) continue;
+        const dx = x - (F.x0 + i * F.sx + off), dz = z - (F.z0 + j * F.sz), q = 1 - (dx * dx + dz * dz) / (MOG_R * MOG_R); if (q > 0) h = Math.max(h, a * q); } }
   }
   return h;
 }
-function inMoguls(x, z) { return Math.hypot((x - MOG.cx) / MOG.rx, (z - MOG.cz) / MOG.rz) < 0.95; }
+function inMoguls(x, z) { for (const F of MOGS) if (Math.hypot((x - F.cx) / F.rx, (z - F.cz) / F.rz) < 0.95) return true; return false; }
 let H_MESH = false; // once the terrain tiles exist, stand on the triangles that are actually drawn
 function linkDeck(x, z, yHint) { // the walking surface of a bridge deck or tunnel floor, if (x, z) is on one
   if (!PG.size) return null; const pn = pisteNear(x, z); if (pn.run < 0) return null;
@@ -215,7 +214,7 @@ const RUNS = [
 // ten trails per mountain: they leave the summit pad together, fan out across the face, and gather again at the base
 const runV = (r, f, u) => r.vS + f * (60 + 0.75 * (f < 0 ? r.rvN : r.rvP) * (1 - u / r.uS));
 const GREEN = '#2fa463', BLUE = '#3d73d9', BLACK = '#1d2230';
-const DIFF = { g: [GREEN, 44, 'circle'], b: [BLUE, 36, 'square'], k: [BLACK, 30, 'diamond'], d: [BLACK, 24, 'double'] };
+const DIFF = { g: [GREEN, 24, 'circle'], b: [BLUE, 20, 'square'], k: [BLACK, 17, 'diamond'], d: [BLACK, 14, 'double'] }; // narrow ribbons of groomed snow, so each mountain's own ground shows between them
 const RUN_NAMES = {
   frost: ['Snowdrift Lane', 'Lantern Line', 'Hare Hollow', 'Summit Express', 'Corkscrew', 'Ridge Runner', 'Last Light'],
   pine: ['Timber Trail', 'Sawmill Glade', 'Needle Chute', 'Woodsmoke', 'Birch Bend', "Logger's Run", 'Owl Hollow', 'Pinecone Alley', 'Bark Trail', 'The Thicket'],
@@ -242,17 +241,26 @@ REGIONS.forEach((r, ri) => {
 // plus valley trails linking Lowpine to the mountains. Each is graded smoothly; the ground above the grade is cut into a canyon
 // (or tunnelled when the cut would be too deep), and where the ground falls away a bridge carries the trail.
 const LINK_COL = '#e0a21b', CAVE_D = 32, BRIDGE_D = 3;
-const LINKS = [
-  ['Pine Gap Traverse', [[-2000, 250], [-1640, 90], [-1250, 10], [-900, -160], [-620, -470]]],
-  ['Echo Canyon Road', [[520, -80], [900, -240], [1250, -340], [1620, -450], [1950, -600]]],
-  ['Creek Crossing', [[2520, -1140], [2650, -1040], [2760, -870], [2810, -690], [2850, -430]]],
-  ['Crystal Tunnel Run', [[1980, -1600], [1620, -1440], [1150, -1330], [760, -1230], [420, -1140]]],
-  ['Red Rock Canyon', [[-520, -1540], [-900, -1390], [-1300, -1290], [-1700, -1190], [-2000, -1120]]],
-  ['Dune Crossing', [[-2780, -1150], [-2840, -960], [-2850, -870], [-2800, -790], [-2700, -660]]],
-  ['Lowpine Bridge Way', [[-40, -1070], [-80, -960], [-170, -870], [-220, -800]]],
-  ['East Valley Way', [[-120, -812], [600, -815], [1400, -812], [2050, -760], [2300, -690]]],
-  ['West Valley Way', [[-420, -815], [-1200, -815], [-1900, -812], [-2350, -700]]]
+const GAPS = [ // what each connector meets in the gap after each mountain (clockwise): canyon ridge, ravine (bridge) or big ridge (tunnel)
+  ['Echo Canyon Road', 'Echo Canyon', { h: 24, w: 46, rough: 0.35 }],
+  ['Cinder Bridge Run', 'Cinder Bridge', { h: -42, w: 30 }],
+  ['Crystal Tunnel Run', 'Crystal Tunnel', { h: 70, w: 70, rough: 0.3 }],
+  ['Red Rock Canyon', 'Red Rock Canyon', { h: 22, w: 42, rough: 0.4 }],
+  ['Sandstone Tunnel Run', 'Sandstone Tunnel', { h: 62, w: 64, rough: 0.3 }],
+  ['Pine Gap Traverse', 'Pine Gap Bridge', { h: -42, w: 30 }]
 ];
+const LINKS = [], FEAT_NAME = {};
+REGIONS.forEach((A, i) => {
+  const B = NEXT(A), [name, feat, f] = GAPS[i], am = (A.ang + 30) * Math.PI / 180, ray = rr => [RING.cx + Math.sin(am) * rr, RING.cz + Math.cos(am) * rr];
+  FEATS.push(Object.assign({ a: ray(RING.R0 + 170), b: ray(RING.R0 + 1500) }, f)); FEAT_NAME[name] = feat;
+  // two connectors through every gap: from the top of each mountain down into its neighbour, one each way round the ring
+  const route = (P, Q, sd, rad, nm, su, eu, sv) => { const s = toWorld(P, su || P.topU - 30, P.vS + sd * (sv || 140)), e = toWorld(Q, eu || 520, -sd * 420), mid = ray(RING.R0 + rad);
+    LINKS.push([nm, [s, [(s[0] + mid[0]) / 2, (s[1] + mid[1]) / 2], mid, [(mid[0] + e[0]) / 2, (mid[1] + e[1]) / 2], e]]); };
+  route(A, B, 1, 960, name);
+  route(B, A, -1, 760, feat + ' Descent');
+  route(A, B, 1, 560, feat + ' Traverse', 950, 300, 360); // a lower, gentler way across from mid-mountain
+});
+{ const loop = []; for (let k = 0; k <= 36; k++) { const a = (k / 36 * 360 + 5) * Math.PI / 180; loop.push([RING.cx + Math.sin(a) * (RING.R0 - 95), RING.cz + Math.cos(a) * (RING.R0 - 95)]); } LINKS.push(['Lowpine Loop', loop]); } // a trail all round the valley floor
 LINKS.forEach(([name, pts]) => RUNS.push({ id: 'link-' + name, name, col: LINK_COL, w: 16, shape: 'circle', link: true, pts }));
 function sampleRun(pts) {
   const raw = [];
@@ -285,10 +293,11 @@ RUNS.forEach(r => {
   if (r.link) { for (let i = 1; i < r.path.length - 1; i++) { const a = r.path[i - 1].mode, b = r.path[i + 1].mode; if (!r.path[i].mode && a && a === b) r.path[i].mode = a; } // no one-point gaps
     for (let i = 0; i < r.path.length;) { const m = r.path[i].mode; let j = i; while (j + 1 < r.path.length && r.path[j + 1].mode === m) j++; if (m && j - i < 5) for (let k = i; k <= j; k++) r.path[k].mode = null; i = j + 1; } } // tiny spans become cuts or embankments instead
 });
-{ const FEAT_NAME = { 'Pine Gap Traverse': 'Pine Gap Bridge', 'Echo Canyon Road': 'Echo Canyon', 'Creek Crossing': 'Creek Bridge', 'Crystal Tunnel Run': 'Crystal Tunnel', 'Red Rock Canyon': 'Red Rock Canyon', 'Dune Crossing': 'Dune Bridge', 'Lowpine Bridge Way': 'Lowpine Bridge' };
+{
   RUNS.forEach(r => { if (!r.link || !FEAT_NAME[r.name]) return; let best = -1, bv = 0; r.path.forEach((p, i) => { const v = Math.abs(p.cut); if (v > bv) { bv = v; best = i; } });
     if (best >= 0) POIS.push({ id: 'feat-' + r.name, name: FEAT_NAME[r.name], x: r.path[best].x, z: r.path[best].z, r: 34 }); });
   POIS.forEach(p => POI[p.id] = p); }
+REGIONS.forEach((r, i) => { if (r.id === 'frost') return; const run = RUNS.find(R => R.region === r.id && R.col === BLACK && R.shape === 'diamond'); if (!run) return; const p = runAt(run, 0.55); mogulField(p.x, p.z, 42, 42, 500 + i); });
 function runAt(run, f) { const p = run.path, s = f * run.len; let i = 0; while (i < p.length - 1 && p[i + 1].s < s) i++; return p[i]; }
 const PN = { d: 0, run: -1, hc: 0, cut: 0, k: 0 };
 function pisteNear(x, z) { // nearest point on any run centreline (projected on segments), with the run's graded height there
@@ -314,20 +323,24 @@ function slopeAt(x, z) { const e = 1.5; return Math.hypot(Hm(x + e, z) - Hm(x - 
 function thawAt(x, z, h) { // 0 = full snow cover, 1 = bare grass and earth; only on the lower slopes and the valley
   const low = 1 - sstep(20, 150, h); if (low <= 0) return 0;
   const rg = regionAt(x, z); if (rg && (rg.id === 'ember' || rg.id === 'dunes' || rg.id === 'aurora' || rg.id === 'crags')) return 0;
+  const vb = rg ? 0 : 0.32; // the valley floor is mostly meadow
   const n = fbm(x * 0.0075 + 3, z * 0.0075 - 5) * 0.75 + vnoise(x * 0.03, z * 0.03) * 0.25; // broad meadows, soft edges
-  return sstep(-0.02, 0.2, n + low * 0.36 - 0.45);
+  return sstep(-0.02, 0.2, n + low * 0.36 + vb - 0.45);
 }
 function snowType(x, z, sl) {
   if (Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz) < 1) return 'ice';
   if (Math.hypot(x - POI.icefalls.x, z - POI.icefalls.z) < 40) return 'ice';
   if (inMoguls(x, z)) return 'moguls';
   if (onPiste(x, z)) return 'groomed';
+  if (creekD(x, z) < 1) return 'ice'; // the frozen tarn
   if (!(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1) && thawAt(x, z, Hraw(x, z)) > 0.5) return 'thin';
   const r = regionAt(x, z);
   if (!r) return 'powder';
   if (r.id === 'ember') return 'ash';
   if (r.id === 'dunes') return vnoise(x * 0.006 + 2, z * 0.006) > 0.45 ? 'powder' : 'sand';
   if (r.id === 'aurora') return sl < 0.45 && fbm(x * 0.004 + 5, z * 0.004) > 0.22 ? 'blueice' : 'powder'; // broad glacier tongues on the gentler ground, not speckles
-  if (r.id === 'crags') return 'windpack';
+  const hh = Hraw(x, z), bn = fbm(x * 0.006 + 7, z * 0.006 - 3); // noise on every threshold so the boundaries wander instead of making stripes
+  if (r.id === 'crags') return sl > 0.48 + bn * 0.3 || hh < 300 + bn * 160 ? 'rock' : 'windpack'; // bare rock low and on steep faces, wind-packed snow high up
+  if (r.id === 'pine') return hh < r.peak * 0.5 + bn * 140 ? (sl > 0.75 ? 'rock' : 'forest') : sl > 0.85 ? 'rock' : 'powder'; // forest floor below the snow line
   return 'powder';
 }

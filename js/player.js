@@ -14,11 +14,13 @@ const SNOW = {
   windpack: { name: 'Wind crust', fric: 0.2, grip: 10, hold: 5, latFric: 6, turn: .9, resp: .85, jostle: true },
   ash: { name: 'Ash and cinders', fric: 0.3, grip: 11, hold: 5.5, latFric: 7, turn: .9, resp: .85 },
   sand: { name: 'Wind-blown sand', fric: 0.32, grip: 13, hold: 6, latFric: 8, turn: .9, resp: .8 },
+  forest: { name: 'Forest floor', fric: 0.6, grip: 13, hold: 6, latFric: 8, turn: .9, resp: .85 },
+  rock: { name: 'Bare rock', fric: 0.45, grip: 12, hold: 6, latFric: 7, turn: .9, resp: .9 },
   thin: { name: 'Thin snow over grass', fric: 0.7, grip: 12, hold: 6, latFric: 8, turn: .9, resp: .85 }
 };
 const P = { x: -425, z: 640, y: 0, h: 0, w: 0, s: 0, lat: 0, vx: 0, vz: 0, tuck: 0, brakeA: 0, brakeSide: 1, wasBrake: false, hold: 0, lastSign: 0, jt: 0,
   crash: 0, spin: 0, spinV: 0, cvx: 0, cvz: 0, inv: 0, snow: 'powder', skidI: 0, sprayAcc: 0, push: 0, pushT: 0, bump: 0,
-  foot: false, walkPh: 0, stepAcc: 0, wax: 0, cocoa: 0, air: false, vy: 0, airT: 0, jumpBuf: 0, jumped: false, gvPrev: 0 };
+  foot: false, spinA: 0, flipA: 0, walkPh: 0, stepAcc: 0, wax: 0, cocoa: 0, air: false, vy: 0, airT: 0, jumpBuf: 0, jumped: false, gvPrev: 0 };
 let playerModel = null;
 function speedKmh() { return Math.hypot(P.vx, P.vz) * 3.6; }
 function grad(x, z, y) { const e = 0.5; return [(H(x + e, z, y) - H(x - e, z, y)) / (2 * e), (H(x, z + e, y) - H(x, z - e, y)) / (2 * e)]; }
@@ -33,6 +35,12 @@ function crashPlayer() {
 }
 const GRAV = 26; // a real person's arc: about a metre up, half a second in the air
 function land(p) { // touchdown: forgiving, never a crash
+  const sA = p.spinA || 0, fA = p.flipA || 0, off = a => Math.abs(a - Math.round(a / TAU) * TAU);
+  const spins = Math.round(Math.abs(sA) / Math.PI) / 2, flips = Math.round(Math.abs(fA) / TAU), clean = off(sA) < 1.2 && off(fA) < 1.0;
+  p.spinA = 0; p.flipA = 0;
+  if (!clean && (Math.abs(sA) > 0.6 || Math.abs(fA) > 0.6)) { p.air = false; p.vy = 0; crashPlayer(); return; } // landed sideways or on your head
+  if (spins >= 1 || flips >= 1) { const pts = Math.round(spins * 2) * 5 + flips * 20, nm = [flips ? (flips > 1 ? flips + '× ' : '') + (fA > 0 ? 'front flip' : 'back flip') : '', spins >= 1 ? Math.round(spins * 360) + ' spin' : ''].filter(Boolean).join(' with a ');
+    save.coins += pts; toast(nm.charAt(0).toUpperCase() + nm.slice(1) + '! Plus ' + pts + ' snowmarks', 'good', 1800); sfx.coin(); }
   const hard = -p.vy; p.air = false; p.vy = 0; p.jumped = false; p.airT = 0; p.gvPrev = 0; trailBreak = true;
   if (hard > 6) { emitBurst(p.x, p.y + 0.1, p.z, Math.min(40, 8 + hard * 1.5)); sfx.land(hard); camShake = Math.max(camShake, Math.min(0.35, hard / 40)); }
 }
@@ -95,7 +103,9 @@ function updatePlayer(dt, inp) {
   const [gx, gz] = grad(p.x, p.z, p.y), gm = Math.hypot(gx, gz);
   p.snow = snowType(p.x, p.z, gm); const S = SNOW[p.snow];
   if (p.foot) { walkPlayer(dt, inp, gx, gz); return; }
-  const steer = inp.steer;
+  if (p.air && !p.foot) { // tricks: left/right spin, up/down flip
+    p.spinA += inp.steer * 11 * dt; p.flipA += ((inp.tuck ? 1 : 0) - (inp.push ? 1 : 0)) * 14 * dt; }
+  const steer = p.air ? 0 : inp.steer;
   if (Math.abs(steer) > 0.05) { const sg = Math.sign(steer); if (sg !== p.lastSign) { p.hold = 0; p.lastSign = sg; } p.hold += dt; } else { p.hold = 0; p.lastSign = 0; }
   const sharp = 0.5 + 0.5 * Math.min(1, p.hold / 0.45);
   const brake = inp.brake, tuck = inp.tuck && !brake;
@@ -145,7 +155,7 @@ function updatePlayer(dt, inp) {
   }
   for (const n of npcs) { const ddx = p.x - n.x, ddz = p.z - n.z, d = Math.hypot(ddx, ddz); if (d < 0.9 && d > 0) { p.x = n.x + ddx / d * 0.9; p.z = n.z + ddz / d * 0.9; p.s *= 0.5; } }
   if (p.crash > 0) return;
-  if (groundStep(p, dt, H(p.x, p.z, p.y), 6.2 + Math.min(2, p.s * 0.03))) { p.skidI = 0; trailBreak = true; return; }
+  if (groundStep(p, dt, H(p.x, p.z, p.y), 8.2 + Math.min(2, p.s * 0.03))) { p.skidI = 0; trailBreak = true; return; }
   p.skidI = clamp(skid * 1.2 + Math.abs(p.lat) / 6 + (brake && p.s > 2 ? p.brakeA : 0), 0, 1);
   // spray
   const deep = p.snow === 'powder' || p.snow === 'deep';
@@ -191,7 +201,7 @@ function posePlayer(dt) {
   const m = playerModel, u = m.userData, p = P;
   const sink = p.air || p.foot ? 0 : ({ powder: 0.2, deep: 0.3, sand: 0.08, thin: 0.04, ash: 0.04 }[p.snow] || 0) // boots and skis disappear into soft snow;
   m.position.set(p.x, p.y - sink, p.z);
-  m.rotation.y = -p.h;
+  m.rotation.y = -p.h - (p.air ? p.spinA || 0 : 0);
   const lean = p.crash > 0 ? 0 : clamp(p.w * p.s / 30, -0.55, 0.55);
   u.tilt.rotation.z = -lean;
   const [gx, gz] = grad(p.x, p.z, p.y), dx = Math.sin(p.h), dz = -Math.cos(p.h);
@@ -216,6 +226,6 @@ function posePlayer(dt) {
   if (p.air) { u.armL.rotation.x = -0.55; u.armR.rotation.x = -0.55; } else if (p.foot) { u.armL.rotation.x = -stride * 0.5 - 0.05; u.armR.rotation.x = stride * 0.5 - 0.05; } else { u.armL.rotation.x = -0.45 + 0.55 * p.tuck + pa; u.armR.rotation.x = -0.45 + 0.55 * p.tuck + pa; /* a tuck holds the hands forward and low, not overhead */ }
   u.tail.rotation.x = 0.4 + Math.min(1.1, p.s / 18) + Math.sin(gameT * 14) * 0.08 * Math.min(1, p.s / 10);
   if (p.crash > 0) { u.tilt.rotation.z = Math.sin(p.spin) * 1.2; u.tilt.rotation.x = Math.cos(p.spin * 0.7) * 0.8; m.position.y += Math.abs(Math.sin(p.spin)) * 0.3; }
-  else u.tilt.rotation.x = 0;
+  else u.tilt.rotation.x = p.air ? -(p.flipA || 0) : 0;
   m.visible = CAM.mode === 'third' && !(p.inv > 0 && Math.floor(p.inv * 10) % 2);
 }

@@ -71,7 +71,7 @@ function rangeRing(R0, hBase, hVar, seed, cols) {
     for (let j = 0; j <= M; j++) {
       const f = j / M, rr = R0 - f * 1400 * (0.6 + 0.4 * ridge(th * 3, seed + 2));
       const y = -300 + (pk + 300) * Math.pow(f, 0.85);
-      pos.push(Math.sin(th) * rr, y, -870 + Math.cos(th) * rr);
+      pos.push(RING.cx + Math.sin(th) * rr, y, RING.cz + Math.cos(th) * rr);
       const snowLine = 0.5 + 0.16 * vnoise(th * 18, seed);
       const lit = 0.5 + 0.5 * Math.sin(th * 7 + seed + Math.sin(th * 23) * 0.6);
       const sn = sstep(snowLine - 0.06, snowLine + 0.06, f);

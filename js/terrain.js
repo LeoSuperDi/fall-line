@@ -13,13 +13,14 @@ function treeChance(x, z, h) { // the same odds the forest generator uses, so di
   if (Math.hypot((x + 230) / 360, (z + 715) / 120) < 1) d *= 0.08; // around the lodge and village
   return d;
 }
-const TILE = 400, TX0 = -3600, TZ0 = -3600, NTX = 18, NTZ = 14;
+const TILE = 400, TX0 = WORLD.x0 - 100, TZ0 = WORLD.z0 - 100, NTX = 18, NTZ = 18;
 const HI_R = LOW ? 520 : 720, HI_SEG = LOW ? 64 : 100, LO_SEG = 24, TREE_VIS = (LOW ? 520 : 720) + 170; // trees always cover every detailed tile, so no bare ring in the distance
 const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, map: paintTex });
 const TC = { grass: C('#4e9426'), grass2: C('#2f7a2c'), earth: C('#8a4a30'), heath: C('#86569a'), creek: C('#5fb6b2'), snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
 const REG_TINT = { pine: C('#ebeee9'), ember: C('#5b4646'), dunes: C('#f1b25e'), crags: C('#d8dde6'), aurora: C('#dfe8f6') };
 const TC2 = { ash: C('#4a3434'), basalt: C('#2a2022'), crater: C('#1f1818'), sand: C('#f2a541'), sand2: C('#d8622a'), sandPiste: C('#f8dca3'), ashPiste: C('#cdbcb8'), lava: new THREE.Color(2.6, 0.75, 0.12), ember: C('#8a3a24') };
 const tmpG = new THREE.Color();
+const TC3 = { moss: C('#4f6b34'), moss2: C('#3d5a35'), needles: C('#7a5636'), rock1: C('#5a5e6c'), rock2: C('#3f4250'), rock3: C('#6b6152') };
 function terrainColor(out, x, z, h, ny, far) {
   const sl = Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 0.05), r = regionAt(x, z);
   { const [a, b, w, vw] = regionMix(x, z); out.copy(REG_TINT[a.id] || TC.snow).lerp(REG_TINT[b.id] || TC.snow, w).lerp(TC.snow, vw); }
@@ -32,6 +33,8 @@ function terrainColor(out, x, z, h, ny, far) {
   if (st === 'ice') out.lerp(Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz) < 1 ? TC.lake : TC.ice, 0.85);
   else if (st === 'blueice') out.lerp(TC.blue, 0.82 * sstep(0.1, 0.3, vnoise(x * 0.012 + 5, z * 0.012)) + 0.25);
   else if (st === 'windpack') out.lerp(TC.crust, 0.55);
+  else if (st === 'forest') { tmpG.copy(TC3.moss).lerp(TC3.needles, 0.5 + 0.5 * vnoise(x * 0.03 + 1, z * 0.03)).lerp(TC3.moss2, sstep(0.2, 0.6, vnoise(x * 0.011, z * 0.011))); out.copy(tmpG); }
+  else if (st === 'rock') { const band = 0.5 + 0.5 * Math.sin(h * 0.12 + 2.5 * vnoise(x * 0.004, z * 0.004)); out.copy(TC3.rock1).lerp(TC3.rock2, band).lerp(TC3.rock3, sstep(0.3, 0.8, vnoise(x * 0.02 + 5, z * 0.02))); } // stratified rock bands
   else if (st === 'ash') out.copy(TC2.ash).lerp(TC2.ember, 0.35 + 0.35 * vnoise(x * 0.02, z * 0.02));
   { const [a, b, w, vw] = regionMix(x, z), sk = (a.id === 'dunes' ? 1 - w : b.id === 'dunes' ? w : 0) * (1 - vw); // sand fades in across the dunes' edge instead of stopping at a line
     if (sk > 0.01 && !onP) { tmpG.copy(TC2.sand).lerp(TC2.sand2, 0.5 + 0.5 * vnoise(x * 0.02 + 4, z * 0.02)).lerp(TC.shade, clamp((sl - 0.2) * 0.8, 0, 0.3)); if (st === 'powder') tmpG.lerp(TC.snow, 0.7); out.lerp(tmpG, sstep(0.05, 0.6, sk)); } }
@@ -44,8 +47,9 @@ function terrainColor(out, x, z, h, ny, far) {
     const th = thawAt(x, z, h) * (1 - sstep(0.4, 0.7, sl)); // no grass on steep walls
     if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, (far ? 0.6 : 0.95) * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
   }
-  if (!r) out.lerp(TC.creek, 0.9 * (1 - sstep(5, 9, creekD(x, z)))); // the frozen creek at the bottom of its gorge
+  if (!r) out.lerp(TC.creek, 0.9 * (1 - sstep(0, 6, creekD(x, z)))); // the frozen tarn
   if (far && !onP) out.lerp(TC.pine, clamp((treeChance(x, z, h) - 0.3) * 1.3, 0, 0.6)); // forests read as dark patches from afar
+  if (pi.run >= 0 && !onP) { const hw = RUNS[pi.run].w / 2, pf = 1 - sstep(hw, hw + 5, pi.d); if (pf > 0) out.lerp(r && r.id === 'dunes' ? TC2.sandPiste : r && r.id === 'ember' ? TC2.ashPiste : TC.piste, pf * 0.85); } // trail edges fade into the ground instead of a saw-tooth line
   const nv = vnoise(x * 0.05, z * 0.05) * 0.03, cw = fbm(x * 0.012 + 3, z * 0.012 - 7) * 0.035;
   out.r = clamp(out.r + nv + cw * 0.6, 0, 1); out.g = clamp(out.g + nv + cw * 0.2, 0, 1); out.b = clamp(out.b + nv * 0.5 - cw * 0.4, 0, 1);
 }
@@ -59,7 +63,7 @@ function* buildTileGen(t, seg, far) { // yields every few rows so building never
   const vc = n * n + 4 * n, pos = new Float32Array(vc * 3), nor = new Float32Array(vc * 3), col = new Float32Array(vc * 3), uv = new Float32Array(vc * 2), idx = [], c = new THREE.Color();
   for (let b = 0; b < n; b++) { for (let a = 0; a < n; a++) {
     const k = b * n + a, x = t.x0 + a * st, z = t.z0 + b * st, h = hs[(b + 1) * W + a + 1];
-    let nx = -(hs[(b + 1) * W + a + 2] - hs[(b + 1) * W + a]), ny = 2 * st, nz = -(hs[(b + 2) * W + a + 1] - hs[b * W + a + 1]); const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
+    let nx = -(hs[(b + 1) * W + a + 2] - hs[(b + 1) * W + a]), ny = 2 * st, /* central differences: soft shading across triangles */ nz = -(hs[(b + 2) * W + a + 1] - hs[b * W + a + 1]); const l = Math.hypot(nx, ny, nz); nx /= l; ny /= l; nz /= l;
     pos[k * 3] = x; pos[k * 3 + 1] = h; pos[k * 3 + 2] = z; nor[k * 3] = nx; nor[k * 3 + 1] = ny; nor[k * 3 + 2] = nz; uv[k * 2] = x / 30; uv[k * 2 + 1] = z / 30;
     terrainColor(c, x, z, h, ny, far); col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
     if (b < seg && a < seg) idx.push(k, k + n, k + 1, k + 1, k + n, k + n + 1);

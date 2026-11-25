@@ -63,12 +63,12 @@ function updateWorld(dt) {
   if (campfire) { campfire.light.intensity = 1.4 + Math.sin(gameT * 13) * 0.2 + Math.sin(gameT * 7.3) * 0.15; campfire.flame.scale.y = 1 + Math.sin(gameT * 11) * 0.15; }
   // gondola cabins on every lift
   for (const Lf of LIFTS) {
-    if (!Lf.cabins || Math.hypot(Lf.x - camera.position.x, (Lf.za + Lf.zb) / 2 - camera.position.z) > 2600) continue;
-    const n = Lf.cabins.count, L = Lf.line, z0 = L[0][0], span = L[L.length - 1][0] - z0;
+    if (!Lf.cabins || Math.hypot(Lf.x - camera.position.x, Lf.z - camera.position.z) > 2600) continue;
+    const n = Lf.cabins.count, L = Lf.line;
     for (let i = 0; i < n; i++) {
-      const up = i % 2 === 0, f = ((gameT * 0.012 + i / n) % 1), z = up ? z0 + f * span : z0 + span - f * span, ft = (z - z0) / span * (L.length - 1);
-      const k = Math.min(L.length - 2, Math.floor(ft)), y = lerp(L[k][1], L[k + 1][1], ft - k);
-      dummy.position.set(Lf.x + (up ? 3 : -3), y, z); dummy.rotation.set(0, (up ? 0 : Math.PI) + (span < 0 ? Math.PI : 0), 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); Lf.cabins.setMatrixAt(i, dummy.matrix);
+      const up = i % 2 === 0, f = ((gameT * 0.012 + i / n) % 1), ft = (up ? f : 1 - f) * (L.length - 1);
+      const k = Math.min(L.length - 2, Math.floor(ft)), e = ft - k, sd = up ? 3 : -3, y = lerp(L[k][2], L[k + 1][2], e);
+      dummy.position.set(lerp(L[k][0], L[k + 1][0], e) + Lf.uz * sd, y, lerp(L[k][1], L[k + 1][1], e) - Lf.ux * sd); dummy.rotation.set(0, Lf.rot + (up ? 0 : Math.PI), 0); dummy.scale.set(1, 1, 1); dummy.updateMatrix(); Lf.cabins.setMatrixAt(i, dummy.matrix);
     }
     Lf.cabins.instanceMatrix.needsUpdate = true;
   }
