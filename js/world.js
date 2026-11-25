@@ -4,7 +4,7 @@
 'use strict';
 
 /* ================= the world =================
-   One connected map. A valley runs east-west (z about -780 to -1100) with Lowpine Village on its north edge.
+   One connected map. A narrow valley runs east-west (z about -780 to -980) with Lowpine Village on its north edge.
    Three mountains rise north of it (downhill is -z) and three rise south of it (downhill is +z).
    x: east(+)/west(-), y: up. Frostpeak, the original mountain, is centred on x = 0. */
 const WORLD = { x0: -3600, x1: 3600, z0: -3540, z1: 1680 };
@@ -22,18 +22,18 @@ REGIONS.forEach(r => { if (r.uS) return; Object.assign(r, { uS: 1900, vS: 0, rvN
 const REGIONS_BY_ROW = { 1: [], '-1': [] }; // the mountains in each row, west to east
 REGIONS.forEach(r => REGIONS_BY_ROW[r.row].push(r)); REGIONS_BY_ROW[1].sort((a, b) => a.cx - b.cx); REGIONS_BY_ROW[-1].sort((a, b) => a.cx - b.cx);
 REGIONS.forEach(r => { r.topU = r.kind === 'volcano' ? r.uS - 250 : r.uS - 54; r.rimH = r.peak * Math.pow(0.9, r.exp); });
-const REG = {}; REGIONS.forEach(r => { REG[r.id] = r; r.zb = r.row > 0 ? -760 : -1100; });
+const REG = {}; REGIONS.forEach(r => { REG[r.id] = r; r.zb = r.row > 0 ? -760 : -980; });
 // local mountain coordinates: u = metres up the fall line from the valley, v = metres across
 function toLocal(r, x, z) { return r.row > 0 ? [z - r.zb, x - r.cx] : [r.zb - z, r.cx - x]; }
 function toWorld(r, u, v) { return r.row > 0 ? [r.cx + v, r.zb + u] : [r.cx - v, r.zb - u]; }
 function regionAt(x, z) {
-  const row = z > -930 ? 1 : -1; let best = null, bd = 1e9;
+  const row = z > -870 ? 1 : -1; let best = null, bd = 1e9;
   for (const r of REGIONS) if (r.row === row) { const d = Math.abs(x - r.cx); if (d < bd) { bd = d; best = r; } }
   if (bd > 1200) return null;
   return toLocal(best, x, z)[0] > -30 ? best : null;
 }
 function regionMix(x, z) { // nearest mountain, its neighbour, how far toward the neighbour (0..0.5), and how much valley
-  const row = z > -930 ? 1 : -1, list = REGIONS.filter(r => r.row === row).sort((a, b) => Math.abs(x - a.cx) - Math.abs(x - b.cx));
+  const row = z > -870 ? 1 : -1, list = REGIONS.filter(r => r.row === row).sort((a, b) => Math.abs(x - a.cx) - Math.abs(x - b.cx));
   const a = list[0], b = list[1], w = 0.5 * sstep(900, 1200, Math.abs(x - a.cx)), u = toLocal(a, x, z)[0];
   return [a, b, w, 1 - sstep(-90, 30, u)];
 }
@@ -47,14 +47,14 @@ function outerH(x, z) {
   return Math.min(d * d * 0.012, 160) + sstep(60, 1500, d) * (600 + 1400 * rn * rn + 260 * rn2) + 40 * fbm(x * 0.01, z * 0.01) * sstep(0, 300, d);
 }
 // the creek winds down the middle of the valley in a small gorge; trails cross it on bridges
-function creekD(x, z) { return Math.abs(z + 935 + 18 * Math.sin(x * 0.004) + 8 * Math.sin(x * 0.011 + 1)); }
+function creekD(x, z) { return Math.abs(z + 870 + 18 * Math.sin(x * 0.004) + 8 * Math.sin(x * 0.011 + 1)); }
 function creekH(x, z) { const d = creekD(x, z); return -11 * (1 - sstep(7, 22, d)) - 1.5 * Math.exp(-Math.pow(d / 50, 2)); }
 // landforms placed on purpose between neighbouring mountains, so each connector trail meets something: a ravine, ridges of rock
 const FEATS = [
   { a: [-1250, -560], b: [-1250, 620], h: -42, w: 30 },             // Pine Gap ravine: bridged
   { a: [1250, -640], b: [1250, 680], h: 24, w: 46, rough: 0.35 },   // Echo ridge: cut by a canyon
-  { a: [1150, -1180], b: [1150, -2520], h: 70, w: 70, rough: 0.3 },  // Crystal ridge: tunnelled through
-  { a: [-1300, -1170], b: [-1300, -2420], h: 22, w: 42, rough: 0.4 } // Red rock ridge: cut by a canyon
+  { a: [1150, -1060], b: [1150, -2400], h: 70, w: 70, rough: 0.3 },  // Crystal ridge: tunnelled through
+  { a: [-1300, -1050], b: [-1300, -2300], h: 22, w: 42, rough: 0.4 } // Red rock ridge: cut by a canyon
 ];
 function featH(x, z) {
   let s = 0;
@@ -113,7 +113,7 @@ function Hraw(x, z) { return Hbase(x, z) + creekH(x, z) + featH(x, z); }
 function Hbase(x, z) { // the land without the creek gorge or the placed landforms: connector trails are graded to this
   const base = valleyH(x, z); let m = 0;
   for (const row of [1, -1]) {
-    if (row > 0 ? z < -800 : z > -1060) continue;
+    if (row > 0 ? z < -830 : z > -910) continue;
     let prev = null;
     for (const r of REGIONS_BY_ROW[row]) {
       const dx = Math.abs(x - r.cx); if (dx > 2300) { prev = null; continue; }
@@ -245,13 +245,13 @@ const LINK_COL = '#e0a21b', CAVE_D = 32, BRIDGE_D = 3;
 const LINKS = [
   ['Pine Gap Traverse', [[-2000, 250], [-1640, 90], [-1250, 10], [-900, -160], [-620, -470]]],
   ['Echo Canyon Road', [[520, -80], [900, -240], [1250, -340], [1620, -450], [1950, -600]]],
-  ['Creek Crossing', [[2520, -1260], [2650, -1160], [2760, -935], [2810, -690], [2850, -430]]],
-  ['Crystal Tunnel Run', [[1980, -1720], [1620, -1560], [1150, -1450], [760, -1350], [420, -1260]]],
-  ['Red Rock Canyon', [[-520, -1660], [-900, -1510], [-1300, -1410], [-1700, -1310], [-2000, -1240]]],
-  ['Dune Crossing', [[-2780, -1270], [-2840, -1080], [-2850, -935], [-2800, -790], [-2700, -660]]],
-  ['Lowpine Bridge Way', [[-40, -1190], [-80, -1080], [-170, -935], [-220, -800]]],
-  ['East Valley Way', [[-120, -830], [600, -860], [1400, -850], [2050, -760], [2300, -690]]],
-  ['West Valley Way', [[-420, -840], [-1200, -860], [-1900, -840], [-2350, -700]]]
+  ['Creek Crossing', [[2520, -1140], [2650, -1040], [2760, -870], [2810, -690], [2850, -430]]],
+  ['Crystal Tunnel Run', [[1980, -1600], [1620, -1440], [1150, -1330], [760, -1230], [420, -1140]]],
+  ['Red Rock Canyon', [[-520, -1540], [-900, -1390], [-1300, -1290], [-1700, -1190], [-2000, -1120]]],
+  ['Dune Crossing', [[-2780, -1150], [-2840, -960], [-2850, -870], [-2800, -790], [-2700, -660]]],
+  ['Lowpine Bridge Way', [[-40, -1070], [-80, -960], [-170, -870], [-220, -800]]],
+  ['East Valley Way', [[-120, -812], [600, -815], [1400, -812], [2050, -760], [2300, -690]]],
+  ['West Valley Way', [[-420, -815], [-1200, -815], [-1900, -812], [-2350, -700]]]
 ];
 LINKS.forEach(([name, pts]) => RUNS.push({ id: 'link-' + name, name, col: LINK_COL, w: 16, shape: 'circle', link: true, pts }));
 function sampleRun(pts) {

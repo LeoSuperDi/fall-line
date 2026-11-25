@@ -7,7 +7,7 @@ const ROOT = path.resolve(__dirname, '..');
 const NM = path.join(__dirname, 'node_modules');
 const FACES = [['Barlow Condensed', 'barlow-condensed', [500, 600, 700, 800]], ['Literata', 'literata', [400, 500]]];
 const FONT_CSS = FACES.flatMap(([fam, dir, ws]) => ws.map(w => `@font-face{font-family:'${fam}';font-weight:${w};src:url(https://fonts.local/${dir}/files/${dir}-latin-${w}-normal.woff2) format('woff2')}`)).join('\n');
-const HOOK = "window.__fl = { get save() { return save; }, get state() { return state; }, P, CAM, travel, regionAt, RUNS, tiles, openOv, closeOv, openShop, talkTo, npcs, toggleSkis, startQuest, interact, LANTERNS, addItem, bannerShow, trailMesh: trail, get trail() { return { count: trCount, drawn: trGeo.drawRange.count, trackY: trCount ? trY[(trCount - 1) * 2] : null, meshY: meshH(P.x, P.z), playerY: P.y, visible: trail.visible }; } };\n";
+const HOOK = "window.__fl = { get save() { return save; }, get state() { return state; }, P, CAM, travel, regionAt, RUNS, tiles, openOv, closeOv, openShop, talkTo, npcs, toggleSkis, startQuest, interact, LANTERNS, addItem, bannerShow, npcs, trailMesh: trail, get trail() { return { count: trCount, drawn: trGeo.drawRange.count, trackY: trCount ? trY[(trCount - 1) * 2] : null, meshY: meshH(P.x, P.z), playerY: P.y, visible: trail.visible }; } };\n";
 
 async function openGame({ width = 1280, height = 720, mobile = false } = {}) {
   const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });

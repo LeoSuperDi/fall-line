@@ -73,14 +73,14 @@ const TRN = 360, NV = 7, trX = new Float32Array(TRN * 2), trZ = new Float32Array
 let trCount = 0, trailBreak = true, trDist = 0, lastTrail = { x: 0, z: 0 }, trW = 0.06;
 // across one track: snow surface, a thin lip of pushed-up snow, the shadowed inner wall, the pressed floor, and back out.
 // The mesh sits almost flat on the snow (it can't go below the ground), so the dent is told by light and shadow, not height.
-const XS = [-1.6, -1.15, -0.75, 0, 0.75, 1.15, 1.6], XH = [0.0, 0.025, -0.1, -0.16, -0.1, 0.025, 0.0], /* a real groove: rim, steep wall down, floor below the snow surface */ XC = ['foot', 'lip', 'wall', 'floor', 'wall', 'lip', 'foot'];
+const XS = [-1.6, -1.15, -0.75, 0, 0.75, 1.15, 1.6], XH = [0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02], /* flat on the snow; the dent is told by shading so it can never stick up */ XC = ['foot', 'lip', 'wall', 'floor', 'wall', 'lip', 'foot'];
 const trGeo = new THREE.BufferGeometry(), trPosA = new Float32Array(TRN * 2 * NV * 3), trColA = new Float32Array(TRN * 2 * NV * 3);
 trGeo.setAttribute('position', new THREE.BufferAttribute(trPosA, 3)); trGeo.setAttribute('color', new THREE.BufferAttribute(trColA, 3));
 { const nrm = new Float32Array(trPosA.length); for (let i = 1; i < nrm.length; i += 3) nrm[i] = 1; trGeo.setAttribute('normal', new THREE.BufferAttribute(nrm, 3)); } // lit like the snow around it
 trGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(TRN * 2 * (NV - 1) * 6), 1));
-const trail = new THREE.Mesh(trGeo, new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -60 }) /* pulled toward the camera so the sunken floor still shows over the snow around it */ /* the strip faces down for some directions of travel, so draw both sides */);
+const trail = new THREE.Mesh(trGeo, new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4 }) /* the strip faces down for some directions of travel, so draw both sides */);
 trail.frustumCulled = false; trail.renderOrder = 1; scene.add(trail);
-const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#f4f7fb'), TR_FOOT = C('#e8edf5'), TR_WALL = C('#c3cde2'), TRAIL_COL = { groomed: C('#8597c2'), powder: C('#6f84ba'), deep: C('#6478b2'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
+const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#f2f5fa'), TR_FOOT = C('#e6ebf3'), TR_WALL = C('#aab7d3'), TRAIL_COL = { groomed: C('#8597c2'), powder: C('#6f84ba'), deep: C('#6478b2'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
 function trailPush(p, nx, nz) {
   trDist += Math.hypot(p.x - lastTrail.x, p.z - lastTrail.z); lastTrail.x = p.x; lastTrail.z = p.z;
   if (trDist < 0.7 && !trailBreak) return; trDist = 0;
@@ -111,7 +111,7 @@ function rebuildTrail() {
       if (i > 0 && !trBrk[i]) for (let q = 0; q < NV - 1; q++) { const a = ((i - 1) * 2 + k) * NV + q, b = (i * 2 + k) * NV + q; idx[ii++] = a; idx[ii++] = b; idx[ii++] = a + 1; idx[ii++] = a + 1; idx[ii++] = b; idx[ii++] = b + 1; }
     }
   }
-  trGeo.setDrawRange(0, ii); if (ii) trGeo.computeVertexNormals(); // walls catch the light, floors sit in shade
+  trGeo.setDrawRange(0, ii);
   trGeo.index.needsUpdate = true; trGeo.attributes.position.needsUpdate = true; trGeo.attributes.color.needsUpdate = true;
 }
 // chimney smoke + spring steam

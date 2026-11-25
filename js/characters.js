@@ -69,7 +69,8 @@ function makePerson(o) {
   mesh(new THREE.SphereGeometry(0.165, 16, 12), o.skin || '#f1c9a8', 0, 0, 0, head);
   mesh(new THREE.SphereGeometry(0.03, 6, 5), shade(o.skin || '#f1c9a8', 0.85), 0, -0.02, -0.165, head); // nose
   for (const sx of [-0.085, 0.085]) mesh(new THREE.SphereGeometry(0.03, 6, 5), '#f0a3a0', sx, -0.05, -0.135, head).scale.set(1, 0.6, 0.5); // cheeks
-  if (o.goggles !== false) {
+  const ht = o.hatType || (o.goggles !== false ? 'helmet' : 'beanie');
+  if (ht === 'helmet') {
     mesh(new THREE.SphereGeometry(0.18, 16, 10, 0, TAU, 0, Math.PI / 1.85), o.hat || '#e9ecf3', 0, 0.025, 0.005, head); // helmet
     mesh(new THREE.BoxGeometry(0.05, 0.06, 0.26), shade(o.hat || '#e9ecf3', 0.75), 0, 0.17, 0.02, head); // helmet ridge
     mesh(new THREE.TorusGeometry(0.172, 0.02, 6, 20), '#2b3142', 0, 0.035, 0, head).rotation.x = Math.PI / 2; // strap
@@ -77,9 +78,13 @@ function makePerson(o) {
     lens.scale.setScalar(0.178); lens.rotation.y = Math.PI; lens.position.y = 0.03; head.add(lens);
     const glint = new THREE.Mesh(new THREE.PlaneGeometry(0.05, 0.016), new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false })); glint.position.set(-0.05, 0.075, -0.17); glint.rotation.z = 0.3; head.add(glint);
   } else {
-    mesh(new THREE.SphereGeometry(0.172, 14, 8, 0, TAU, 0, Math.PI / 2.1), o.hat || '#3d6fb6', 0, 0.035, 0, head); // beanie
-    mesh(new THREE.TorusGeometry(0.168, 0.03, 6, 20), shade(o.hat || '#3d6fb6', 0.75), 0, 0.045, 0, head).rotation.x = Math.PI / 2; // turned-up brim
-    mesh(new THREE.SphereGeometry(0.06, 8, 6), '#f4f1ea', 0, 0.21, 0, head); // pompom
+    const hc = o.hat || '#3d6fb6';
+    if (ht === 'beanie' || ht === 'earflap') { mesh(new THREE.SphereGeometry(0.172, 14, 8, 0, TAU, 0, Math.PI / 2.1), hc, 0, 0.035, 0, head);
+      if (ht === 'beanie') { mesh(new THREE.TorusGeometry(0.168, 0.03, 6, 20), shade(hc, 0.75), 0, 0.045, 0, head).rotation.x = Math.PI / 2; mesh(new THREE.SphereGeometry(0.06, 8, 6), '#f4f1ea', 0, 0.21, 0, head); }
+      else for (const sx of [-1, 1]) { const f = mesh(new THREE.BoxGeometry(0.05, 0.16, 0.12), shade(hc, 0.8), sx * 0.165, -0.02, 0.01, head); f.rotation.z = sx * 0.15; mesh(new THREE.SphereGeometry(0.035, 6, 5), '#efe6d6', sx * 0.17, -0.1, 0.01, head); } }
+    else if (ht === 'wide') { mesh(new THREE.CylinderGeometry(0.33, 0.33, 0.025, 20), hc, 0, 0.1, 0, head); mesh(new THREE.CylinderGeometry(0.12, 0.15, 0.13, 14), hc, 0, 0.17, 0, head); mesh(new THREE.CylinderGeometry(0.152, 0.152, 0.03, 14), shade(hc, 0.6), 0, 0.12, 0, head); }
+    else if (ht === 'hardhat') { mesh(new THREE.SphereGeometry(0.185, 14, 8, 0, TAU, 0, Math.PI / 2), hc, 0, 0.06, 0, head); mesh(new THREE.CylinderGeometry(0.235, 0.235, 0.02, 18), hc, 0, 0.06, -0.02, head); mesh(new THREE.BoxGeometry(0.04, 0.05, 0.3), shade(hc, 0.8), 0, 0.23, 0, head); mesh(new THREE.BoxGeometry(0.2, 0.06, 0.04), '#2b3142', 0, 0.03, -0.17, head); }
+    else if (ht === 'hood') { const h = mesh(new THREE.SphereGeometry(0.21, 14, 10, 0, TAU, 0, Math.PI / 1.6), hc, 0, 0.02, 0.03, head); h.scale.set(1, 1.05, 1.1); mesh(new THREE.TorusGeometry(0.16, 0.055, 8, 18), o.fur || '#efe6d6', 0, 0.0, -0.13, head); }
     for (const sx of [-0.06, 0.06]) { mesh(new THREE.SphereGeometry(0.026, 8, 6), '#1f2433', sx, 0.01, -0.152, head); mesh(new THREE.SphereGeometry(0.009, 5, 4), '#ffffff', sx + 0.008, 0.02, -0.176, head); }
     mesh(new THREE.TorusGeometry(0.035, 0.008, 4, 10, Math.PI), '#9a5b52', 0, -0.07, -0.152, head).rotation.z = Math.PI; // smile
   }

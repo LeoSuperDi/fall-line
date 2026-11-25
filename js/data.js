@@ -17,6 +17,18 @@ const JACKETS = [
   { id: 'aurora', name: 'Aurora', c: '#59c3e6', quest: 'crystals' },
   { id: 'gold', name: 'Champion gold', c: '#f0b429', quest: 'wall' }
 ];
+const LOCALS = [ // one person who knows each mountain, standing near its base camp
+  { id: 'wren', region: 'pine', name: 'Wren', role: 'Forester', jacket: '#5b7f3a', hat: '#a33b2b', hatType: 'earflap', scarf: '#d9a441', beard: true, pants: '#4a3b2c',
+    idle: ["Every tree on this ridge has a number. I gave most of them names instead.", "Listen. That knocking? Woodpecker. Or the old sawmill settling."] },
+  { id: 'ignis', region: 'ember', name: 'Ignis', role: 'Volcanologist', jacket: '#c4c8d2', hat: '#f2b705', hatType: 'hardhat', scarf: '#d9532b', skin: '#c98e6b', pants: '#5b5f6e',
+    idle: ["She's sleeping. Mostly. The steam vents are her snoring.", "Don't ski over the glowing bits. They're exactly as hot as they look."] },
+  { id: 'sabi', region: 'dunes', name: 'Sabi', role: 'Sandboarder', jacket: '#2f8f8a', hat: '#d98a3c', hatType: 'wide', scarf: '#f2d16b', skin: '#a8694a', pants: '#e0c08a',
+    idle: ["Snow, sand, it's all just the ground wanting you to go faster.", "Wax your skis for sand. Trust me."] },
+  { id: 'brann', region: 'crags', name: 'Brann', role: 'Mountain guide', jacket: '#2f5e8c', hat: '#e0402e', hatType: 'helmet', scarf: '#f2b705', skin: '#e8b896', pack: '#e07b2a', lens: 0x5fb6e6,
+    idle: ["The wind up there will push you sideways. Lean into it.", "Never trust a ridge you haven't walked."] },
+  { id: 'lumi', region: 'aurora', name: 'Lumi', role: 'Stargazer', jacket: '#3c3f78', hat: '#2b2f5a', hatType: 'hood', fur: '#ece4d6', scarf: '#7fd0e8', skin: '#8d5a42', pants: '#26294a',
+    idle: ["The lights are brightest just after the moon sets.", "Every lantern on Starlight was carried up by hand."] }
+];
 const NPCS = [
   { id: 'bram', name: 'Bram', role: 'Gondola operator', x: -446, z: 652, jacket: '#3d6fb6', hat: '#e8b04a', scarf: '#f0b429', beard: true, goggles: false,
     idle: ["The gondola never sleeps. I do, though. Just not on shift.", "Wind's picking up on the Wall side. Ski it smart.", "Seen any crystals glinting off-piste? Old Tov knows a story about those."] },
@@ -67,6 +79,19 @@ const QUESTS = {
     steps: [{ t: 'course', id: 'wall', text: 'Race The Wall top to bottom in under 110 s' }, { t: 'talk', npc: 'sela', text: 'Find Sela at the summit', say: ["...You actually did it. Huh.", "Champion gold. Wear it. You earned it."] }],
     reward: { coins: 120, color: 'gold' }, remind: 'The start banner is at the top of The Wall, east of the summit.' }
 };
+LOCALS.forEach(L => { const r = REG[L.region], [x, z] = toWorld(r, 132, 120); NPCS.push(Object.assign({ x, z, goggles: L.hatType === 'helmet' }, L)); });
+Object.assign(QUESTS, {
+  sawmill: { title: 'The Old Sawmill', giver: 'wren', offer: ["The old sawmill up the ridge has been quiet for years. I'd like to know if the roof's still on.", "Ski up and take a look for me?"],
+    steps: [{ t: 'visit', pois: ['sawmill'], text: 'Find the Old Sawmill on Pine Ridge' }, { t: 'talk', npc: 'wren', text: 'Tell Wren about the sawmill', say: ["Roof's on? Good. The owls will be pleased.", "Here, for your boots."] }], reward: { coins: 40 }, remind: 'The sawmill sits halfway up Pine Ridge, east of the gondola.' },
+  crater: { title: 'Into the Fire', giver: 'ignis', offer: ["I need eyes on the crater. My knees don't do summits any more.", "Ride up, look into the lava lake, and come back with your eyebrows."] ,
+    steps: [{ t: 'visit', pois: ['crater'], text: 'Look into the crater on Ember Peak' }, { t: 'talk', npc: 'ignis', text: 'Report to Ignis', say: ["Still bubbling? Lovely.", "Danger pay. You've earned it."] }], reward: { coins: 50 }, remind: 'The crater is at the very top of Ember Peak.' },
+  arch: { title: 'Sun on the Arch', giver: 'sabi', offer: ["There's a sandstone arch on the dunes that glows at sunset.", "Find it and you'll see why I live out here."],
+    steps: [{ t: 'visit', pois: ['arch'], text: 'Find the Sandstone Arch on Sunset Dunes' }, { t: 'talk', npc: 'sabi', text: 'Tell Sabi you found it', say: ["Right? Best view in the Frontier.", "Take this, and keep your goggles on."] }], reward: { coins: 40 }, remind: 'The arch stands on the east side of the dunes.' },
+  ridge: { title: 'Through the Crystal', giver: 'brann', offer: ["Want to see something nobody believes? There's a tunnel through the ridge east of here, full of ice crystals.", "Ski the Crystal Tunnel Run and visit the stone cairn on the Crags."],
+    steps: [{ t: 'visit', pois: ['feat-Crystal Tunnel Run', 'cairn'], text: 'Pass through the Crystal Tunnel and reach the Stone Cairn' }, { t: 'talk', npc: 'brann', text: 'Find Brann at the foot of the Crags', say: ["Told you. Nobody believes me either.", "A guide's fee, in reverse."] }], reward: { coins: 60 }, remind: 'The tunnel is on the connector between Aurora Peak and the Crags.' },
+  stars: { title: 'Lantern Keeper', giver: 'lumi', offer: ["The Stargazer Hut needs someone to check the telescope.", "Ski up and see if it's still pointed at the sky."],
+    steps: [{ t: 'visit', pois: ['stargazer'], text: 'Visit the Stargazer Hut on Aurora Peak' }, { t: 'talk', npc: 'lumi', text: 'Tell Lumi the telescope is fine', say: ["Still pointing up? Then so are we.", "For the lanterns' sake, thank you."] }], reward: { coins: 50 }, remind: 'The hut sits high on Aurora Peak, east of the lift.' }
+});
 QUESTS.lamps = { title: 'Lamps of Lowpine', giver: 'oskar',
   offer: ["Evening, scout. My knees and these icy steps don't get along anymore.", "Would you light the five street lamps around the village for me? Take your skis off first, it's easier on foot. Walk up to each one and light it."],
   steps: [{ t: 'light', text: 'Light the 5 lamps around Lowpine Village' }, { t: 'talk', npc: 'oskar', text: 'Tell Oskar the lamps are lit', say: ["Look at that. Lowpine glows again.", "Here, for your trouble. And a cup of cocoa on me."] }],

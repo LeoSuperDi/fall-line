@@ -15,7 +15,7 @@ const PALC = PAL.map(p => ({ t: p.t, top: C(p.top), mid: C(p.mid), hor: C(p.hor)
 const STORM = { fog: C('#b4bbc8'), top: C('#8a95a9'), mid: C('#a3acbb'), hor: C('#b8bfcb') };
 const tmpC = new THREE.Color(), tmpC2 = new THREE.Color();
 const NIGHT = { top: C('#070f26'), mid: C('#13204a'), hor: C('#2c3766'), fog: C('#1a2347'), sun: C('#9fb4ff'), hs: C('#41548c'), hg: C('#232a4a') };
-const ENV = { night: 0, storm: 0, fogK: 1, tint: 0, tc: new THREE.Color('#ffffff') }, ENV_T = { aurora: { night: 1 }, crags: { storm: 0.3 }, ember: { fogK: 1.3, tint: 0.55, tc: '#b8a49a' }, dunes: { fogK: 1.1, tint: 0.45, tc: '#ecd2a4' } };
+const ENV = { night: 0, storm: 0, fogK: 1, tint: 0, tc: new THREE.Color('#ffffff') }, ENV_T = { aurora: { night: 1 }, crags: { storm: 0.3 }, ember: { fogK: 1.2, tint: 0.5, tc: '#e2876a' }, dunes: { fogK: 1.05, tint: 0.5, tc: '#f7c27a' } };
 let lastRegion = null;
 function updateEnv(dt) {
   const r = regionAt(state === 'title' ? camera.position.x : P.x, state === 'title' ? camera.position.z : P.z), t = (r && ENV_T[r.id]) || {}, k = 1 - Math.exp(-0.5 * dt);

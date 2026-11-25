@@ -12,7 +12,7 @@ function buildNPCs() {
   MARK.offer = new THREE.SpriteMaterial({ map: markTex('!', '#f2661c'), depthTest: false, transparent: true });
   MARK.turn = new THREE.SpriteMaterial({ map: markTex('?', '#2f5e8c'), depthTest: false, transparent: true });
   for (const d of NPCS) {
-    const m = makePerson({ jacket: d.jacket, hat: d.hat, scarf: d.scarf, small: d.small, beard: d.beard, goggles: d.goggles, ski: '#d9dde8' });
+    const m = makePerson(Object.assign({ ski: '#d9dde8' }, d)); // each person's own outfit and hat
     const y = Hm(d.x, d.z); m.position.set(d.x, y, d.z); scene.add(m);
     const mk = new THREE.Sprite(MARK.offer); mk.scale.set(0.9, 0.9, 1); mk.position.set(d.x, y + (d.small ? 2.0 : 2.5), d.z); mk.renderOrder = 5; scene.add(mk);
     npcs.push(Object.assign({}, d, { y, model: m, mark: mk, yaw: 0 }));

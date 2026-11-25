@@ -8,7 +8,8 @@ defined in files listed above it.
 Published as a claude.ai artifact: https://claude.ai/artifact/2WBf8tn6SdUXG4n26vdm9W
 
 ## World
-One connected map (`WORLD`, about 4 km x 3.4 km). A valley runs east-west with Lowpine Village on its north edge.
+One connected map (`WORLD`, about 4 km x 3.4 km). A narrow valley (about 220 m) runs east-west with Lowpine Village on its north edge; the creek winds down its middle (`creekD`).
+Each mountain has a local NPC with their own outfit (`LOCALS` in data.js, `hatType` in makePerson) and a visit quest.
 Six standalone peaks (600-1050 m tall, 10 trails each) in `REGIONS`: north row Pine Ridge (forest), Frostpeak (the original),
 Ember Peak (volcano with crater); south row Sunset Dunes (sand), Windswept Crags (rocky), Aurora Peak (night glacier). Each is a cone-like peak (`mountainH`) with a summit at (uS, vS),
 slopes reaching rvN/rvP sideways and `back` behind; `exp` sets how pointed it is. Height is

@@ -17,8 +17,8 @@ const TILE = 400, TX0 = -3600, TZ0 = -3600, NTX = 18, NTZ = 14;
 const HI_R = LOW ? 520 : 720, HI_SEG = LOW ? 64 : 100, LO_SEG = 24, TREE_VIS = (LOW ? 520 : 720) + 170; // trees always cover every detailed tile, so no bare ring in the distance
 const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, map: paintTex });
 const TC = { grass: C('#4e9426'), grass2: C('#2f7a2c'), earth: C('#8a4a30'), heath: C('#86569a'), creek: C('#5fb6b2'), snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
-const REG_TINT = { pine: C('#ebeee9'), ember: C('#d9d8dc'), dunes: C('#e2bd84'), crags: C('#d8dde6'), aurora: C('#dfe8f6') };
-const TC2 = { ash: C('#7d797e'), basalt: C('#3a3436'), crater: C('#2b2426'), sand: C('#d9a865'), sand2: C('#bf8550'), sandPiste: C('#f0d7aa'), ashPiste: C('#e4e4e8') };
+const REG_TINT = { pine: C('#ebeee9'), ember: C('#5b4646'), dunes: C('#f1b25e'), crags: C('#d8dde6'), aurora: C('#dfe8f6') };
+const TC2 = { ash: C('#4a3434'), basalt: C('#2a2022'), crater: C('#1f1818'), sand: C('#f2a541'), sand2: C('#d8622a'), sandPiste: C('#f8dca3'), ashPiste: C('#cdbcb8'), lava: new THREE.Color(2.6, 0.75, 0.12), ember: C('#8a3a24') };
 const tmpG = new THREE.Color();
 function terrainColor(out, x, z, h, ny, far) {
   const sl = Math.sqrt(Math.max(0, 1 - ny * ny)) / Math.max(ny, 0.05), r = regionAt(x, z);
@@ -32,11 +32,12 @@ function terrainColor(out, x, z, h, ny, far) {
   if (st === 'ice') out.lerp(Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz) < 1 ? TC.lake : TC.ice, 0.85);
   else if (st === 'blueice') out.lerp(TC.blue, 0.82 * sstep(0.1, 0.3, vnoise(x * 0.012 + 5, z * 0.012)) + 0.25);
   else if (st === 'windpack') out.lerp(TC.crust, 0.55);
-  else if (st === 'ash') out.lerp(TC2.ash, 0.5 + 0.3 * vnoise(x * 0.02, z * 0.02));
+  else if (st === 'ash') out.copy(TC2.ash).lerp(TC2.ember, 0.35 + 0.35 * vnoise(x * 0.02, z * 0.02));
   { const [a, b, w, vw] = regionMix(x, z), sk = (a.id === 'dunes' ? 1 - w : b.id === 'dunes' ? w : 0) * (1 - vw); // sand fades in across the dunes' edge instead of stopping at a line
     if (sk > 0.01 && !onP) { tmpG.copy(TC2.sand).lerp(TC2.sand2, 0.5 + 0.5 * vnoise(x * 0.02 + 4, z * 0.02)).lerp(TC.shade, clamp((sl - 0.2) * 0.8, 0, 0.3)); if (st === 'powder') tmpG.lerp(TC.snow, 0.7); out.lerp(tmpG, sstep(0.05, 0.6, sk)); } }
   if (onP && r && r.id === 'dunes') out.copy(TC2.sandPiste); else if (onP && r && r.id === 'ember') out.copy(TC2.ashPiste);
-  if (r && r.id === 'ember') { const [u, v] = toLocal(r, x, z), dc = Math.hypot(u - r.uS, v) / 190; if (dc < 1) out.lerp(TC2.crater, 0.85 * (1 - sstep(0.75, 1, dc))); }
+  if (r && r.id === 'ember') { const [u, v] = toLocal(r, x, z), dc = Math.hypot(u - r.uS, v) / 190; if (dc < 1) out.lerp(TC2.crater, 0.85 * (1 - sstep(0.75, 1, dc)));
+    if (!onP && dc > 0.95 && u > 200) { const flow = 1 - Math.abs(Math.sin(v * 0.022 + 2.6 * vnoise(u * 0.004 + 1, v * 0.003))); out.lerp(TC2.lava, sstep(0.955, 0.985, flow) * sstep(200, 500, u)); } } // glowing lava rivers down the cone
   const rk = mixNum(x, z, 'rockSl', 0.9); if (sl > rk) out.lerp(r && r.id === 'ember' ? TC2.basalt : r && r.id === 'dunes' ? TC2.sand2 : TC.rock, clamp((sl - rk) * 2, 0, 0.9));
   if (z < -600 && z > -840 && x > -560 && x < 160) out.lerp(TC.village, clamp((-600 - z) / 60, 0, 0.6));
   if (!onP && !(Math.hypot((x + 230) / 360, (z + 715) / 120) < 1)) { // patches of meadow and red earth where the snow has thinned
