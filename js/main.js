@@ -140,7 +140,7 @@ if (isTouch) $('tHelp').textContent = 'Hold the left or right side of the screen
 function init() {
   resize(); setMute(AU.muted);
   placeCrystals(); buildLandmarks(); buildCrystals(); buildNPCs();
-  buildBorder(); updateTiles(-150, 300, true);
+  buildBorder(); updateTiles(-150, 300, true); H_MESH = true;
   playerModel = makePerson({ jacket: '#ff5a36', hat: '#26304a', scarf: '#f0b429', ski: '#ffd21f' }); scene.add(playerModel);
   playerModel.traverse(o => { if (o.isMesh) o.castShadow = true; });
   $('loading').classList.add('hidden');

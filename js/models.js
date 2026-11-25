@@ -73,7 +73,7 @@ function rockGeo(seed) {
 
 /* ================= obstacles grid ================= */
 const OG = new Map(), OC = 12;
-function addObs(x, z, r, kind) { const k = Math.floor(x / OC) * 4096 + Math.floor(z / OC); if (!OG.has(k)) OG.set(k, []); OG.get(k).push({ x, z, r, kind }); }
+function addObs(x, z, r, kind, y) { const k = Math.floor(x / OC) * 4096 + Math.floor(z / OC); if (!OG.has(k)) OG.set(k, []); OG.get(k).push({ x, z, r, kind, y }); }
 function nearObs(x, z, cb) {
   const ci = Math.floor(x / OC), cj = Math.floor(z / OC);
   for (let a = ci - 1; a <= ci + 1; a++) for (let b = cj - 1; b <= cj + 1; b++) { const L = OG.get(a * 4096 + b); if (L) for (const o of L) if (cb(o)) return o; }

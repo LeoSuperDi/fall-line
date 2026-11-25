@@ -59,7 +59,7 @@ function* genTreesGen(t) {
     if (px < WORLD.x0 + 30 || px > WORLD.x1 - 30 || pz < WORLD.z0 + 30 || pz > WORLD.z1 - 30) continue;
     const h = Hm(px, pz), dens = treeChance(px, pz, h);
     if (r() > sstep(0.36, 0.62, dens) * 0.85) continue; // trees gather in groves instead of a thin random sprinkle
-    if (Math.exp(-Math.pow((pz + 935) / 16, 2)) > 0.3 && !regionAt(px, pz)) continue; // not in the creek
+    if (creekD(px, pz) < 26) continue; // not in the creek gorge
     if (nearLift(px, pz, 14) || onPiste(px, pz, 9)) continue;
     if (Math.hypot((px - LAKE.x) / LAKE.rx, (pz - LAKE.z) / LAKE.rz) < 1.15) continue;
     if (inMoguls(px, pz) || isReserved(px, pz)) continue;
@@ -231,8 +231,9 @@ function buildLandmarks() {
     for (let i = 0; i < 4; i++) smokes.push({ x: -480 + (i - 1.5) * 3, y: y + 0.5, z: -430 + (i % 2) * 3, steam: true }); }
   LIFTS.forEach(buildLift);
   buildRegions();
+  buildLinks();
   // run markers + signs
-  { const n = []; RUNS.forEach((run, ri) => { for (let i = 6; i < run.path.length - 4; i += 8) { const p = run.path[i]; for (const sd of [-1, 1]) { const x = p.x - p.tz * sd * (run.w / 2 + 1.5), z = p.z + p.tx * sd * (run.w / 2 + 1.5); n.push([x, z, run.col]); } } });
+  { const n = []; RUNS.forEach((run, ri) => { for (let i = 6; i < run.path.length - 4; i += 8) { const p = run.path[i]; if (p.mode) continue; for (const sd of [-1, 1]) { const x = p.x - p.tz * sd * (run.w / 2 + 1.5), z = p.z + p.tx * sd * (run.w / 2 + 1.5); n.push([x, z, run.col]); } } });
     n.forEach(([x, z, c]) => tileBucket(x, z).push([x, z, c, false]));
     RUNS.forEach(run => { if (!run.lamps) return; for (let i = 3; i < run.path.length - 2; i += 10) { const p = run.path[i], sd = (i / 10) % 2 ? 1 : -1, x = p.x - p.tz * sd * (run.w / 2 + 2), z = p.z + p.tx * sd * (run.w / 2 + 2); tileBucket(x, z).push([x, z, null, true]); } });
     RUNS.forEach((run, ri) => { const p = run.path[4]; const x = p.x - p.tz * (run.w / 2 + 4), z = p.z + p.tx * (run.w / 2 + 4); runSign(x, z, run, ri); });
@@ -250,6 +251,41 @@ function buildLift(L) {
   for (const [z, rot] of [[L.za + 4 * sg, 0], [L.zb - 4 * sg, Math.PI]]) { const g = new THREE.Group(); g.position.set(X, Hm(X, z), z); g.rotation.y = rot; scene.add(g);
     box(12, 0.6, 14, '#8b7d78', 0, 7, 0, g); roof(13, 15, 3, '#4f6688', 0, 9, 0, g); roof(13.4, 15.4, 2.6, '#f4f6fb', 0, 9.3, 0, g);
     for (const sx of [-5.5, 5.5]) for (const sz of [-6, 6]) { cyl(0.35, 0.35, 7, '#6f7a8e', sx, 3.5, sz, g); addObs(X + sx, z + sz, 0.6, 'post'); } }
+}
+function buildLinks() {
+  for (const R of RUNS) { if (!R.link) continue; const P = R.path; let i = 0;
+    while (i < P.length) { const m = P[i].mode; if (!m) { i++; continue; } let j = i; while (j + 1 < P.length && P[j + 1].mode === m) j++;
+      const a = Math.max(0, i - 1), b = Math.min(P.length - 1, j + 1); (m === 'bridge' ? buildBridge : buildTunnel)(R, a, b); i = j + 1; } }
+}
+const seg = (P, k, y) => { const p = P[k], q = P[k + 1], a = new THREE.Vector3(p.x, y(p), p.z), b = new THREE.Vector3(q.x, y(q), q.z); return [a, b, a.distanceTo(b)]; };
+function place(m, a, b, yOff) { m.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + (yOff || 0), (a.z + b.z) / 2); m.lookAt(b.x, b.y + (yOff || 0), b.z); scene.add(m); return m; }
+function buildBridge(R, i0, i1) { // a timber deck with rails, on stone piers down to the ground
+  const P = R.path, hw = R.w / 2, top = p => p.hc + SNOW_D - 0.1, wood = toon('#8a6447'), dark = toon('#5b4030'), stone = toon('#8b8f9c'), snow = toon('#eef2f8');
+  for (let k = i0; k < i1; k++) {
+    const [a, b, L] = seg(P, k, top);
+    place(new THREE.Mesh(new THREE.BoxGeometry(R.w, 0.7, L + 0.3), wood), a, b, -0.35).receiveShadow = true;
+    place(new THREE.Mesh(new THREE.BoxGeometry(R.w - 0.6, 0.14, L + 0.8), snow), a, b, 0.04);
+    for (const sd of [-1, 1]) { const g = new THREE.Group(); place(g, a, b, 0);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, L + 0.3), dark); rail.position.set(sd * (hw - 0.2), 1.1, 0); g.add(rail);
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.22, 1.2, 0.22), dark); post.position.set(sd * (hw - 0.2), 0.55, -L / 2); g.add(post);
+      for (let t = 0; t <= L; t += 2) { const f = t / L; addObs(lerp(a.x, b.x, f) + P[k].tz * -sd * (hw - 0.2) * -1, lerp(a.z, b.z, f) + P[k].tx * sd * (hw - 0.2) * -1, 0.35, 'rail', lerp(a.y, b.y, f)); } }
+    if ((k - i0) % 3 === 1) { const p = P[k], gy = Hraw(p.x, p.z), hgt = top(p) - 0.7 - gy; if (hgt > 1) { const pier = new THREE.Mesh(new THREE.BoxGeometry(R.w * 0.55, hgt + 2, 1.6), stone); pier.position.set(p.x, gy - 1 + (hgt + 2) / 2, p.z); pier.rotation.y = Math.atan2(p.tx, p.tz); pier.castShadow = true; scene.add(pier); } }
+  }
+}
+function buildTunnel(R, i0, i1) { // a rock tube with a snowy floor, lamps and a stone arch at each mouth
+  const P = R.path, hw = R.w / 2, rad = hw + 1.5, floor = p => p.hc + SNOW_D - 0.2, mid = P[(i0 + i1) >> 1], rg = regionAt(mid.x, mid.z);
+  const icy = rg && (rg.id === 'aurora' || rg.id === 'crags'), wall = toon(icy ? '#3f5878' : '#4c4a52', { side: THREE.DoubleSide }), rim = toon(icy ? '#9cc6e4' : '#7b7680'), snow = toon('#dfe6f1');
+  const lamp = new THREE.MeshBasicMaterial({ color: icy ? 0x9be7ff : 0xffcf7a, toneMapped: false });
+  for (let k = i0; k < i1; k++) {
+    const [a, b, L] = seg(P, k, floor);
+    const g = new THREE.CylinderGeometry(rad, rad, L + 0.4, 16, 1, true, Math.PI / 2, Math.PI); g.rotateX(Math.PI / 2);
+    place(new THREE.Mesh(g, wall), a, b, 0);
+    place(new THREE.Mesh(new THREE.BoxGeometry(R.w + 2, 0.5, L + 0.4), snow), a, b, -0.25);
+    if ((k - i0) % 4 === 2) { const s = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), lamp); s.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + rad - 0.6, (a.z + b.z) / 2); scene.add(s);
+      if (icy) for (const sd of [-1, 1]) { const c = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), lamp); c.scale.y = 2.4; c.position.set(a.x - P[k].tz * sd * (hw - 0.5), a.y + 1.2, a.z + P[k].tx * sd * (hw - 0.5)); c.rotation.z = sd * 0.3; scene.add(c); } }
+    for (let t = 0; t <= L; t += 2) { const f = t / L; for (const sd of [-1, 1]) addObs(lerp(a.x, b.x, f) - P[k].tz * sd * (hw + 0.4), lerp(a.z, b.z, f) + P[k].tx * sd * (hw + 0.4), 0.5, 'rail', lerp(a.y, b.y, f)); }
+  }
+  for (const k of [i0, i1 - 1]) { const [a, b] = seg(P, k, floor), arch = new THREE.Mesh(new THREE.TorusGeometry(rad + 0.6, 1.3, 8, 18, Math.PI), rim); place(arch, k === i0 ? a : b, k === i0 ? b : a, 0); arch.position.copy(k === i0 ? a : b); arch.castShadow = true; }
 }
 function signBoard(x, z, rot, text, w) { // a painted trail-sign board on two posts
   const tex = new THREE.CanvasTexture(mkCanvas(512, 128, g => { g.fillStyle = '#1d3a33'; g.fillRect(0, 0, 512, 128); g.strokeStyle = 'rgba(238,243,248,.45)'; g.lineWidth = 6; g.strokeRect(10, 10, 492, 108); g.fillStyle = '#eef3f8'; g.font = '800 64px "Barlow Condensed", system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(text, 256, 68); }));

@@ -45,6 +45,7 @@ node check.js
 node screenshot.js village crater
 ```
 
+`features.js` stands at each bridge, canyon or tunnel. `tracks.js` looks back at fresh ski grooves.
 `ride.js` skis down from every summit and reports drop, top speed, crashes and unasked-for air time.
 `closeups.js` frames the skier from the front (skiing, tucking, walking) and looks at the far view and the outer range.
 `check.js` loads the game in headless Chromium and confirms there are no errors, all 60 trails exist, and that

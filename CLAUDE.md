@@ -18,6 +18,12 @@ Runs are defined as shares of the room available at each height (`runV`), so the
 is the ground's own height smoothed along it; `Hm` only flattens small bumps across a trail (never cuts walls), packs it
 0.35 m lower and adds soft snowbanks. Neighbouring peaks are joined by saddle ridges (`shoulderH`). Each `kind` has its
 own silhouette: pine ridge, aurora horn, dunes mesa, crags crown of spikes, volcano crater, frost classic.
+Connector trails (`LINKS` in world.js, `link: true`) ring the six mountains and cross the valley. They are graded to
+`Hbase` (the land without `creekH` and the placed `FEATS` landforms), so each landform becomes a canyon (cut), tunnel
+(cut >= CAVE_D, terrain left intact, `buildTunnel`) or bridge (fill > BRIDGE_D, `buildBridge`); path points carry
+`mode`. `H(x, z, yHint)` returns bridge decks / tunnel floors via `linkDeck`, otherwise the drawn mesh height (`meshH`).
+Obstacles may carry a `y` (rails, tunnel walls) and `kind: 'rail'` pushes without crashing. `node tools/features.js`
+(MODE=bridge|tunnel BACK=n) screenshots them.
 Only Space leaves the ground; there are no automatic launches. Before publishing, run `node tools/ride.js` too.
 Snow is a real 0.5 m layer (`SNOW_D` in `Hm`), thinner where meadows show through. Space jumps (`groundStep`), Shift stops.
 Terrain is 400 m tiles: a coarse mesh for every tile at start (so everything is visible), detailed mesh + trees

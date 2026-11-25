@@ -14,7 +14,7 @@ function treeChance(x, z, h) { // the same odds the forest generator uses, so di
   return d;
 }
 const TILE = 400, TX0 = -3600, TZ0 = -3600, NTX = 18, NTZ = 14;
-const HI_R = LOW ? 520 : 720, HI_SEG = LOW ? 40 : 60, LO_SEG = 24, TREE_VIS = (LOW ? 520 : 720) + 170; // trees always cover every detailed tile, so no bare ring in the distance
+const HI_R = LOW ? 520 : 720, HI_SEG = LOW ? 64 : 100, LO_SEG = 24, TREE_VIS = (LOW ? 520 : 720) + 170; // trees always cover every detailed tile, so no bare ring in the distance
 const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, map: paintTex });
 const TC = { grass: C('#4e9426'), grass2: C('#2f7a2c'), earth: C('#8a4a30'), heath: C('#86569a'), creek: C('#5fb6b2'), snow: C('#e8eef8'), shade: C('#bccbe8'), rock: C('#7a8299'), piste: C('#eef1f6'), ice: C('#b4cee6'), lake: C('#9fcbe0'), forest: C('#d8deec'), village: C('#e9e2d8'), edge: C('#dce2ee'), pine: C('#2c4d43'), blue: C('#6aa6d0'), crust: C('#d3d9e3') };
 const REG_TINT = { pine: C('#ebeee9'), ember: C('#d9d8dc'), dunes: C('#e2bd84'), crags: C('#d8dde6'), aurora: C('#dfe8f6') };
@@ -43,7 +43,7 @@ function terrainColor(out, x, z, h, ny, far) {
     const th = thawAt(x, z, h) * (1 - sstep(0.4, 0.7, sl)); // no grass on steep walls
     if (th > 0) { const e = vnoise(x * 0.03 + 9, z * 0.03 - 2); tmpG.copy(TC.grass).lerp(TC.grass2, 0.5 + 0.5 * vnoise(x * 0.05, z * 0.05)); if (e > 0.5) tmpG.lerp(TC.earth, 0.7 * sstep(0.5, 0.7, e)); else if (e < -0.6) tmpG.lerp(TC.heath, 0.45); out.lerp(tmpG, (far ? 0.6 : 0.95) * sstep(0.3, 0.55, th)); } // crisp meadow edges, like grass meeting a path
   }
-  if (!r) out.lerp(TC.creek, 0.9 * sstep(0.55, 0.85, Math.exp(-Math.pow((z + 935) / 16, 2)))); // the frozen creek
+  if (!r) out.lerp(TC.creek, 0.9 * (1 - sstep(5, 9, creekD(x, z)))); // the frozen creek at the bottom of its gorge
   if (far && !onP) out.lerp(TC.pine, clamp((treeChance(x, z, h) - 0.3) * 1.3, 0, 0.6)); // forests read as dark patches from afar
   const nv = vnoise(x * 0.05, z * 0.05) * 0.03, cw = fbm(x * 0.012 + 3, z * 0.012 - 7) * 0.035;
   out.r = clamp(out.r + nv + cw * 0.6, 0, 1); out.g = clamp(out.g + nv + cw * 0.2, 0, 1); out.b = clamp(out.b + nv * 0.5 - cw * 0.4, 0, 1);

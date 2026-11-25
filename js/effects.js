@@ -73,36 +73,37 @@ const TRN = 360, NV = 7, trX = new Float32Array(TRN * 2), trZ = new Float32Array
 let trCount = 0, trailBreak = true, trDist = 0, lastTrail = { x: 0, z: 0 }, trW = 0.06;
 // across one track: snow surface, a thin lip of pushed-up snow, the shadowed inner wall, the pressed floor, and back out.
 // The mesh sits almost flat on the snow (it can't go below the ground), so the dent is told by light and shadow, not height.
-const XS = [-1.7, -1.2, -0.65, 0, 0.65, 1.2, 1.7], XH = [0.01, 0.05, 0.02, 0.012, 0.02, 0.05, 0.01], XC = ['foot', 'lip', 'wall', 'floor', 'wall', 'lip', 'foot'];
+const XS = [-1.6, -1.15, -0.75, 0, 0.75, 1.15, 1.6], XH = [0.0, 0.025, -0.1, -0.16, -0.1, 0.025, 0.0], /* a real groove: rim, steep wall down, floor below the snow surface */ XC = ['foot', 'lip', 'wall', 'floor', 'wall', 'lip', 'foot'];
 const trGeo = new THREE.BufferGeometry(), trPosA = new Float32Array(TRN * 2 * NV * 3), trColA = new Float32Array(TRN * 2 * NV * 3);
 trGeo.setAttribute('position', new THREE.BufferAttribute(trPosA, 3)); trGeo.setAttribute('color', new THREE.BufferAttribute(trColA, 3));
+{ const nrm = new Float32Array(trPosA.length); for (let i = 1; i < nrm.length; i += 3) nrm[i] = 1; trGeo.setAttribute('normal', new THREE.BufferAttribute(nrm, 3)); } // lit like the snow around it
 trGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(TRN * 2 * (NV - 1) * 6), 1));
-const trail = new THREE.Mesh(trGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -6 }) /* the strip faces down for some directions of travel, so draw both sides */);
+const trail = new THREE.Mesh(trGeo, new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: gradMap, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -60 }) /* pulled toward the camera so the sunken floor still shows over the snow around it */ /* the strip faces down for some directions of travel, so draw both sides */);
 trail.frustumCulled = false; trail.renderOrder = 1; scene.add(trail);
-const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#fbfcfe'), TR_FOOT = C('#e1e7f1'), TR_WALL = C('#a3b2d2'), TRAIL_COL = { groomed: C('#8597c2'), powder: C('#6f84ba'), deep: C('#6478b2'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
+const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#f4f7fb'), TR_FOOT = C('#e8edf5'), TR_WALL = C('#c3cde2'), TRAIL_COL = { groomed: C('#8597c2'), powder: C('#6f84ba'), deep: C('#6478b2'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
 function trailPush(p, nx, nz) {
   trDist += Math.hypot(p.x - lastTrail.x, p.z - lastTrail.z); lastTrail.x = p.x; lastTrail.z = p.z;
   if (trDist < 0.7 && !trailBreak) return; trDist = 0;
   if (p.s < 0.5 && !trailBreak) return;
   if (trCount === TRN) { trX.copyWithin(0, 2); trZ.copyWithin(0, 2); trY.copyWithin(0, 2); trBrk.copyWithin(0, 1); trWArr.copyWithin(0, 1); trDeep.copyWithin(0, 1); trCol.copyWithin(0, 3); trCount--; }
   const i = trCount++, off = 0.14 + p.brakeA * 0.1;
-  for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1, x = p.x + nx * off * sd, z = p.z + nz * off * sd; trX[i * 2 + k] = x; trZ[i * 2 + k] = z; trY[i * 2 + k] = meshH(x, z) + mogulH(x, z) + 0.04; }
+  for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1, x = p.x + nx * off * sd, z = p.z + nz * off * sd; trX[i * 2 + k] = x; trZ[i * 2 + k] = z; trY[i * 2 + k] = H(x, z, p.y) + 0.04; }
   trBrk[i] = trailBreak ? 1 : 0; trailBreak = false;
   const c = TRAIL_COL[p.snow] || TRAIL_COL.powder; trCol[i * 3] = c.r; trCol[i * 3 + 1] = c.g; trCol[i * 3 + 2] = c.b;
-  trWArr[i] = (p.snow === 'powder' || p.snow === 'deep' || p.snow === 'sand' ? 0.2 : 0.11) + p.brakeA * 0.1 + p.skidI * 0.06; // wide enough to read from the camera; powder takes a bigger bite
+  trWArr[i] = (p.snow === 'powder' || p.snow === 'deep' || p.snow === 'sand' ? 0.1 : 0.06) + p.brakeA * 0.12 + p.skidI * 0.06; // wide enough to read from the camera; powder takes a bigger bite
   trDeep[i] = { powder: 1.6, deep: 2.1, sand: 1.2, ash: 1.1, thin: 0.6, ice: 0.25, blueice: 0.25, groomed: 0.45, windpack: 0.7 }[p.snow] || 1;
   rebuildTrail();
 }
 function rebuildTrail() {
   const idx = trGeo.index.array; let ii = 0;
   for (let i = 0; i < trCount; i++) {
-    const fade = clamp((trCount - 1 - i) / TRN * 1.3, 0, 1), dp = trDeep[i], w = trWArr[i] * (0.8 + dp * 0.35);
+    const fade = clamp((trCount - 1 - i) / TRN * 1.3, 0, 1), dp = trDeep[i], w = trWArr[i];
     for (let k = 0; k < 2; k++) {
       const j = i * 2 + k, pj = Math.max(0, i - 1) * 2 + k, qj = Math.min(trCount - 1, i + 1) * 2 + k;
       let tx = trX[qj] - trX[pj], tz = trZ[qj] - trZ[pj]; const l = Math.hypot(tx, tz) || 1; tx /= l; tz /= l;
       for (let q = 0; q < NV; q++) {
         const v = ((i * 2 + k) * NV + q) * 3, o = XS[q] * w;
-        trPosA[v] = trX[j] - tz * o; trPosA[v + 1] = trY[j] + XH[q] * dp * (1 - fade * 0.7); trPosA[v + 2] = trZ[j] + tx * o;
+        trPosA[v] = trX[j] - tz * o; trPosA[v + 1] = trY[j] + XH[q]; trPosA[v + 2] = trZ[j] + tx * o;
         const kc = XC[q], src = kc === 'lip' ? TR_BERM : kc === 'foot' ? TR_FOOT : kc === 'wall' ? TR_WALL : null;
         const cr = src ? src.r : trCol[i * 3], cg = src ? src.g : trCol[i * 3 + 1], cb = src ? src.b : trCol[i * 3 + 2];
         trColA[v] = lerp(cr, TRAIL_FADE.r, fade); trColA[v + 1] = lerp(cg, TRAIL_FADE.g, fade); trColA[v + 2] = lerp(cb, TRAIL_FADE.b, fade);
@@ -110,7 +111,7 @@ function rebuildTrail() {
       if (i > 0 && !trBrk[i]) for (let q = 0; q < NV - 1; q++) { const a = ((i - 1) * 2 + k) * NV + q, b = (i * 2 + k) * NV + q; idx[ii++] = a; idx[ii++] = b; idx[ii++] = a + 1; idx[ii++] = a + 1; idx[ii++] = b; idx[ii++] = b + 1; }
     }
   }
-  trGeo.setDrawRange(0, ii);
+  trGeo.setDrawRange(0, ii); if (ii) trGeo.computeVertexNormals(); // walls catch the light, floors sit in shade
   trGeo.index.needsUpdate = true; trGeo.attributes.position.needsUpdate = true; trGeo.attributes.color.needsUpdate = true;
 }
 // chimney smoke + spring steam

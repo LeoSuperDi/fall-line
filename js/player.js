@@ -21,7 +21,7 @@ const P = { x: -425, z: 640, y: 0, h: 0, w: 0, s: 0, lat: 0, vx: 0, vz: 0, tuck:
   foot: false, walkPh: 0, stepAcc: 0, wax: 0, cocoa: 0, air: false, vy: 0, airT: 0, jumpBuf: 0, jumped: false, gvPrev: 0 };
 let playerModel = null;
 function speedKmh() { return Math.hypot(P.vx, P.vz) * 3.6; }
-function grad(x, z) { const e = 0.5; return [(H(x + e, z) - H(x - e, z)) / (2 * e), (H(x, z + e) - H(x, z - e)) / (2 * e)]; }
+function grad(x, z, y) { const e = 0.5; return [(H(x + e, z, y) - H(x - e, z, y)) / (2 * e), (H(x, z + e, y) - H(x, z - e, y)) / (2 * e)]; }
 function crashPlayer() {
   if (P.crash > 0 || P.inv > 0) return;
   if (P.foot) { camShake = 0.5; sfx.crash(); emitBurst(P.x, P.y + 0.5, P.z, 30); P.s = 0; return; }
@@ -44,6 +44,7 @@ function groundStep(p, dt, gy, jumpV) { // returns true while airborne
     if (p.y <= gy) { p.y = gy; land(p); return false; }
     return true;
   }
+  if (p.y - gy > 1.2) { p.air = true; p.jumped = true; p.vy = 0; p.airT = 0.2; return true; } // stepped off an edge: fall
   const gv = (gy - p.y) / Math.max(dt, 1e-4);
   if (p.jumpBuf > 0) { p.air = true; p.jumped = true; p.vy = jumpV + Math.max(0, gv * 0.5); p.airT = 0; p.jumpBuf = 0; p.y = Math.max(p.y, gy); sfx.jump(); emitBurst(p.x, gy + 0.1, p.z, 10); return true; }
   p.gvPrev = gv; p.y = gy; return false;
@@ -61,10 +62,10 @@ function walkPlayer(dt, inp, gx, gz) {
   p.vx = p.s * dx; p.vz = p.s * dz;
   p.x += p.vx * dt; p.z += p.vz * dt;
   if (p.x < WORLD.x0 + 25 || p.x > WORLD.x1 - 25 || p.z < WORLD.z0 + 25 || p.z > WORLD.z1 - 45) { p.x = clamp(p.x, WORLD.x0 + 25, WORLD.x1 - 25); p.z = clamp(p.z, WORLD.z0 + 25, WORLD.z1 - 45); }
-  const hit = nearObs(p.x, p.z, o => { const ddx = p.x - o.x, ddz = p.z - o.z; return ddx * ddx + ddz * ddz < (o.r + 0.4) * (o.r + 0.4); });
+  const hit = nearObs(p.x, p.z, o => { if (o.y !== undefined && Math.abs(p.y - o.y) > 2.5) return false; const ddx = p.x - o.x, ddz = p.z - o.z; return ddx * ddx + ddz * ddz < (o.r + 0.4) * (o.r + 0.4); });
   if (hit) { const ddx = p.x - hit.x, ddz = p.z - hit.z, d = Math.hypot(ddx, ddz) || 1; p.x = hit.x + ddx / d * (hit.r + 0.41); p.z = hit.z + ddz / d * (hit.r + 0.41); }
   for (const n of npcs) { const ddx = p.x - n.x, ddz = p.z - n.z, d = Math.hypot(ddx, ddz); if (d < 0.8 && d > 0) { p.x = n.x + ddx / d * 0.8; p.z = n.z + ddz / d * 0.8; } }
-  const inAir = groundStep(p, dt, H(p.x, p.z), 4.6);
+  const inAir = groundStep(p, dt, H(p.x, p.z, p.y), 4.6);
   const moved = inAir ? 0 : Math.abs(p.s) * dt; p.walkPh += moved * 3.4; p.stepAcc += moved;
   if (p.stepAcc > 0.85) { p.stepAcc = 0; sfx.step2(p.snow); }
   trailBreak = true;
@@ -91,7 +92,7 @@ function updatePlayer(dt, inp) {
     if (p.crash <= 0) { const [gx, gz] = grad(p.x, p.z); p.h = Math.hypot(gx, gz) > 0.02 ? Math.atan2(-gx, gz) : p.h; p.crash = 0; p.spin = 0; p.s = 2; p.inv = 1.2; }
     return;
   }
-  const [gx, gz] = grad(p.x, p.z), gm = Math.hypot(gx, gz);
+  const [gx, gz] = grad(p.x, p.z, p.y), gm = Math.hypot(gx, gz);
   p.snow = snowType(p.x, p.z, gm); const S = SNOW[p.snow];
   if (p.foot) { walkPlayer(dt, inp, gx, gz); return; }
   const steer = inp.steer;
@@ -135,15 +136,16 @@ function updatePlayer(dt, inp) {
   p.x += p.vx * dt; p.z += p.vz * dt;
   if (p.x < WORLD.x0 + 25 || p.x > WORLD.x1 - 25 || p.z < WORLD.z0 + 25 || p.z > WORLD.z1 - 45) { p.x = clamp(p.x, WORLD.x0 + 25, WORLD.x1 - 25); p.z = clamp(p.z, WORLD.z0 + 25, WORLD.z1 - 45); p.s *= 0.5; }
   // collisions
-  const gyNow = H(p.x, p.z);
-  const hit = p.air && p.y - gyNow > 2.2 ? null : nearObs(p.x, p.z, o => { const ddx = p.x - o.x, ddz = p.z - o.z; return ddx * ddx + ddz * ddz < (o.r + 0.45) * (o.r + 0.45); });
+  const gyNow = H(p.x, p.z, p.y);
+  const hit = p.air && p.y - gyNow > 2.2 ? null : nearObs(p.x, p.z, o => { if (o.y !== undefined && Math.abs(p.y - o.y) > 2.5) return false; const ddx = p.x - o.x, ddz = p.z - o.z; return ddx * ddx + ddz * ddz < (o.r + 0.45) * (o.r + 0.45); });
   if (hit) {
-    if (p.s > 7 && p.inv <= 0) crashPlayer();
+    if (hit.kind === 'rail') { const ddx = p.x - hit.x, ddz = p.z - hit.z, d = Math.hypot(ddx, ddz) || 1; p.x = hit.x + ddx / d * (hit.r + 0.46); p.z = hit.z + ddz / d * (hit.r + 0.46); p.s *= 0.92; p.lat *= -0.3; }
+    else if (p.s > 7 && p.inv <= 0) crashPlayer();
     else { const ddx = p.x - hit.x, ddz = p.z - hit.z, d = Math.hypot(ddx, ddz) || 1; p.x = hit.x + ddx / d * (hit.r + 0.46); p.z = hit.z + ddz / d * (hit.r + 0.46); p.s *= 0.4; }
   }
   for (const n of npcs) { const ddx = p.x - n.x, ddz = p.z - n.z, d = Math.hypot(ddx, ddz); if (d < 0.9 && d > 0) { p.x = n.x + ddx / d * 0.9; p.z = n.z + ddz / d * 0.9; p.s *= 0.5; } }
   if (p.crash > 0) return;
-  if (groundStep(p, dt, H(p.x, p.z), 6.2 + Math.min(2, p.s * 0.03))) { p.skidI = 0; trailBreak = true; return; }
+  if (groundStep(p, dt, H(p.x, p.z, p.y), 6.2 + Math.min(2, p.s * 0.03))) { p.skidI = 0; trailBreak = true; return; }
   p.skidI = clamp(skid * 1.2 + Math.abs(p.lat) / 6 + (brake && p.s > 2 ? p.brakeA : 0), 0, 1);
   // spray
   const deep = p.snow === 'powder' || p.snow === 'deep';
@@ -168,8 +170,8 @@ function updateCamera(dt, snap) {
   const tp = new THREE.Vector3(), tl = new THREE.Vector3();
   if (CAM.mode === 'third') {
     const dist = P.foot ? 4.8 : 6.2 + sp * 0.08, hgt = P.foot ? 2.1 : 2.5 + sp * 0.035;
-    tp.set(p.x - dx * dist, 0, p.z - dz * dist); tp.y = Math.max(p.y + hgt, H(tp.x, tp.z) + 1.6, H(p.x + dx * 5, p.z + dz * 5) + 1.0);
-    tl.set(p.x + dx * 5, Math.max(p.y + 1.1, H(p.x + dx * 5, p.z + dz * 5) + 1.3), p.z + dz * 5);
+    tp.set(p.x - dx * dist, 0, p.z - dz * dist); tp.y = Math.max(p.y + hgt, H(tp.x, tp.z, p.y) + 1.6, H(p.x + dx * 5, p.z + dz * 5, p.y) + 1.0);
+    tl.set(p.x + dx * 5, Math.max(p.y + 1.1, H(p.x + dx * 5, p.z + dz * 5, p.y) + 1.3), p.z + dz * 5);
     CAM.pos.lerp(tp, snap ? 1 : 1 - Math.exp(-9 * dt)); CAM.look.lerp(tl, snap ? 1 : 1 - Math.exp(-12 * dt));
     CAM.roll += (0 - CAM.roll) * (1 - Math.exp(-6 * dt));
   } else {
@@ -192,7 +194,7 @@ function posePlayer(dt) {
   m.rotation.y = -p.h;
   const lean = p.crash > 0 ? 0 : clamp(p.w * p.s / 30, -0.55, 0.55);
   u.tilt.rotation.z = -lean;
-  const [gx, gz] = grad(p.x, p.z), dx = Math.sin(p.h), dz = -Math.cos(p.h);
+  const [gx, gz] = grad(p.x, p.z, p.y), dx = Math.sin(p.h), dz = -Math.cos(p.h);
   u.skis.rotation.x = p.air ? clamp(Math.atan2(p.vy, Math.max(4, p.s)) * 0.6, -0.5, 0.4) : Math.atan(gx * dx + gz * dz);
   u.skis.rotation.y = p.brakeA * p.brakeSide * 0.9;
   u.skis.visible = !p.foot; u.poles.forEach(pl => pl.visible = !p.foot);

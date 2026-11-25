@@ -170,7 +170,12 @@ function buildMapBase() {
   mapBase = mkCanvas(MW, MH, (g) => {
     g.imageSmoothingEnabled = true; g.drawImage(small, 0, 0, MW, MH);
     RUNS.forEach(run => { g.strokeStyle = run.col; g.lineWidth = Math.max(2, run.w / (WORLD.x1 - WORLD.x0) * MW * 1.4); g.lineCap = 'round'; g.lineJoin = 'round'; g.globalAlpha = 0.8; g.beginPath(); run.path.forEach((p, i) => i ? g.lineTo(mu(p.x), mv(p.z)) : g.moveTo(mu(p.x), mv(p.z))); g.stroke(); });
-    g.globalAlpha = 1; g.strokeStyle = '#3a4256'; g.setLineDash([5, 4]); g.lineWidth = 1.6;
+    g.globalAlpha = 1;
+    RUNS.forEach(run => { if (!run.link) return; for (let k = 0; k < run.path.length - 1; k++) { const p = run.path[k], q = run.path[k + 1]; if (!p.mode) continue;
+      g.lineCap = 'butt'; g.setLineDash(p.mode === 'tunnel' ? [3, 3] : []); g.strokeStyle = p.mode === 'tunnel' ? '#2b2f3a' : '#f4efe6'; g.lineWidth = p.mode === 'tunnel' ? 4 : 6;
+      g.beginPath(); g.moveTo(mu(p.x), mv(p.z)); g.lineTo(mu(q.x), mv(q.z)); g.stroke(); } }); g.setLineDash([]); g.lineCap = 'round';
+    g.strokeStyle = '#5fb6b2'; g.lineWidth = 3; g.beginPath(); for (let x = WORLD.x0; x <= WORLD.x1; x += 40) { const z = -935 - 18 * Math.sin(x * 0.004) - 8 * Math.sin(x * 0.011 + 1); x === WORLD.x0 ? g.moveTo(mu(x), mv(z)) : g.lineTo(mu(x), mv(z)); } g.stroke();
+    g.strokeStyle = '#3a4256'; g.setLineDash([5, 4]); g.lineWidth = 1.6;
     LIFTS.forEach(L => { g.beginPath(); g.moveTo(mu(L.x), mv(L.za)); g.lineTo(mu(L.x), mv(L.zb)); g.stroke(); }); g.setLineDash([]);
     g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '800 22px "Barlow Condensed", sans-serif';
     REGIONS.forEach(r => { const [x, z] = toWorld(r, r.uS * 0.5, 60); g.lineWidth = 5; g.strokeStyle = 'rgba(238,243,248,.85)'; g.strokeText(r.name, mu(x), mv(z)); g.fillStyle = '#1d3a33'; g.fillText(r.name, mu(x), mv(z)); });
