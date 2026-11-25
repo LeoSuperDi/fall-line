@@ -224,6 +224,24 @@ body.touch #hubPrompt { bottom: 130px; }
 .note.no canvas { background: transparent; box-shadow: none; outline: 1.5px dashed rgba(43, 42, 51, .3); outline-offset: -4px; }
 .note.no::before { display: none; } .note.no b { color: #8a8476; }
 @media (max-width: 700px) { .notes { grid-template-columns: repeat(3, 1fr); } }
+/* time stop after a landed flip: the frame freezes and a one-row reel of finds spins across the middle */
+body.still #game { filter: grayscale(.85) brightness(.62); }
+#reel { position: fixed; left: 0; right: 0; top: 50%; transform: translateY(-58%); display: grid; justify-items: center; gap: 12px; pointer-events: none; }
+#reel .stl { font: 30px/1 var(--osd); letter-spacing: 1px; text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+#reel .stl::before { content: ""; display: inline-block; width: 9px; height: 22px; margin-right: 12px; border-left: 5px solid var(--paper); border-right: 5px solid var(--paper); box-sizing: border-box; vertical-align: -3px; }
+#reel .win { position: relative; width: min(780px, 94vw); height: 136px; overflow: hidden; background: rgba(13, 15, 19, .78); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+#reel .track { display: flex; gap: 12px; padding: 14px 0; will-change: transform; }
+#reel .tile { flex: 0 0 120px; height: 106px; display: grid; justify-items: center; align-content: start; gap: 2px; background: #fbf8ef; padding: 4px 4px 0; box-sizing: border-box; transform: rotate(var(--r, 0deg)); }
+#reel .tile canvas { width: 112px; height: 84px; }
+#reel .tile small { font: italic 11px/1 Georgia, serif; color: #5a5446; white-space: nowrap; overflow: hidden; max-width: 112px; }
+#reel .tile.hit { outline: 3px solid var(--amber); outline-offset: 2px; }
+#reel .fade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(13, 15, 19, .95), rgba(13, 15, 19, 0) 22%, rgba(13, 15, 19, 0) 78%, rgba(13, 15, 19, .95)); }
+#reel .mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--rec); }
+#reel .mark::before, #reel .mark::after { content: ""; position: absolute; left: -7px; border: 8px solid transparent; }
+#reel .mark::before { top: 0; border-top-color: var(--rec); } #reel .mark::after { bottom: 0; border-bottom-color: var(--rec); }
+#reel .res { min-height: 1.5em; font: italic 400 22px/1.3 Georgia, serif; text-shadow: 0 1px 10px rgba(0, 0, 0, .7); text-align: center; padding: 0 16px; }
+#reel .res b { font-weight: 400; } #reel .res .q1 { color: #8ff0b0; } #reel .res .q2 { color: #9cc4ff; } #reel .res .q3 { color: #ffcf3f; }
+@media (max-height: 520px) { #reel .win { height: 118px; } #reel .tile { flex-basis: 104px; height: 92px; } #reel .tile canvas { width: 96px; height: 72px; } }
 @media (max-height: 520px) {
   #title h1 { font-size: min(21vh, 16vw); } #title .wrap { gap: 10px; padding-bottom: 22px; } .mi { font-size: 30px; } #title .tag { font-size: 15px; }
   .panel h2 { font-size: 34px; } .sheet h2 { font-size: 40px; } .stats { font-size: 15px; } .stats span { padding: 6px 0; } .panel { padding: 18px 22px; }
@@ -271,6 +289,7 @@ body.touch #hubPrompt { bottom: 130px; }
 
 <div id="chapterCard" class="ov hidden"><div id="ccNum">TAPE 1</div><div id="ccEra">Today</div><div id="ccTitle">The North Woods</div></div>
 
+<div id="reel" class="hidden" aria-live="polite"><div class="stl">STILL</div><div class="win"><div class="track" id="reelTrack"></div><div class="fade"></div><div class="mark"></div></div><div class="res" id="reelRes"></div></div>
 <div id="lbTop" class="hidden"></div>
 <div id="dlg" class="hidden" role="dialog" aria-live="polite"><canvas id="face" width="192" height="192"></canvas><div><div id="dlgName"></div><div id="dlgText"></div></div><div id="dlgMore">SPACE</div></div>
 
@@ -464,7 +483,7 @@ function land(gy) {
     const pts = flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), name = (flips ? (flips > 1 ? flips + 'x ' : '') + (P.trick > 0 ? 'Front flip' : 'Back flip') : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
     L.score += pts; L.tricks++; P.s = Math.min(MAXS, P.s + 90 * flips + (grab ? 40 : 0));
     popup(P.x, P.y - 70, name + '  +' + pts, '#ffcf3f'); sfx.trick();
-    if (flips && !demo && L.finds && Math.random() < Math.min(0.6, 0.2 * flips + (grab ? 0.08 : 0))) { const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist(); popup(P.x, P.y - 112, (f.isNew ? 'New find: ' : 'Find: ') + f.it.name, ['#e8e9e2', '#7fe3a0', '#8fbcff', '#ffcf3f'][f.it.r]); } /* landed flips are lucky: each one can turn up an album photo */
+    if (flips && !demo && L.finds && state === 'play') { const f = Math.random() < Math.min(0.8, 0.15 + 0.2 * flips + (grab ? 0.08 : 0)) ? rollFind(RW[Math.min(3, flips)], L.ci) : null; if (f) { L.finds.push(f); persist(); } startReel(f); } /* a landed flip stops time and spins the find reel */
   }
   burst(P.x, P.y, 10, L.Z.top); sfx.land(); P.trick = 0; P.grabT = 0;
 }
@@ -983,7 +1002,7 @@ function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told
 let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save', {})), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
 if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
-const hideHub = () => ['hubHud', 'hubPrompt', 'hubPanel'].forEach(i => show(i, false));
+const hideHub = () => { ['hubHud', 'hubPrompt', 'hubPanel', 'reel'].forEach(i => show(i, false)); document.body.classList.remove('still'); };
 function persist() { store.set('hourstone_save', save); store.set('hourstone_run', runStats); }
 const tapeOpen = ci => ci === 0 || !!save.best[(ci - 1) + '-2'];
 const stageOpen = (ci, si) => tapeOpen(ci) && (si === 0 || !!save.best[ci + '-' + (si - 1)]);
@@ -1147,6 +1166,39 @@ function openAlbum() {
     : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small></div>`).join('')}</div></section>`).join('');
   panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares go to Bet for shards.</p><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
   $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
+}
+
+/* ================= the find reel: time stops after a landed flip ================= */
+let reelT = null;
+function drawBlank(cv) {
+  const k = cv.getContext('2d'); k.setTransform(cv.width / 120, 0, 0, cv.height / 90, 0, 0); k.strokeStyle = 'rgba(43,42,51,.55)'; k.lineWidth = 1.6; k.lineCap = 'round';
+  k.beginPath(); k.arc(60, 44, 20, 0, TAU); k.stroke(); k.fillStyle = 'rgba(43,42,51,.55)'; k.beginPath(); k.arc(53, 40, 1.8, 0, TAU); k.arc(67, 40, 1.8, 0, TAU); k.fill();
+  k.beginPath(); k.moveTo(52, 52); k.lineTo(68, 52); k.stroke(); k.beginPath(); k.moveTo(30, 76); k.lineTo(90, 76); k.stroke();
+}
+function startReel(f) {
+  state = 'reel'; document.body.classList.add('still'); show('reel', true); $('reelRes').innerHTML = '&nbsp;';
+  tone(900, 0.35, 'sine', 0.05, 220);
+  const pool = ITEMS.map((it, i) => i).filter(i => ITEMS[i].zone === L.ci), N = 34, T = 28, tiles = [];
+  for (let n = 0; n < N; n++) tiles.push(n === T ? (f ? f.i : -1) : (Math.random() < 0.38 ? -1 : pool[Math.floor(Math.random() * pool.length)]));
+  const tr = $('reelTrack'); tr.style.transition = 'none'; tr.style.transform = 'translateX(0px)';
+  tr.innerHTML = tiles.map((id, n) => `<div class="tile" style="--r:${((hash(n * 7 + 1) - 0.5) * 4).toFixed(1)}deg"><canvas width="224" height="168"></canvas><small>${id < 0 ? 'nothing' : ITEMS[id].name}</small></div>`).join('');
+  tr.querySelectorAll('canvas').forEach((c, n) => tiles[n] < 0 ? drawBlank(c) : doodle(c, tiles[n], true));
+  const tile = tr.children[0], step = tile.getBoundingClientRect().width + 12, W = tr.parentElement.clientWidth, jit = (Math.random() - 0.5) * step * 0.5;
+  const end = W / 2 - (T * step + step / 2 + jit), dur = 1500;
+  void tr.offsetWidth; tr.style.transition = `transform ${dur}ms cubic-bezier(.1,.75,.16,1)`; tr.style.transform = `translateX(${end}px)`;
+  let lastIdx = 0; const t0 = performance.now();
+  const tick = () => { if (state !== 'reel') return; const x = new DOMMatrix(getComputedStyle(tr).transform).m41, idx = Math.floor((W / 2 - x) / step); if (idx !== lastIdx) { lastIdx = idx; tone(1300, 0.025, 'square', 0.025); } if (performance.now() - t0 < dur) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+  reelT = setTimeout(() => {
+    tr.children[T].classList.add('hit');
+    if (f) { $('reelRes').innerHTML = `<b class="q${f.it.r}">${f.it.name}</b>, ${RARITY[f.it.r].toLowerCase()}. ${f.isNew ? 'New in the sketchbook.' : 'A spare, +' + f.dupe + ' shards.'}`; (f.it.r >= 2 ? sfx.trick : sfx.shard)(); }
+    else { $('reelRes').textContent = 'Nothing this time. Land another flip.'; tone(300, 0.2, 'triangle', 0.04, 200); }
+    reelT = setTimeout(endReel, f ? 1100 : 650);
+  }, dur + 80);
+}
+function endReel() {
+  if (state !== 'reel') return; clearTimeout(reelT); reelT = null;
+  document.body.classList.remove('still'); show('reel', false); state = 'play'; acc = 0; tone(220, 0.25, 'sine', 0.04, 880);
 }
 
 /* ================= basecamp: the walkable hub ================= */
@@ -1321,6 +1373,7 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.repeat) return;
   if (state === 'dialog' && ['Space', 'Enter', 'KeyZ', 'ArrowRight'].includes(e.code)) { advance(); return; }
+  if (state === 'reel' && ['Space', 'Enter'].includes(e.code) && $('reelTrack').querySelector('.hit')) { endReel(); return; }
   if (state === 'hub' && e.code === 'KeyI') openAlbum();
   if (state === 'hub' && ['ArrowUp', 'KeyW', 'Enter', 'KeyE', 'Space'].includes(e.code)) hubAct();
   else if (state === 'panel' && e.code === 'Escape') closePanel();
@@ -1381,6 +1434,6 @@ function frame(now) {
 }
 startTitle();
 requestAnimationFrame(frame);
-window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, openAlbum, openFinale, rollFind, ITEMS, END, albumCount, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
+window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, startReel, endReel, openAlbum, openFinale, rollFind, ITEMS, END, albumCount, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
 })();
 </script>
