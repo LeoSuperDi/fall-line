@@ -204,6 +204,26 @@ body.touch #hubPrompt { bottom: 130px; }
 .card.no { color: #3a3d46; border-style: dashed; } .card.no b { color: #5a5d66; }
 .card .n { color: var(--dim); }
 @media (max-width: 700px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+/* the album is Arlo's sketchbook: ruled paper, taped snapshots, ink doodles */
+.panel.paper { width: min(760px, 100%); background: #ede5d1 repeating-linear-gradient(transparent 0 29px, rgba(60, 100, 160, .16) 29px 30px); color: #2b2a33; border: 0; border-radius: 3px; box-shadow: 0 24px 60px rgba(0, 0, 0, .55), inset 34px 0 0 -32px rgba(200, 70, 60, .45); }
+.panel.paper h2 { font: italic 400 40px/1 Georgia, 'Times New Roman', serif; color: #2b2a33; }
+.panel.paper p { font: italic 400 16px/1.5 Georgia, 'Times New Roman', serif; color: #5a5446; }
+.panel.paper .btn { border-color: rgba(43, 42, 51, .4); color: #2b2a33; font-family: Georgia, serif; font-style: italic; font-weight: 400; }
+.panel.paper .btn:hover { background: rgba(43, 42, 51, .07); }
+.panel.paper .cnt { font: italic 400 17px Georgia, serif; color: #5a5446; white-space: nowrap; }
+.book { display: grid; gap: 18px; max-height: 58vh; overflow: auto; padding: 4px 6px 10px 2px; }
+.book h3 { margin: 0; font: italic 400 22px/1.2 Georgia, serif; color: #2b2a33; text-decoration: underline wavy rgba(200, 70, 60, .5); text-underline-offset: 5px; }
+.book h3 small { font-size: 15px; color: #7a7466; margin-left: 6px; text-decoration: none; display: inline-block; }
+.notes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px 12px; padding-top: 6px; }
+.note { position: relative; display: grid; justify-items: center; gap: 5px; transform: rotate(var(--r, 0deg)); }
+.note canvas { width: 100%; aspect-ratio: 4 / 3; background: #fbf8ef; padding: 5px 5px 4px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(40, 30, 10, .3); }
+.note::before { content: ""; position: absolute; top: -8px; left: 50%; width: 44px; height: 14px; margin-left: -22px; background: rgba(240, 220, 140, .65); transform: rotate(calc(var(--r, 0deg) * -2)); }
+.note b { font: italic 400 14px/1.15 Georgia, serif; text-align: center; color: #2b2a33; }
+.note small { font: italic 400 12px Georgia, serif; color: #7a7466; }
+.note .q0 { color: #7a7466; } .note .q1 { color: #2f7a4a; } .note .q2 { color: #2f5e9c; } .note .q3 { color: #a8740a; }
+.note.no canvas { background: transparent; box-shadow: none; outline: 1.5px dashed rgba(43, 42, 51, .3); outline-offset: -4px; }
+.note.no::before { display: none; } .note.no b { color: #8a8476; }
+@media (max-width: 700px) { .notes { grid-template-columns: repeat(3, 1fr); } }
 @media (max-height: 520px) {
   #title h1 { font-size: min(21vh, 16vw); } #title .wrap { gap: 10px; padding-bottom: 22px; } .mi { font-size: 30px; } #title .tag { font-size: 15px; }
   .panel h2 { font-size: 34px; } .sheet h2 { font-size: 40px; } .stats { font-size: 15px; } .stats span { padding: 6px 0; } .panel { padding: 18px 22px; }
@@ -1051,9 +1071,64 @@ function openFinale() {
   panel(`<h2>The last frame</h2><p>The stone is whole. The camera is in Arlo’s hands. What does he do?</p><div>${opts.map(o => `<button class="prow" data-e="${o.id}" ${o.ok ? '' : 'disabled'}><i style="background:${save.endings.includes(o.id) ? '#efece4' : 'transparent'}"></i><span><b>${o.t}</b><br><small>${o.d}</small></span><em>${save.endings.includes(o.id) ? 'Seen' : ''}</em></button>`).join('')}</div><div class="row"><button class="btn" id="hpClose">Not yet</button></div>`);
   $('hpBox').querySelectorAll('.prow').forEach(b => b.onclick = () => { const id = b.dataset.e; save.told.end = 1; persist(); show('hubPanel', false); hubDialog(END[id].l, () => showEnding(id)); });
 }
+/* ink doodles for the album: wobbly double-stroked lines and slightly off-register colour, like a pen sketch */
+function doodle(cv, idx, found) {
+  const k = cv.getContext('2d'), R = rng(idx * 97 + 13), j = a => (R() - 0.5) * a;
+  k.setTransform(cv.width / 120, 0, 0, cv.height / 90, 0, 0); k.lineCap = 'round'; k.lineJoin = 'round';
+  const ink = found ? '#2b2a33' : 'rgba(43,42,51,.28)';
+  const path = pts => { k.beginPath(); pts.forEach(([x, y], i) => i ? k.lineTo(x, y) : k.moveTo(x, y)); };
+  const L = (pts, w = 1.6) => { k.strokeStyle = ink; for (let pass = 0; pass < 2; pass++) { path(pts.map(([x, y]) => [x + j(1.4), y + j(1.4)])); k.lineWidth = pass ? w * 0.55 : w; k.stroke(); } };
+  const ring = (cx, cy, rx, ry, a0 = 0, a1 = TAU) => { const n = 20, o = R() * 0.4, pts = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n + (a1 - a0 >= TAU - 0.01 ? o : 0); pts.push([cx + Math.cos(a) * rx * (1 + j(0.07)), cy + Math.sin(a) * ry * (1 + j(0.07))]); } if (a1 - a0 >= TAU - 0.01) pts.push(pts[1]); return pts; };
+  const tint = (pts, col) => { if (!found) return; k.fillStyle = col; k.globalAlpha = 0.6; path(pts.map(([x, y]) => [x + 1.6, y + 1.2])); k.fill(); k.globalAlpha = 1; };
+  const E = (cx, cy, rx, ry, col) => { const p = ring(cx, cy, rx, ry); if (col) tint(p, col); L(p); };
+  const P = (col, ...pts) => { const p = pts.concat([pts[0]]); if (col) tint(p, col); L(p); };
+  const D = (x, y, r, col) => { k.fillStyle = found ? col || ink : 'rgba(43,42,51,.25)'; k.beginPath(); k.arc(x + j(0.6), y + j(0.6), r, 0, TAU); k.fill(); };
+  const legs = (xs, y0, y1) => xs.forEach(x => L([[x, y0], [x + j(3), y1]], 2));
+  const ears = (x, y) => { P(null, [x - 4, y], [x - 2, y - 8], [x + 1, y - 1]); P(null, [x + 2, y], [x + 5, y - 8], [x + 7, y]); };
+  const beast = (bx, by, brx, bry, hx, hy, hr, col, lg) => { legs(lg || [bx - brx * 0.6, bx - brx * 0.3, bx + brx * 0.3, bx + brx * 0.6], by + bry * 0.5, 76); E(bx, by, brx, bry, col); E(hx, hy, hr, hr * 0.85, col); D(hx + hr * 0.4, hy - 1.5, 1.3); };
+  const rays = (cx, cy, r0, r1, n, col) => { for (let i = 0; i < n; i++) { const a = i / n * TAU + j(0.2); k.strokeStyle = found ? col : ink; k.lineWidth = 1.2; k.beginPath(); k.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); k.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); k.stroke(); } };
+  const ground = () => L([[8, 77], [40, 76 + j(2)], [80, 77 + j(2)], [112, 76]], 1);
+  const F = [
+    () => { ground(); L([[34, 52], [20, 44], [12, 50], [22, 56], [34, 56]], 1.6); tint(ring(22, 50, 10, 5), '#e0702a'); D(13, 50, 2.6, '#fff'); beast(52, 54, 20, 9, 76, 45, 8, '#e0702a'); ears(76, 39); L([[82, 47], [90, 48]], 1.4); },
+    () => { L([[30, 82], [90, 82]], 3); E(60, 48, 18, 25, '#f2f0e6'); E(53, 40, 5, 5, '#f3c93a'); E(67, 40, 5, 5, '#f3c93a'); D(53, 40, 1.8); D(67, 40, 1.8); P('#e7a83a', [58, 46], [60, 51], [62, 46]); for (let i = 0; i < 7; i++) D(48 + R() * 24, 55 + R() * 14, 1); L([[54, 72], [54, 81]], 1.4); L([[66, 72], [66, 81]], 1.4); },
+    () => { ground(); beast(52, 50, 24, 11, 82, 38, 7, '#9a6a40'); L([[84, 32], [80, 20], [72, 14]], 1.6); L([[80, 20], [86, 12]], 1.4); L([[88, 32], [94, 20], [102, 16]], 1.6); L([[94, 20], [96, 10]], 1.4); },
+    () => { ground(); beast(54, 54, 22, 10, 80, 44, 9, '#c9a26a'); L([[75, 37], [74, 28]], 1.4); L([[83, 36], [85, 27]], 1.4); L([[32, 52], [26, 48]], 2.4); for (let i = 0; i < 6; i++) D(42 + R() * 26, 50 + R() * 8, 1.1, '#5a4030'); },
+    () => { ground(); rays(80, 34, 16, 26, 12, '#d4a017'); beast(52, 50, 24, 11, 82, 38, 7, '#fbf6e8'); L([[84, 32], [80, 20], [72, 14]], 1.6); L([[80, 20], [86, 12]], 1.4); L([[88, 32], [94, 20], [102, 16]], 1.6); L([[94, 20], [96, 10]], 1.4); },
+    () => { L([[6, 8], [114, 8]], 2); [[30, 30], [60, 22], [88, 40]].forEach(([x, y]) => { L([[x, y - 6], [x, y - 13]], 0.8); L([[x - 18, y - 4], [x - 12, y + 3], [x - 7, y - 1], [x - 3, y + 3], [x, y]], 1.4); L([[x + 18, y - 4], [x + 12, y + 3], [x + 7, y - 1], [x + 3, y + 3], [x, y]], 1.4); E(x, y, 3.5, 4.5, '#5a4a6a'); }); },
+    () => { k.fillStyle = found ? 'rgba(150,120,90,.18)' : 'transparent'; k.fillRect(10, 8, 100, 74); const h = [[46, 74], [42, 50], [36, 30], [42, 28], [50, 46], [50, 22], [57, 20], [59, 44], [62, 18], [69, 19], [68, 46], [73, 26], [80, 28], [76, 52], [86, 46], [90, 50], [78, 66], [72, 74]]; tint(h, '#b5482a'); L(h.concat([h[0]]), 1.4); },
+    () => { ground(); beast(54, 50, 30, 17, 90, 42, 12, '#6b4a3a', [34, 46, 62, 74]); D(84, 32, 3.2, '#6b4a3a'); D(94, 31, 3.2, '#6b4a3a'); D(101, 44, 1.8); },
+    () => { ground(); beast(54, 54, 24, 10, 82, 44, 10, '#d9a85a'); L([[30, 52], [20, 44], [16, 50]], 1.4); D(16, 50, 2.6, '#6b4a2a'); L(ring(82, 44, 13, 12, Math.PI * 0.5, Math.PI * 1.7), 1.2); },
+    () => { rays(60, 46, 26, 36, 10, '#5fc8e0'); P('#8fe6ff', [50, 76], [54, 34], [60, 26], [64, 34], [66, 76]); P('#b79cff', [36, 76], [40, 48], [44, 44], [48, 52], [48, 76]); P('#8fe6ff', [70, 76], [74, 52], [80, 46], [82, 54], [80, 76]); L([[30, 77], [90, 77]], 1.6); },
+    () => { E(60, 45, 26, 26, '#d8b25a'); E(60, 45, 20, 20); P('#d8483a', [60, 27], [63, 45], [57, 45]); P(null, [60, 63], [63, 45], [57, 45]); D(60, 45, 2); L([[60, 15], [60, 19]], 1.4); },
+    () => { const m = [[42, 76], [40, 44], [44, 26], [56, 20], [68, 26], [70, 40], [78, 34], [86, 40], [76, 54], [74, 76]]; tint(m, '#c0392b'); L(m.concat([m[0]]), 1.6); L([[40, 70], [76, 70]], 1.4); L([[41, 64], [75, 64]], 1.4); },
+    () => { ground(); beast(54, 54, 22, 10, 80, 42, 9, '#d9b07a'); ears(80, 36); L([[32, 52], [26, 42], [32, 40]], 2); L([[44, 46], [44, 62]], 2.4); L([[62, 46], [62, 62]], 2.4); },
+    () => { L([[60, 54], [44, 80]], 1.6); L([[60, 54], [76, 80]], 1.6); L([[60, 54], [60, 80]], 1.6); P('#7a5a3a', [42, 24], [70, 24], [70, 54], [42, 54]); P('#5a4a3a', [70, 30], [86, 26], [86, 52], [70, 48]); E(90, 39, 6, 9, '#a8c8d8'); L([[48, 24], [48, 18], [58, 18], [58, 24]], 1.4); },
+    () => { P('#b8c8d0', [22, 20], [96, 14], [100, 70], [26, 76]); if (found) { k.globalAlpha = 0.35; E(62, 46, 12, 17, '#2b2a33'); E(64, 26, 7, 7, '#2b2a33'); k.globalAlpha = 1; } else E(62, 46, 12, 17); L([[32, 24], [44, 36]], 1); L([[36, 22], [52, 38]], 1); },
+    () => { ground(); E(56, 60, 18, 13, '#f2f0e6'); E(74, 50, 8, 7, '#f2f0e6'); L([[72, 44], [66, 22]], 2); L([[77, 44], [76, 21]], 2); D(77, 49, 1.3); D(40, 62, 4, '#f2f0e6'); legs([48, 66], 70, 76); },
+    () => { L([[14, 70], [40, 64], [80, 68], [108, 62]], 1); E(60, 42, 14, 7, '#f2f0e6'); L([[56, 40], [36, 22], [20, 26]], 1.8); L([[64, 40], [84, 24], [100, 30]], 1.8); E(74, 38, 5, 4, '#f2f0e6'); D(76, 37, 1.1); P('#2b2a33', [79, 38], [84, 39], [79, 40]); },
+    () => { ground(); beast(52, 50, 28, 15, 88, 54, 11, '#7a5a3a'); P('#e8dcc0', [96, 48], [104, 34], [100, 50]); P('#e8dcc0', [90, 46], [94, 38], [94, 47]); for (let i = 0; i < 8; i++) L([[30 + i * 6, 38], [28 + i * 6, 34]], 1); },
+    () => { ground(); beast(52, 50, 24, 17, 78, 42, 12, '#8a5a36', [36, 46, 60, 68]); L([[86, 46], [90, 60], [86, 70], [82, 68]], 3); L([[84, 52], [92, 56]], 1.6); D(80, 38, 1.4); for (let i = 0; i < 6; i++) L([[32 + i * 7, 36], [31 + i * 7, 31]], 1); },
+    () => { ground(); beast(52, 54, 24, 10, 82, 46, 10, '#d4a050'); L([[84, 52], [83, 62]], 1.8); L([[88, 52], [88, 61]], 1.8); for (let i = 0; i < 4; i++) L([[42 + i * 7, 46], [44 + i * 7, 54]], 1.2); L([[30, 52], [20, 48]], 1.6); },
+    () => { for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI; L([[60 - Math.cos(a) * 24, 46 - Math.sin(a) * 24], [60 + Math.cos(a) * 24, 46 + Math.sin(a) * 24]], 2); } D(60, 46, 3, '#8fe6ff'); L([[96, 76], [96, 22]], 1.4); L([[90, 30], [96, 20], [102, 30]], 1.4); },
+    () => { const t = []; for (let i = 0; i <= 24; i++) { const a = i / 24 * TAU, r = i % 2 ? 28 : 22; t.push([60 + Math.cos(a) * r, 45 + Math.sin(a) * r]); } tint(t, '#c9a84a'); L(t, 1.6); E(60, 45, 9, 9); L([[60, 45], [60, 34]], 1.4); L([[60, 45], [67, 49]], 1.4); },
+    () => { const b = ring(56, 45, 26, 14); tint(b, '#9fdcff'); L(b); P('#9fdcff', [30, 45], [14, 34], [16, 56]); D(72, 42, 2); L([[50, 34], [56, 45], [50, 56]], 1); L([[62, 33], [68, 45], [62, 57]], 1); D(94, 30, 2, '#9fdcff'); D(100, 22, 1.5, '#9fdcff'); },
+    () => { E(42, 34, 18, 14, '#c8ecc0'); E(78, 34, 18, 14, '#c8ecc0'); E(46, 58, 12, 10, '#c8ecc0'); E(74, 58, 12, 10, '#c8ecc0'); L([[60, 26], [60, 66]], 3); L([[60, 26], [52, 12]], 1); L([[60, 26], [68, 12]], 1); D(42, 34, 3, '#e8e0a0'); D(78, 34, 3, '#e8e0a0'); },
+    () => { const w = ring(54, 46, 34, 17); tint(w, '#3a4a8a'); L(w); P('#3a4a8a', [20, 44], [6, 30], [10, 46], [6, 60]); D(78, 42, 1.8); for (let i = 0; i < 9; i++) D(32 + R() * 46, 36 + R() * 18, 1.2, '#f3e9a0'); L([[60, 30], [58, 20], [62, 14]], 1); L([[64, 30], [66, 22]], 1); },
+    () => { ground(); const b = ring(58, 56, 32, 7); tint(b, '#2b2a33'); L(b); E(92, 54, 7, 5, '#2b2a33'); for (let i = 0; i < 5; i++) D(36 + i * 11, 54 + j(3), 2.6, '#f3c62a'); legs([40, 48, 68, 76], 60, 68); L([[26, 56], [12, 60]], 1.6); },
+    () => { E(40, 38, 20, 14, '#f08a3a'); E(80, 38, 20, 14, '#f08a3a'); E(46, 60, 11, 9, '#e8603a'); E(74, 60, 11, 9, '#e8603a'); L([[60, 28], [60, 68]], 3); D(40, 38, 4, '#6a2a1a'); D(80, 38, 4, '#6a2a1a'); L([[60, 28], [54, 14]], 1); L([[60, 28], [66, 14]], 1); },
+    () => { P('#3a3440', [26, 66], [40, 24], [70, 16], [94, 40], [84, 72], [50, 78]); L([[46, 30], [62, 24]], 1); L([[44, 38], [50, 34]], 1); },
+    () => { P('#b07a5a', [10, 40], [50, 34], [58, 44], [66, 34], [110, 40], [70, 50], [60, 52], [50, 50]); P('#b07a5a', [56, 40], [64, 26], [80, 22], [66, 32]); L([[64, 26], [56, 14]], 1.6); D(70, 26, 1.2); },
+    () => { rays(60, 45, 22, 34, 14, '#5fc8e0'); P('#8fe6ff', [60, 18], [80, 45], [60, 72], [40, 45]); L([[52, 34], [60, 26]], 1); L([[50, 48], [56, 56]], 1); }
+  ];
+  if (found) F[idx](); else { F[idx](); k.globalAlpha = 1; k.fillStyle = 'rgba(43,42,51,.35)'; k.font = 'italic 26px Georgia, serif'; k.textAlign = 'center'; k.fillText('?', 104, 24); }
+}
 function openAlbum() {
-  const zones = CH.map((C, z) => `<h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of 5</small></h3><div class="cards">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i] ? `<div class="card r${it.r}"><svg viewBox="0 0 48 48" class="r${it.r}">${GLYPH[it.gl]}</svg><b>${it.name}</b><small class="r${it.r}">${RARITY[it.r]}</small>${save.album[i] > 1 ? '<small class="n">x' + save.album[i] + '</small>' : ''}</div>` : `<div class="card no"><svg viewBox="0 0 48 48">${GLYPH[it.gl]}</svg><b>Not found</b><small>${RARITY[it.r]}</small></div>`).join('')}</div>`).join('');
-  panel(`<div class="top"><h2>Arlo’s album</h2><span class="bank plain">${albumCount()} of ${ITEMS.length} found</span></div><p>Clearing a stage turns up a field find, and every landed flip has a chance at one too. Bigger flips and better medals make rare ones likelier. Duplicates sell for shards.</p><div class="album">${zones}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
+  const rot = i => ((hash(i + 3) - 0.5) * 5).toFixed(1) + 'deg';
+  const zones = CH.map((C, z) => `<section><h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of 5</small></h3><div class="notes">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i]
+    ? `<div class="note" style="--r:${rot(i)}"><canvas width="240" height="180" data-i="${i}" data-f="1"></canvas><b>${it.name}</b><small class="q${it.r}">${RARITY[it.r].toLowerCase()}${save.album[i] > 1 ? ', ×' + save.album[i] : ''}</small></div>`
+    : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small></div>`).join('')}</div></section>`).join('');
+  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares go to Bet for shards.</p><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
+  $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
 }
 
 /* ================= basecamp: the walkable hub ================= */
@@ -1110,7 +1185,7 @@ const BET_INTRO = [['bet', "Welcome to the Lucky Lodge. Shards on the table, no 
 const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
 
 /* panels */
-function panel(html) { $('hpBox').innerHTML = html; show('hubPanel', true); show('hubPrompt', false); state = 'panel'; const c = $('hpClose'); if (c) c.onclick = closePanel; }
+function panel(html, cls) { $('hpBox').className = 'panel wide' + (cls ? ' ' + cls : ''); $('hpBox').innerHTML = html; show('hubPanel', true); show('hubPrompt', false); state = 'panel'; const c = $('hpClose'); if (c) c.onclick = closePanel; }
 function closePanel() { if (lg.spinning) return; show('hubPanel', false); backToHub(); }
 function openTape(ci) {
   const C = CH[ci];
