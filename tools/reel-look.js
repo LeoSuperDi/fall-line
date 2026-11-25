@@ -14,7 +14,7 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
   }
   console.log('reel started from a real flip:', got);
   if (!got) await p.evaluate(() => __hs.startReel(__hs.rollFind([0, 0, 1, 0], 0)));
-  await p.waitForTimeout(600); await p.screenshot({ path: path.join(__dirname, 'shots', 'hs-reel-spin.png') });
+  await p.waitForTimeout(700); await p.screenshot({ path: path.join(__dirname, 'shots', 'hs-reel-spin.png') });
   await p.waitForTimeout(1200); await p.screenshot({ path: path.join(__dirname, 'shots', 'hs-reel-stop.png') });
   await p.waitForTimeout(1500); console.log('state after', await p.evaluate(() => __hs.state), 'errors', errs); await b.close();
 })();
