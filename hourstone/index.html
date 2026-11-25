@@ -1,163 +1,226 @@
 <title>Hourstone</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Hanken+Grotesk:ital,wght@0,400;0,700;1,400&family=VT323&display=swap" rel="stylesheet">
 <style>
-/* Layout: a full-bleed game canvas; chunky arcade panels float over it. One deliberate dark arcade look. */
+/* Layout: the game fills the screen and the interface is a camcorder overlay, because Arlo is filming everything.
+   Play: viewfinder corners, REC dot and timecode, a battery for health. Story: film letterbox bars with subtitles.
+   Stage results: a printed frame grab. Chapters are tapes. Flat dark panels, one hairline border, no drop shadows. */
 :root {
-  --night: #141633; --ink: #fff7e8; --dim: #b9b4d6; --sun: #ffcf3f; --flare: #ff5d3a; --frost: #7fe3ff; --violet: #9b6bff;
-  --panel: #1f2357; --panel2: #2c3180; --edge: #0b0d24;
-  --display: 'Bungee', 'Arial Black', Impact, sans-serif; --body: 'Rubik', 'Trebuchet MS', system-ui, sans-serif;
+  --ink: #0d0f13; --panel: #14171d; --line: rgba(239, 236, 228, .18); --paper: #efece4; --dim: #a7a99f;
+  --rec: #ff4a2b; --glow: #8fe6ff; --amber: #ffb454;
+  --display: 'Big Shoulders Display', 'Arial Narrow', Impact, sans-serif;
+  --body: 'Hanken Grotesk', 'Trebuchet MS', system-ui, sans-serif;
+  --osd: 'VT323', 'Courier New', monospace;
+  --gx: max(18px, env(safe-area-inset-left, 0px)); --gy: max(16px, env(safe-area-inset-top, 0px));
   color-scheme: dark;
 }
-html, body { height: 100%; margin: 0; background: var(--night); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; touch-action: none; }
+html, body { height: 100%; margin: 0; background: var(--ink); color: var(--paper); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; touch-action: none; }
 #game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
 .hidden { display: none !important; }
 button { font: inherit; color: inherit; cursor: pointer; }
-:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--glow); outline-offset: 3px; }
+kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 4px; background: rgba(255, 255, 255, .06); color: var(--paper); }
 
-/* panels: thick ink outline + hard offset shadow, like an arcade cabinet sticker */
-.panel { background: var(--panel); border: 3px solid var(--edge); border-radius: 14px; box-shadow: 0 6px 0 var(--edge); }
-.btn { font-family: var(--display); font-size: 18px; letter-spacing: .5px; padding: 12px 22px 10px; border-radius: 12px; border: 3px solid var(--edge); background: var(--panel2); box-shadow: 0 5px 0 var(--edge); min-height: 50px; }
-.btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--edge); }
-.btn.go { background: var(--sun); color: #2a1800; }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
+/* camcorder furniture */
+#vf { position: fixed; pointer-events: none; inset: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+#vf i { position: absolute; width: 26px; height: 26px; border: 0 solid rgba(255, 255, 255, .75); }
+#vf i:nth-child(1) { left: 0; top: 0; border-left-width: 2px; border-top-width: 2px; }
+#vf i:nth-child(2) { right: 0; top: 0; border-right-width: 2px; border-top-width: 2px; }
+#vf i:nth-child(3) { left: 0; bottom: 0; border-left-width: 2px; border-bottom-width: 2px; }
+#vf i:nth-child(4) { right: 0; bottom: 0; border-right-width: 2px; border-bottom-width: 2px; }
+.osd { font: 28px/1 var(--osd); letter-spacing: .5px; text-shadow: 0 1px 0 rgba(0, 0, 0, .55), 0 0 10px rgba(0, 0, 0, .35); font-variant-numeric: tabular-nums; }
+.rec::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 9px; border-radius: 50%; background: var(--rec); animation: blink 1.4s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .rec::before { animation: none; } }
 
 /* HUD */
 #hud { position: fixed; inset: 0; pointer-events: none; }
 #hud > * { pointer-events: auto; }
-#hudL { position: absolute; left: max(14px, env(safe-area-inset-left, 0px)); top: max(12px, env(safe-area-inset-top, 0px)); padding: 10px 14px; display: grid; gap: 4px; min-width: 200px; }
-#hudL small { color: var(--frost); font: 600 13px var(--body); letter-spacing: .4px; }
-#hudL b { font: 16px var(--display); }
-#hudRow { display: flex; gap: 14px; align-items: center; font: 800 18px var(--body); font-variant-numeric: tabular-nums; }
-#hearts { color: var(--flare); letter-spacing: 2px; font-size: 20px; }
-#shardN::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 6px; background: var(--frost); transform: rotate(45deg); box-shadow: 0 0 8px var(--frost); }
-#hudR { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: max(12px, env(safe-area-inset-top, 0px)); display: flex; gap: 8px; }
-.ib { width: 48px; height: 48px; border-radius: 12px; border: 3px solid var(--edge); background: var(--panel); box-shadow: 0 4px 0 var(--edge); font: 18px var(--display); display: grid; place-items: center; }
-#score { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: calc(max(12px, env(safe-area-inset-top, 0px)) + 62px); text-align: right; font: 26px var(--display); text-shadow: 0 3px 0 var(--edge); font-variant-numeric: tabular-nums; }
-#score small { display: block; font: 600 14px var(--body); color: var(--dim); text-shadow: none; }
-#chase { position: absolute; left: 50%; transform: translateX(-50%); top: max(12px, env(safe-area-inset-top, 0px)); width: min(420px, 46vw); padding: 8px 12px 10px; }
-#chase small { display: block; font: 13px var(--display); color: var(--dim); margin-bottom: 6px; text-align: center; }
-#chaseBar { height: 12px; border-radius: 6px; background: var(--edge); overflow: hidden; }
-#chaseFill { height: 100%; width: 50%; background: linear-gradient(90deg, var(--flare), var(--sun), var(--frost)); }
+#hudL { position: absolute; left: calc(var(--gx) + 14px); top: calc(var(--gy) + 14px); display: grid; gap: 5px; pointer-events: none; }
+#hudEra { font: 400 15px var(--body); color: var(--paper); opacity: .8; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+#hudStage { font: 800 28px/1 var(--display); text-shadow: 0 1px 10px rgba(0, 0, 0, .45); }
+#hudR { position: absolute; right: calc(var(--gx) + 14px); top: calc(var(--gy) + 12px); display: flex; gap: 14px; align-items: center; }
+#stat { display: flex; gap: 16px; align-items: center; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
+.batt { display: inline-flex; gap: 3px; padding: 3px; border: 2px solid var(--paper); border-radius: 3px; position: relative; }
+.batt::after { content: ""; position: absolute; right: -6px; top: 4px; width: 3px; height: 8px; background: var(--paper); border-radius: 0 2px 2px 0; }
+.batt i { width: 9px; height: 10px; background: rgba(239, 236, 228, .2); }
+.batt i.on { background: var(--paper); }
+.batt.low i.on { background: var(--rec); }
+#shardN { font: 700 19px var(--body); font-variant-numeric: tabular-nums; }
+#shardN::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--glow); transform: rotate(45deg); }
+.tb2 { font: 22px/1 var(--osd); letter-spacing: .5px; padding: 8px 11px 6px; border: 1px solid var(--line); border-radius: 4px; background: rgba(13, 15, 19, .55); color: var(--paper); }
+.tb2:hover { background: rgba(13, 15, 19, .8); }
+#score { position: absolute; right: calc(var(--gx) + 14px); top: calc(var(--gy) + 62px); text-align: right; font: 900 46px/1 var(--display); font-variant-numeric: tabular-nums; text-shadow: 0 1px 10px rgba(0, 0, 0, .45); pointer-events: none; }
+#score small { display: block; margin-top: 2px; font: 400 14px var(--body); opacity: .75; }
+#chase { position: absolute; left: 50%; transform: translateX(-50%); top: calc(var(--gy) + 16px); width: min(340px, 36vw); pointer-events: none; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
+#chase small { display: block; font: 22px/1 var(--osd); margin-bottom: 6px; text-align: center; }
+#chaseBar { height: 4px; background: rgba(255, 255, 255, .25); }
+#chaseFill { height: 100%; width: 50%; background: var(--paper); }
+#chase.low #chaseFill { background: var(--rec); }
 
 /* touch controls */
-#touch { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px;
-  padding: 0 max(14px, env(safe-area-inset-right, 0px)) max(14px, env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); pointer-events: none; }
-#touch > div { display: flex; gap: 10px; pointer-events: auto; }
-.tb { width: 74px; height: 74px; border-radius: 50%; border: 3px solid var(--edge); background: rgba(31, 35, 87, .82); box-shadow: 0 4px 0 var(--edge); font: 15px var(--display); }
-.tb.big { width: 96px; height: 96px; background: rgba(255, 207, 63, .9); color: #2a1800; }
+#touch { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; pointer-events: none;
+  padding: 0 max(22px, env(safe-area-inset-right, 0px)) max(22px, env(safe-area-inset-bottom, 0px)) max(22px, env(safe-area-inset-left, 0px)); }
+#touch > div { display: flex; gap: 12px; pointer-events: auto; }
+.tb { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--line); background: rgba(13, 15, 19, .5); font: 24px/1 var(--osd); letter-spacing: .5px; }
+.tb.big { width: 92px; height: 92px; background: var(--rec); border-color: transparent; color: #1a0a06; font-size: 30px; }
 
-/* overlays */
-.ov { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
-.ov.dim { background: rgba(11, 13, 36, .62); }
-.card { width: min(560px, 100%); max-height: 100%; overflow: auto; padding: 24px; display: grid; gap: 14px; }
-.card h2 { margin: 0; font: 30px/1.05 var(--display); text-wrap: balance; }
-.card p { margin: 0; line-height: 1.5; color: var(--dim); }
+/* buttons and menus */
+.btn { font: 700 17px/1 var(--body); padding: 13px 20px; border-radius: 4px; border: 1px solid var(--line); background: transparent; min-height: 46px; }
+.btn:hover { background: rgba(255, 255, 255, .08); }
+.btn:active { transform: translateY(1px); }
+.btn.go { background: var(--rec); border-color: var(--rec); color: #1a0a06; }
+.btn.go:hover { background: #ff6a4d; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; }
+.ov { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: max(20px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px)) max(20px, env(safe-area-inset-bottom, 0px)) max(20px, env(safe-area-inset-left, 0px)); }
+.ov.dim { background: rgba(7, 8, 11, .8); }
+.panel { width: min(520px, 100%); max-height: 100%; overflow: auto; display: grid; gap: 14px; padding: 26px 28px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; box-shadow: 0 24px 60px rgba(0, 0, 0, .5); }
+.panel h2 { margin: 0; font: 800 42px/1 var(--display); text-wrap: balance; }
+.panel p { margin: 0; line-height: 1.55; color: var(--dim); font-size: 17px; }
 
-#title { background: radial-gradient(ellipse 70% 60% at 50% 48%, rgba(11,13,36,.62), rgba(11,13,36,0)); }
-#title .wrap { text-align: center; display: grid; gap: 18px; justify-items: center; max-width: 640px; }
-#title h1 { margin: 0; font: clamp(54px, 12vw, 120px)/.9 var(--display); color: var(--sun); text-shadow: 0 6px 0 var(--edge), 0 0 40px rgba(255, 207, 63, .35); }
-#title .tag { font: 600 clamp(16px, 2.4vw, 20px)/1.4 var(--body); max-width: 34ch; text-shadow: 0 2px 0 var(--edge); }
-#title .keys { font: 14px/1.7 var(--body); color: var(--dim); max-width: 48ch; text-shadow: 0 2px 0 var(--edge); }
-kbd { font: 12px var(--display); background: var(--panel2); border: 2px solid var(--edge); border-radius: 6px; padding: 1px 6px; color: var(--ink); }
+/* title screen */
+#title { justify-content: flex-start; align-items: flex-end; background: linear-gradient(90deg, rgba(9, 11, 15, .78) 0%, rgba(9, 11, 15, .45) 42%, rgba(9, 11, 15, 0) 72%); }
+#title .wrap { display: grid; gap: 22px; max-width: 580px; padding: 0 0 clamp(26px, 8vh, 80px) clamp(34px, 6vw, 100px); }
+#title h1 { margin: 0; font: 900 clamp(80px, 16vw, 200px)/.8 var(--display); letter-spacing: -.01em; text-shadow: 0 2px 30px rgba(0, 0, 0, .3); }
+#title .tag { margin: 0; font: 400 clamp(17px, 2.2vw, 21px)/1.45 var(--body); max-width: 31ch; text-shadow: 0 1px 12px rgba(0, 0, 0, .5); }
+.menu { display: grid; gap: 2px; justify-items: start; }
+.mi { position: relative; padding: 2px 0 2px 0; border: 0; background: none; text-align: left; font: 800 44px/1.05 var(--display); color: var(--paper); transition: padding-left .12s; }
+.mi::before { content: ""; position: absolute; left: -26px; top: 50%; width: 12px; height: 12px; margin-top: -6px; background: var(--rec); opacity: 0; transform: scale(.4); transition: opacity .12s, transform .12s; }
+.mi:hover:not(:disabled), .mi:focus-visible { padding-left: 10px; color: #fff; }
+.mi:hover:not(:disabled)::before, .mi:focus-visible::before { opacity: 1; transform: none; left: -16px; }
+.mi:disabled { opacity: .35; cursor: not-allowed; }
+.mi.go::before { opacity: 1; transform: none; left: -18px; }
+#title .keys { margin: 0; color: var(--paper); opacity: .85; font: 400 15px/1.9 var(--body); text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+#titleOsd { position: absolute; left: calc(var(--gx) + 14px); top: calc(var(--gy) + 14px); }
 
-#chapters .list { display: grid; gap: 10px; }
-#chapters .list button { text-align: left; display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 12px; border: 3px solid var(--edge); background: var(--panel2); box-shadow: 0 4px 0 var(--edge); }
-#chapters .list button span { font: 22px var(--display); color: var(--sun); }
-#chapters .list button b { display: block; font: 16px var(--display); }
-#chapters .list button small { color: var(--dim); font-size: 14px; }
+/* tapes (chapters) */
+#chapters .list { display: grid; }
+#chapters .list button { display: grid; grid-template-columns: 76px 1fr; gap: 10px; align-items: baseline; padding: 12px 2px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
+#chapters .list button:hover:not(:disabled) { background: rgba(255, 255, 255, .05); }
+#chapters .list .tn { font: 24px/1 var(--osd); color: var(--rec); }
+#chapters .list b { display: block; font: 800 25px/1.05 var(--display); }
+#chapters .list small { color: var(--dim); font-size: 15px; }
+#chapters .list button:disabled { opacity: .4; cursor: not-allowed; }
+#chapters .list button:disabled .tn { color: var(--dim); }
 
-#chapterCard { flex-direction: column; text-align: center; gap: 10px; pointer-events: none; }
-#ccEra { font: clamp(16px, 3vw, 22px) var(--display); color: var(--frost); letter-spacing: 2px; text-shadow: 0 3px 0 var(--edge); }
-#ccTitle { font: clamp(44px, 9vw, 92px)/.95 var(--display); color: var(--ink); text-shadow: 0 6px 0 var(--edge); }
-#ccNum { font: 600 16px var(--body); color: var(--dim); text-shadow: 0 2px 0 var(--edge); }
+/* tape title card */
+#chapterCard { background: #06070a; justify-content: flex-start; align-items: flex-end; flex-direction: column; text-align: left; padding-left: clamp(24px, 8vw, 120px); padding-bottom: clamp(30px, 14vh, 130px); gap: 8px; pointer-events: none; }
+#ccNum { align-self: flex-start; margin-top: auto; font: 30px/1 var(--osd); color: var(--rec); }
+#ccEra { align-self: flex-start; font: 700 clamp(20px, 3vw, 30px)/1 var(--display); color: var(--dim); }
+#ccTitle { align-self: flex-start; font: 900 clamp(60px, 12vw, 150px)/.85 var(--display); }
 
-/* dialogue */
-#dlg { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); width: min(820px, calc(100% - 32px)); display: grid; grid-template-columns: auto 1fr; gap: 16px; padding: 16px 18px; cursor: pointer; }
-#dlg canvas { width: 96px; height: 96px; border-radius: 10px; background: var(--panel2); border: 3px solid var(--edge); }
+/* story: film letterbox bars with subtitles */
+#lbTop { position: fixed; left: 0; right: 0; top: 0; height: max(64px, calc(env(safe-area-inset-top, 0px) + 44px)); background: #07080b; }
+#dlg { position: fixed; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: start; padding: 22px max(26px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(26px, env(safe-area-inset-left, 0px)); background: #07080b; cursor: pointer; }
+#dlg canvas { width: 92px; height: 92px; border: 1px solid var(--line); border-radius: 3px; background: #14171d; }
 #dlg.noface { grid-template-columns: 1fr; }
 #dlg.noface canvas { display: none; }
-#dlgName { font: 18px var(--display); color: var(--sun); }
-#dlgText { margin-top: 6px; font: 400 19px/1.45 var(--body); min-height: 2.9em; max-width: 62ch; }
+#dlgName { font: 800 24px/1 var(--display); color: var(--rec); }
+#dlg[data-who=juni] #dlgName { color: #b79cff; }
+#dlg[data-who=yeti] #dlgName { color: var(--glow); }
+#dlg[data-who=edda] #dlgName { color: #7a4a1c; }
+#dlg[data-who=tip] #dlgName { color: var(--glow); }
+#dlgText { margin-top: 8px; font: 400 clamp(17px, 2.1vw, 21px)/1.5 var(--body); min-height: 3em; max-width: 64ch; }
 #dlg.narr #dlgText { font-style: italic; color: var(--dim); }
-#dlg.tip { background: #12324a; }
-#dlg.tip #dlgName { color: var(--frost); }
-#dlg.journal { background: #e9dcc0; color: #3b2a14; }
-#dlg.journal #dlgName { color: #7a4a1c; }
+#dlg.tip { border-top: 3px solid var(--glow); }
+#dlg.journal { background: #e8dfca; color: #2b2418; }
 #dlg.journal #dlgText { font-family: Georgia, 'Times New Roman', serif; font-style: italic; }
-#dlgMore { position: absolute; right: 16px; bottom: 10px; font: 12px var(--display); color: var(--dim); }
+#dlgMore { position: absolute; right: max(26px, env(safe-area-inset-right, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); font: 20px/1 var(--osd); color: var(--dim); }
+#dlg.journal #dlgMore { color: #7a6a4a; }
 
-#results .stats { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; font-size: 17px; font-variant-numeric: tabular-nums; }
-#results .stats span:nth-child(even) { text-align: right; font-weight: 800; }
-#rank { font: 64px var(--display); color: var(--sun); text-shadow: 0 5px 0 var(--edge); text-align: center; }
+/* stage results: a printed frame grab */
+.sheet { display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr); gap: clamp(26px, 5vw, 60px); align-items: center; width: min(960px, 100%); max-height: 100%; }
+.print { position: relative; margin: 0; padding: 12px 12px 6px; background: #f1eee6; box-shadow: 0 20px 50px rgba(0, 0, 0, .55); transform: rotate(-1.4deg); }
+.print img, .print .blank { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #1a1d24; }
+.print figcaption { padding: 12px 4px 10px; color: #3a372f; font: italic 400 16px/1.3 var(--body); }
+.stamp { position: absolute; right: -16px; top: -22px; display: grid; place-items: center; width: 76px; height: 76px; border: 4px solid var(--rec); border-radius: 50%; background: #f1eee6; color: var(--rec); font: 900 50px/1 var(--display); transform: rotate(8deg); }
+.sheet .text { display: grid; gap: 16px; }
+.sheet h2 { margin: 0; font: 900 clamp(40px, 6vw, 64px)/.92 var(--display); text-wrap: balance; }
+.sheet p { margin: 0; color: var(--dim); line-height: 1.55; font-size: 17px; max-width: 34ch; }
+.stats { display: grid; grid-template-columns: 1fr auto; font-size: 17px; font-variant-numeric: tabular-nums; }
+.stats span { padding: 9px 0; border-bottom: 1px solid var(--line); }
+.stats span:nth-child(even) { text-align: right; font-weight: 700; }
 
-@media (max-width: 640px) {
-  #hudL { min-width: 0; padding: 8px 10px; }
-  #hudL b { font-size: 13px; }
-  #chase { top: calc(max(12px, env(safe-area-inset-top, 0px)) + 96px); width: 70vw; }
-  #dlg { grid-template-columns: 1fr; } #dlg canvas { display: none; }
-  #dlgText { font-size: 16px; }
+@media (max-height: 520px) {
+  #title h1 { font-size: min(21vh, 16vw); } #title .wrap { gap: 10px; padding-bottom: 22px; } .mi { font-size: 30px; } #title .tag { font-size: 15px; }
+  .panel h2 { font-size: 34px; } .sheet h2 { font-size: 40px; } .stats { font-size: 15px; } .stats span { padding: 6px 0; } .panel { padding: 18px 22px; }
 }
-@media (prefers-reduced-motion: reduce) { .btn:active { transform: none; } }
+@media (max-width: 700px) {
+  .sheet { grid-template-columns: 1fr; gap: 22px; overflow: auto; }
+  .print { max-width: 420px; }
+  #hudL { max-width: 46vw; } #hudStage { font-size: 22px; }
+  #hudR { gap: 8px; top: calc(var(--gy) + 8px); } #stat { gap: 10px; }
+  #chase { top: calc(var(--gy) + 82px); width: 62vw; }
+  #score { top: calc(var(--gy) + 52px); font-size: 36px; }
+  #dlg { grid-template-columns: 1fr; padding-bottom: max(30px, env(safe-area-inset-bottom, 0px)); } #dlg canvas { display: none; }
+  .mi { font-size: 38px; }
+}
 </style>
 
 <canvas id="game"></canvas>
+<div id="vf"><i></i><i></i><i></i><i></i></div>
 
 <div id="hud" class="hidden">
-  <div id="hudL" class="panel"><small id="hudEra">Today</small><b id="hudStage">Ranger Road</b><div id="hudRow"><span id="hearts">♥♥♥</span><span id="shardN">0</span><span id="timeN">0:00</span></div></div>
-  <div id="chase" class="panel hidden"><small id="chaseLbl">Keep up with the yeti</small><div id="chaseBar"><div id="chaseFill"></div></div></div>
-  <div id="hudR"><button class="ib" id="bMute" aria-label="Sound on or off">♪</button><button class="ib" id="bPause" aria-label="Pause">II</button></div>
+  <div id="hudL"><div class="osd rec" id="timeN">00:00:00</div><div id="hudEra">Tape 1</div><div id="hudStage">Ranger Road</div></div>
+  <div id="chase" class="hidden"><small id="chaseLbl">Yeti ahead</small><div id="chaseBar"><div id="chaseFill"></div></div></div>
+  <div id="hudR"><div id="stat"><span class="batt" id="hearts"><i></i><i></i><i></i></span><span id="shardN">0 / 0</span></div><button class="tb2" id="bMute" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bPause" aria-label="Pause">PAUSE</button></div>
   <div id="score">0<small>points</small></div>
 </div>
 
 <div id="touch" class="hidden">
-  <div><button class="tb" id="tL" aria-label="Brake or back flip">◀</button><button class="tb" id="tR" aria-label="Push or front flip">▶</button></div>
+  <div><button class="tb" id="tL" aria-label="Brake or back flip">Brake</button><button class="tb" id="tR" aria-label="Push or front flip">Push</button></div>
   <div><button class="tb" id="tD" aria-label="Tuck or grab">Tuck</button><button class="tb big" id="tJ" aria-label="Jump">Jump</button></div>
 </div>
 
-<div id="title" class="ov"><div class="wrap">
+<div id="title" class="ov"><div class="osd rec" id="titleOsd">REC 00:00:00</div><div class="wrap">
   <h1>Hourstone</h1>
   <p class="tag">Arlo Finch needs one photo of the yeti. He's about to chase it through ten thousand years.</p>
-  <div class="row" style="justify-content:center"><button class="btn go" id="bPlay">New game</button><button class="btn" id="bCont">Continue</button><button class="btn" id="bChapters">Chapters</button></div>
-  <p class="keys"><kbd>Space</kbd> jump &nbsp; <kbd>←</kbd><kbd>→</kbd> brake and push, or flip in the air &nbsp; <kbd>↓</kbd> tuck, or grab in the air &nbsp; <kbd>P</kbd> pause</p>
+  <div class="menu"><button class="mi go" id="bPlay">New game</button><button class="mi" id="bCont">Continue</button><button class="mi" id="bChapters">Tapes</button></div>
+  <p class="keys"><kbd>Space</kbd> jump &nbsp; <kbd>←</kbd> brake <kbd>→</kbd> push, or flip in the air &nbsp; <kbd>↓</kbd> tuck, or grab in the air &nbsp; <kbd>P</kbd> pause</p>
 </div></div>
 
-<div id="chapters" class="ov dim hidden"><div class="card panel">
-  <h2>Chapters</h2>
+<div id="chapters" class="ov dim hidden"><div class="panel">
+  <h2>Tapes</h2>
   <div class="list" id="chList"></div>
   <div class="row"><button class="btn" id="chBack">Back</button></div>
 </div></div>
 
-<div id="chapterCard" class="ov hidden"><div id="ccNum">Chapter 1</div><div id="ccEra">Today</div><div id="ccTitle">The North Woods</div></div>
+<div id="chapterCard" class="ov hidden"><div id="ccNum">TAPE 1</div><div id="ccEra">Today</div><div id="ccTitle">The North Woods</div></div>
 
-<div id="dlg" class="panel hidden" role="dialog" aria-live="polite"><canvas id="face" width="192" height="192"></canvas><div><div id="dlgName"></div><div id="dlgText"></div></div><div id="dlgMore">Space ▸</div></div>
+<div id="lbTop" class="hidden"></div>
+<div id="dlg" class="hidden" role="dialog" aria-live="polite"><canvas id="face" width="192" height="192"></canvas><div><div id="dlgName"></div><div id="dlgText"></div></div><div id="dlgMore">SPACE</div></div>
 
-<div id="results" class="ov dim hidden"><div class="card panel">
-  <h2 id="resTitle">Stage clear</h2>
-  <div id="rank">A</div>
-  <div class="stats" id="resStats"></div>
-  <div class="row"><button class="btn go" id="resNext">Next</button><button class="btn" id="resRetry">Ski it again</button></div>
+<div id="results" class="ov dim hidden"><div class="sheet">
+  <figure class="print"><img id="resPhoto" alt="Frame grab from the run"><div class="stamp" id="rank">A</div><figcaption id="resCap">Frame grab</figcaption></figure>
+  <div class="text">
+    <h2 id="resTitle">Stage clear</h2>
+    <div class="stats" id="resStats"></div>
+    <div class="row"><button class="btn go" id="resNext">Next</button><button class="btn" id="resRetry">Ski it again</button></div>
+  </div>
 </div></div>
 
-<div id="fail" class="ov dim hidden"><div class="card panel">
-  <h2 id="failTitle">Out of hearts</h2>
+<div id="fail" class="ov dim hidden"><div class="panel">
+  <h2 id="failTitle">Battery dead</h2>
   <p id="failText">Arlo needs a breather. Try the stage again from the top.</p>
   <div class="row"><button class="btn go" id="failRetry">Try again</button><button class="btn" id="failQuit">Title screen</button></div>
 </div></div>
 
-<div id="pause" class="ov dim hidden"><div class="card panel">
+<div id="pause" class="ov dim hidden"><div class="panel">
   <h2>Paused</h2>
   <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Land with your skis flat to the slope.</p>
   <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Title screen</button></div>
 </div></div>
 
-<div id="ending" class="ov dim hidden"><div class="card panel">
-  <h2>The end</h2>
-  <p>Arlo never got the photo. He got a story, a friend, and a pile of pinecones by the door.</p>
-  <div class="stats" id="endStats"></div>
-  <div class="row"><button class="btn go" id="endTitle">Title screen</button></div>
+<div id="ending" class="ov dim hidden"><div class="sheet">
+  <figure class="print"><div class="blank"></div><figcaption>Frame 1 of 1. Not taken.</figcaption></figure>
+  <div class="text">
+    <h2>No photo</h2>
+    <p>Arlo never got the shot. He got a story, a friend, and a pile of pinecones by the door.</p>
+    <div class="stats" id="endStats"></div>
+    <div class="row"><button class="btn go" id="endTitle">Title screen</button></div>
+  </div>
 </div></div>
 
 <script>
@@ -257,7 +320,7 @@ function buildLevel(ci, si) {
   const put = (dy, isGap) => { y += dy; gy.push(y); gap.push(!!isGap); };
   const X = () => gy.length * STEP;
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
-  const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 220; x += 460 + R() * 560) if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
+  const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) // far enough apart that one jump never lands on the next obstacle if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
   const placeShards = (x0, x1) => { if (R() < 0.75 && x1 - x0 > 600) { const sx = x0 + 120 + R() * (x1 - x0 - 560); for (let i = 0; i < 5; i++) shards.push({ x: sx + i * 56, dy: -30, got: false }); } };
   seg(800, () => STEP * 0.07); cps.push(300);
   let lastCp = 0;
@@ -290,7 +353,7 @@ function ceilAt(x) { return baseAt(x) - 330 - 45 * Math.sin(x * 0.004) - 25 * Ma
 
 /* ================= player ================= */
 const P = { x: 0, y: 0, vx: 0, vy: 0, s: 0, ground: true, rot: 0, trick: 0, grabT: 0, crouch: 0.3, crash: 0, inv: 0, coyote: 0, jumpBuf: 0, hearts: 3, t: 0 };
-const MINS = 270, MAXS = 1100, JUMPV = 640;
+const MINS = 270, MAXS = 900, JUMPV = 640; // top speed leaves about 0.75 s of warning on screen
 let cam = { x: 0, y: 0 }, shake = 0, demo = false;
 function respawn(full) {
   const cpx = full ? L.cps[0] : L.cp;
@@ -301,15 +364,16 @@ function respawn(full) {
 }
 function crash(why) {
   if (P.crash > 0 || (P.inv > 0 && why !== 'fall') || demo) { if (demo && why === 'fall') respawn(true); return; }
-  P.crash = 1.1; P.hearts--; L.crashes++; P.spin = (Math.random() < 0.5 ? -1 : 1) * 9;
+  L.whys = (L.whys || []).concat(why); P.crash = 1.1; P.hearts--; L.crashes++; P.spin = (Math.random() < 0.5 ? -1 : 1) * 9;
   shake = 1; burst(P.x, P.y - 16, 34, '#ffffff'); sfx.crash();
 }
 function jump() { P.ground = false; P.vy = P.vy - JUMPV; P.coyote = 0; P.jumpBuf = 0; P.trick = 0; P.grabT = 0; sfx.jump(); burst(P.x, P.y, 8, L.Z.top); }
 function land(gy) {
-  const a = slopeAt(P.x), d = wrapA(P.rot - a);
-  if (Math.abs(d) > 1.05) { P.y = gy; crash('land'); return; }
+  const a = slopeAt(P.x), d = Math.abs(wrapA(P.rot - a));
+  if (d > 2.1) { P.y = gy; crash('land'); return; } // landed on your head
   P.ground = true; P.y = gy; P.rot = a;
   P.s = clamp(P.vx * Math.cos(a) + P.vy * Math.sin(a), MINS, MAXS);
+  if (d > 0.95) { P.s = Math.max(MINS, P.s * 0.6); popup(P.x, P.y - 70, 'Sloppy landing', '#ff9a6a'); sfx.land(); P.trick = 0; P.grabT = 0; return; } // crooked: you keep your feet but lose speed
   const flips = Math.floor((Math.abs(P.trick) + 0.9) / TAU), grab = P.grabT > 0.25;
   if (flips || grab) {
     const pts = flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), name = (flips ? (flips > 1 ? flips + 'x ' : '') + (P.trick > 0 ? 'Front flip' : 'Back flip') : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
@@ -333,7 +397,7 @@ function stepPlayer(dt) {
   if (P.crash > 0) {
     P.crash -= dt; P.rot += P.spin * dt; P.spin *= Math.exp(-3 * dt);
     P.vx *= Math.exp(-2.5 * dt); P.x += P.vx * dt; const gy = baseAt(P.x); P.vy += 1700 * dt; P.y += P.vy * dt; if (P.y > gy) { P.y = gy; P.vy *= -0.3; }
-    if (P.crash <= 0) { if (P.hearts <= 0) { failStage('Out of hearts', 'Arlo needs a breather. Try the stage again from the top.'); return; } respawn(false); }
+    if (P.crash <= 0) { if (P.hearts <= 0) { failStage('Battery dead', 'Arlo needs a breather. Try the stage again from the top.'); return; } respawn(false); }
     return;
   }
   const k = input(), Z = L.Z, G = 1750 * Z.g;
@@ -366,14 +430,14 @@ function stepPlayer(dt) {
     if (Z.ceiling) { const c = ceilAt(P.x) + 48; if (P.y < c) { P.y = c; if (P.vy < 0) P.vy *= -0.2; } }
     const gy = groundAt(P.x);
     if (!isNaN(gy) && P.y >= gy) land(gy);
-    else if (P.y > baseAt(P.x) + 420) { P.hearts--; L.crashes++; sfx.crash(); shake = 1; if (P.hearts <= 0) { failStage('Out of hearts', 'Arlo needs a breather. Try the stage again from the top.'); return; } respawn(false); popup(P.x, P.y - 80, 'Fell in!', '#ff5d3a'); }
+    else if (P.y > baseAt(P.x) + 420) { P.hearts--; L.crashes++; sfx.crash(); shake = 1; if (P.hearts <= 0) { failStage('Battery dead', 'Arlo needs a breather. Try the stage again from the top.'); return; } respawn(false); popup(P.x, P.y - 80, 'Fell in!', '#ff5d3a'); }
   }
   // obstacles
   const cy = P.y - 22 + (P.ground ? P.crouch * 6 : 0);
   for (const o of L.obs) {
     if (o.x < P.x - 160) continue; if (o.x > P.x + 160) break;
     const top = obsTop(o), bot = obsBot(o);
-    if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) { crash('hit'); break; }
+    if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) { crash('hit:' + o.k); break; }
   }
   // shards
   for (const sd of L.shards) { if (sd.got) continue; const sx = sd.x, sy = baseAt(sx) + sd.dy; if (Math.abs(sx - P.x) < 28 && Math.abs(sy - (P.y - 24)) < 34) { sd.got = true; L.got++; L.score += 100; sfx.shard(); burst(sx, sy, 10, '#7fe3ff'); } }
@@ -382,7 +446,7 @@ function stepPlayer(dt) {
   if (P.x > L.finish && !demo) finishStage();
   if (P.ground && P.s > 300) { if (Math.random() < 0.25 + (k.d ? 0.3 : 0)) spray(P.x - 18, P.y, L.Z.top); }
 }
-function obsTop(o) { if (o.k === 'geyser') return baseAt(o.x) - (geyserUp(o) ? 150 : 0); return baseAt(o.x) - o.fly - o.h + (o.fly ? Math.sin(P.t * 3 + o.ph) * 14 : 0); }
+function obsTop(o) { if (o.k === 'geyser') return baseAt(o.x) - (geyserUp(o) ? 84 : 0); return baseAt(o.x) - o.fly - o.h + (o.fly ? Math.sin(P.t * 3 + o.ph) * 14 : 0); }
 function obsBot(o) { if (o.k === 'geyser') return baseAt(o.x); return obsTop(o) + o.h; }
 function geyserUp(o) { return (P.t * 0.5 + o.ph) % 2 < 0.8; }
 function stepWorld(dt) {
@@ -494,7 +558,7 @@ function drawObs(o) {
     case 'star': { g.save(); g.translate(o.x, by - 18); g.rotate(P.t * 2 + o.ph); g.fillStyle = '#bfeeff'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 8 : 19, a = i / 10 * TAU; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke(); g.restore(); break; }
     case 'ptero': { const f = Math.sin(P.t * 7 + o.ph); g.fillStyle = '#6b3b2e'; g.beginPath(); g.moveTo(o.x - 30, top + 6 + f * 10); g.lineTo(o.x, top + 12); g.lineTo(o.x + 30, top + 6 + f * 10); g.lineTo(o.x + 6, top + 16); g.lineTo(o.x - 6, top + 16); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.moveTo(o.x - 4, top + 12); g.lineTo(o.x - 22, top + 8); g.lineTo(o.x - 4, top + 16); g.fill(); g.stroke(); break; }
     case 'geyser': { const up = geyserUp(o); g.fillStyle = '#2a1c1c'; g.beginPath(); g.ellipse(o.x, by, 18, 6, 0, 0, TAU); g.fill(); g.stroke();
-      if (up) { const gr = g.createLinearGradient(0, by - 150, 0, by); gr.addColorStop(0, 'rgba(255,207,63,0)'); gr.addColorStop(0.3, '#ffcf3f'); gr.addColorStop(1, '#ff5a1a'); g.fillStyle = gr; g.fillRect(o.x - 11, by - 150, 22, 150); }
+      if (up) { const gr = g.createLinearGradient(0, by - 84, 0, by); gr.addColorStop(0, 'rgba(255,207,63,0)'); gr.addColorStop(0.3, '#ffcf3f'); gr.addColorStop(1, '#ff5a1a'); g.fillStyle = gr; g.fillRect(o.x - 11, by - 84, 22, 84); }
       else { g.fillStyle = '#ff7a2a'; g.beginPath(); g.arc(o.x + Math.sin(P.t * 9) * 4, by - 8, 3, 0, TAU); g.fill(); } break; }
   }
   g.restore();
@@ -620,7 +684,7 @@ function render(dt) {
   for (const p of parts) { g.globalAlpha = clamp(p.life * 2, 0, 1); g.fillStyle = p.col; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
   g.globalAlpha = 1;
   drawLava(VW);
-  g.font = '20px Bungee, Impact, sans-serif'; g.textAlign = 'center';
+  g.font = '800 26px "Big Shoulders Display", Impact, sans-serif'; g.textAlign = 'center';
   for (const p of pops) { g.globalAlpha = clamp(p.t, 0, 1); g.fillStyle = '#14162e'; g.fillText(p.text, p.x + 2, p.y + 3); g.fillStyle = p.col; g.fillText(p.text, p.x, p.y); }
   g.globalAlpha = 1;
   g.restore();
@@ -678,7 +742,7 @@ function music() {
     AU.next += spb;
   }
 }
-function setMute(m) { AU.muted = m; store.set('hourstone_mute', m); if (AU.m) AU.m.gain.value = m ? 0 : 0.6; $('bMute').textContent = m ? '×' : '♪'; }
+function setMute(m) { AU.muted = m; store.set('hourstone_mute', m); if (AU.m) AU.m.gain.value = m ? 0 : 0.6; $('bMute').textContent = m ? 'MUTED' : 'SOUND'; }
 
 /* ================= flow ================= */
 let state = 'title', save = store.get('hourstone_save', { ci: 0, si: 0, best: {} }), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
@@ -686,13 +750,13 @@ const show = (id, on) => $(id).classList.toggle('hidden', !on);
 function persist() { store.set('hourstone_save', save); store.set('hourstone_run', runStats); }
 function startTitle() {
   state = 'title'; buildLevel(0, 0); demo = true; P.hearts = 99; respawn(true); cam.x = P.x - 200; cam.y = P.y - 230;
-  ['hud', 'touch', 'dlg', 'results', 'fail', 'pause', 'ending', 'chapters', 'chapterCard'].forEach(i => show(i, false)); show('title', true);
+  ['hud', 'touch', 'dlg', 'lbTop', 'results', 'fail', 'pause', 'ending', 'chapters', 'chapterCard'].forEach(i => show(i, false)); show('title', true);
   $('bCont').disabled = !(save.ci > 0 || save.si > 0);
 }
 function startChapter(ci, fresh) {
   show('title', false); show('chapters', false); demo = false;
   buildLevel(ci, 0); respawn(true); camSnap();
-  state = 'card'; $('ccNum').textContent = 'Chapter ' + (ci + 1); $('ccEra').textContent = CH[ci].era; $('ccTitle').textContent = CH[ci].title; show('chapterCard', true); sfx.clear();
+  state = 'card'; $('ccNum').textContent = 'TAPE ' + (ci + 1) + ' OF ' + CH.length; $('ccEra').textContent = CH[ci].era; $('ccTitle').textContent = CH[ci].title; show('chapterCard', true); sfx.clear();
   setTimeout(() => { show('chapterCard', false); dialog(CH[ci].intro, () => startStage(ci, 0, true)); }, 2400);
 }
 function startStage(ci, si, skipBefore) {
@@ -702,7 +766,7 @@ function startStage(ci, si, skipBefore) {
     demo = false; buildLevel(ci, si); P.hearts = 3; respawn(true); camSnap(); state = 'play';
     save.ci = Math.max(save.ci, ci); if (ci === save.ci) save.si = Math.max(si, ci === save.ci ? save.si : 0); persist();
     show('hud', true); show('touch', isTouch); show('chase', !!L.yeti);
-    $('hudEra').textContent = CH[ci].era + ', chapter ' + (ci + 1); $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'The lava is right behind you' : 'Keep up with the yeti';
+    $('hudEra').textContent = 'Tape ' + (ci + 1) + ', ' + CH[ci].era; $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'LAVA' : 'YETI';
   };
   if (!skipBefore && st.before) { buildLevel(ci, si); respawn(true); camSnap(); dialog(st.before, go); } else go();
 }
@@ -716,7 +780,8 @@ function finishStage() {
   const last = L.si === CH[L.ci].stages.length - 1;
   if (last) { if (L.ci + 1 > save.ci) { save.ci = L.ci + 1; save.si = 0; } } else if (L.ci === save.ci) save.si = Math.max(save.si, L.si + 1);
   persist();
-  $('resTitle').textContent = L.S.name + ': clear'; $('rank').textContent = rank;
+  $('resTitle').textContent = L.S.name; $('rank').textContent = rank; $('resCap').textContent = 'Frame grab, ' + fmt(L.time) + '. Tape ' + (L.ci + 1) + ', ' + L.C.era + '.';
+  { const t = document.createElement('canvas'); t.width = 640; t.height = Math.round(640 * cvs.height / cvs.width); t.getContext('2d').drawImage(cvs, 0, 0, t.width, t.height); $('resPhoto').src = t.toDataURL('image/jpeg', 0.82); }
   $('resStats').innerHTML = `<span>Time</span><span>${fmt(L.time)}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}</span><span>Crashes</span><span>${L.crashes}</span><span>Points</span><span>${L.score}</span>`;
   show('hud', false); show('touch', false); show('results', true); $('resNext').focus();
 }
@@ -728,6 +793,7 @@ function nextAfterResults() {
 }
 function failStage(title, text) { if (state !== 'play') return; state = 'fail'; $('failTitle').textContent = title; $('failText').textContent = text; show('hud', false); show('touch', false); show('fail', true); $('failRetry').focus(); }
 function showEnding() { state = 'ending'; $('endStats').innerHTML = `<span>Time on skis</span><span>${fmt(runStats.time)}</span><span>Shards found</span><span>${runStats.shards}</span><span>Crashes</span><span>${runStats.crashes}</span>`; show('ending', true); }
+function fmtTC(t) { const p = n => (n < 10 ? '0' : '') + n; return p(Math.floor(t / 60)) + ':' + p(Math.floor(t % 60)) + ':' + p(Math.floor((t % 1) * 30)); }
 function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
 function camSnap() { const sc = cvs.height / 540, VW = cvs.width / sc; cam.x = P.x - VW * 0.3; cam.y = P.y - 540 * 0.45; }
 
@@ -735,9 +801,9 @@ function camSnap() { const sc = cvs.height / 540, VW = cvs.width / sc; cam.x = P
 let dq = [], dcb = null, dfull = '', dshown = 0, dtimer = 0;
 function dialog(lines, cb) { dq = lines.slice(); dcb = cb; state = state === 'title' ? 'title' : 'dialog'; state = 'dialog'; show('hud', false); show('touch', false); nextLine(); }
 function nextLine() {
-  if (!dq.length) { show('dlg', false); const c = dcb; dcb = null; if (c) c(); return; }
+  if (!dq.length) { show('dlg', false); show('lbTop', false); const c = dcb; dcb = null; if (c) c(); return; }
   const [who, text] = dq.shift(), [name, cls] = WHO[who];
-  const d = $('dlg'); d.className = 'panel ' + (cls || '') + (['narrator', 'tip'].includes(who) ? ' noface' : ''); show('dlg', true);
+  const d = $('dlg'); d.className = (cls || '') + (['narrator', 'tip'].includes(who) ? ' noface' : ''); d.dataset.who = who; show('dlg', true); show('lbTop', true);
   $('dlgName').textContent = name; dfull = text; dshown = 0; $('dlgText').textContent = ''; if (!['narrator', 'tip'].includes(who)) drawFace(who);
 }
 function advance() { if (dshown < dfull.length) { dshown = dfull.length; $('dlgText').textContent = dfull; } else { sfx.blip(); nextLine(); } }
@@ -757,7 +823,8 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => { keys[e.code] = false; });
 addEventListener('blur', () => { for (const k in keys) keys[k] = false; touch.l = touch.r = touch.d = false; if (state === 'play') pause(true); });
-$('dlg').addEventListener('click', () => advance());
+if (isTouch) document.querySelector('#title .keys').textContent = 'Jump button to jump. Hold Push or Brake in the air to flip, and Tuck to grab.';
+$('dlg').addEventListener('click', () => advance()); $('dlgMore').textContent = isTouch ? 'TAP' : 'SPACE';
 const hold = (id, key) => { const b = $(id); const on = e => { e.preventDefault(); audioInit(); touch[key] = true; }, off = e => { e.preventDefault(); touch[key] = false; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); };
 hold('tL', 'l'); hold('tR', 'r'); hold('tD', 'd');
 $('tJ').addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); if (state === 'play') P.jumpBuf = 0.14; else if (state === 'dialog') advance(); });
@@ -769,7 +836,7 @@ $('bMute').onclick = () => { audioInit(); setMute(!AU.muted); };
 $('bPlay').onclick = () => { audioInit(); save = { ci: 0, si: 0, best: {} }; runStats = { time: 0, shards: 0, crashes: 0 }; persist(); startChapter(0); };
 $('bCont').onclick = () => { audioInit(); if (save.si === 0) startChapter(Math.min(save.ci, CH.length - 1)); else { show('title', false); startStage(save.ci, save.si); } };
 $('bChapters').onclick = () => {
-  $('chList').innerHTML = CH.map((c, i) => `<button data-c="${i}" ${i > save.ci ? 'disabled' : ''}><span>${i + 1}</span><span style="font:inherit;color:inherit"><b>${c.title}</b><small>${i > save.ci ? 'Locked' : c.era}</small></span></button>`).join('');
+  $('chList').innerHTML = CH.map((c, i) => `<button data-c="${i}" ${i > save.ci ? 'disabled' : ''}><span class="tn">TAPE ${i + 1}</span><span><b>${c.title}</b><small>${i > save.ci ? 'Not found yet' : c.era}</small></span></button>`).join('');
   $('chList').querySelectorAll('button').forEach(b => b.onclick = () => { audioInit(); startChapter(+b.dataset.c); });
   show('chapters', true);
 };
@@ -801,14 +868,13 @@ function frame(now) {
   cam.x = lerp(cam.x, tx, 1 - Math.exp(-8 * dt)); cam.y = lerp(cam.y, ty, 1 - Math.exp(-5 * dt));
   render(dt);
   if (state === 'play' && (hudT += dt) > 0.1) {
-    hudT = 0; $('hearts').textContent = '♥'.repeat(Math.max(0, P.hearts)) + '♡'.repeat(Math.max(0, 3 - P.hearts)); $('shardN').textContent = L.got + ' / ' + L.shards.length; $('timeN').textContent = fmt(L.time);
+    hudT = 0; $('hearts').innerHTML = [0, 1, 2].map(k => '<i class="' + (k < P.hearts ? 'on' : '') + '"></i>').join(''); $('hearts').classList.toggle('low', P.hearts === 1); $('shardN').textContent = L.got + ' / ' + L.shards.length; $('timeN').textContent = fmtTC(L.time);
     $('score').firstChild.nodeValue = L.score;
-    if (L.yeti && !L.lava) { const d = L.yeti.x - P.x; $('chaseFill').style.width = clamp(100 - (d - 200) / 10, 4, 100) + '%'; }
-    if (L.lava) { const d = P.x - L.lava.x; $('chaseFill').style.width = clamp(d / 12, 3, 100) + '%'; }
+    { let pc = -1; if (L.yeti && !L.lava) pc = clamp(100 - (L.yeti.x - P.x - 200) / 10, 4, 100); if (L.lava) pc = clamp((P.x - L.lava.x) / 12, 3, 100); if (pc >= 0) { $('chaseFill').style.width = pc + '%'; $('chase').classList.toggle('low', pc < 25); } }
   }
 }
 startTitle();
 requestAnimationFrame(frame);
-window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage };
+window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog };
 })();
 </script>

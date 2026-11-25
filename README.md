@@ -4,7 +4,11 @@
 yeti through six eras (forest, caves, a 1924 expedition, the Ice Age glacier, the Snowglobe at the end of time, and a
 volcano before the first winter). Six chapters of three stages each, with a story told between stages; about an hour
 to finish. Space jumps, arrows brake, push and flip, down tucks and grabs. `node tools/hourstone-bot.js` plays stages
-with a bot; `node tools/hourstone-shots.js` screenshots every era.
+with a bot that tucks, pushes and jumps; `node tools/hourstone-shots.js [--mobile]` screenshots every screen.
+
+Interface: a camcorder overlay, because Arlo is filming everything. Viewfinder corners, REC timecode and a battery in
+play; film letterbox bars with subtitles for story; a printed frame grab for stage results; chapters are tapes.
+Fonts: Big Shoulders Display (titles), Hanken Grotesk (reading), VT323 (camcorder readouts).
 
 The 3D game below is kept for reference.
 

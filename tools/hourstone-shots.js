@@ -1,15 +1,23 @@
-// Mid-run screenshots of every era in Hourstone.
-const { chromium } = require('playwright'), path = require('path');
+// Screenshots of every Hourstone screen, saved to tools/shots/hs-*.png.
+const { chromium } = require('playwright'), path = require('path'), routeFonts = require('./hs-fonts');
 (async () => {
-  const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
-  const errs = []; p.on('pageerror', e => errs.push(e.message)); await p.route(/fonts\./, r => r.abort());
-  await p.goto('file://' + path.resolve(__dirname, '../hourstone/index.html')); await p.waitForTimeout(600);
-  for (let c = 0; c < 6; c++) {
-    const s = +(process.env.STAGE || 2);
-    await p.evaluate(([c, s]) => __hs.startStage(c, s, true), [c, s]);
-    await p.waitForTimeout(5200); await p.keyboard.down('Space'); await p.waitForTimeout(60); await p.keyboard.up('Space'); await p.waitForTimeout(220);
-    await p.screenshot({ path: path.join(__dirname, 'shots', `hsplay-${c}.png`) });
-  }
-  await p.evaluate(() => __hs.startStage(2, 1)); await p.waitForTimeout(700); await p.screenshot({ path: path.join(__dirname, 'shots', 'hs-dialog.png') });
+  const mobile = process.argv.includes('--mobile');
+  const b = await chromium.launch(); const p = await b.newPage(mobile ? { viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true } : { viewport: { width: 1280, height: 720 } });
+  const errs = []; p.on('pageerror', e => errs.push(e.message)); await routeFonts(p);
+  await p.goto('file://' + path.resolve(__dirname, '../hourstone/index.html')); await p.waitForTimeout(900);
+  const shot = async n => p.screenshot({ path: path.join(__dirname, 'shots', 'hs-' + n + (mobile ? '-m' : '') + '.png') });
+  const clear = () => p.evaluate(() => { document.querySelectorAll('.ov, #dlg, #lbTop').forEach(e => { if (e.id !== 'title') e.classList.add('hidden'); }); });
+  await shot('title');
+  await p.click('#bChapters'); await p.waitForTimeout(300); await shot('tapes'); await p.click('#chBack');
+  await p.evaluate(() => __hs.startStage(0, 1, true)); await p.waitForTimeout(3600); await p.keyboard.press('Space'); await p.waitForTimeout(260); await shot('play');
+  await p.evaluate(() => __hs.startStage(0, 2, true)); await p.waitForTimeout(3000); await shot('chase');
+  await clear(); await p.evaluate(() => __hs.dialog([['arlo', "Dad saw it here, Juni. Right on this ridge, thirty years ago."]], () => {})); await p.waitForTimeout(1200); await shot('dialog-arlo');
+  await clear(); await p.evaluate(() => __hs.dialog([['edda', 'Day 31. Pemba fell into a crevasse today. The creature pulled him out. I had my camera in my hands.']], () => {})); await p.waitForTimeout(1500); await shot('dialog-journal');
+  await clear(); await p.evaluate(() => __hs.dialog([['tip', 'Space to jump. In the air, hold left or right to flip, and down to grab.']], () => {})); await p.waitForTimeout(1400); await shot('dialog-tip');
+  await clear(); await p.evaluate(() => __hs.dialog([['yeti', 'My name is Oru. I keep the Hourstone. It holds the seasons in their places.']], () => {})); await p.waitForTimeout(1900); await shot('dialog-yeti');
+  await clear(); await p.evaluate(() => __hs.startStage(3, 1, true)); await p.waitForTimeout(3000); await p.evaluate(() => { __hs.L.got = 31; __hs.L.score = 6100; __hs.L.tricks = 4; }); await p.evaluate(() => __hs.finishStage()); await p.waitForTimeout(500); await shot('results');
+  await clear(); await p.evaluate(() => __hs.startStage(1, 1, true)); await p.waitForTimeout(800); await p.evaluate(() => __hs.failStage('Battery dead', 'Arlo needs a breather. Try the stage again from the top.')); await p.waitForTimeout(300); await shot('fail');
+  await clear(); await p.evaluate(() => __hs.startChapter(1)); await p.waitForTimeout(900); await shot('card');
+  await p.waitForTimeout(2600); await clear(); await p.evaluate(() => __hs.showEnding()); await p.waitForTimeout(300); await shot('ending');
   console.log('errors', errs); await b.close();
 })();
