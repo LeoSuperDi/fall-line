@@ -320,7 +320,7 @@ function buildLevel(ci, si) {
   const put = (dy, isGap) => { y += dy; gy.push(y); gap.push(!!isGap); };
   const X = () => gy.length * STEP;
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
-  const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) // far enough apart that one jump never lands on the next obstacle if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
+  const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
   const placeShards = (x0, x1) => { if (R() < 0.75 && x1 - x0 > 600) { const sx = x0 + 120 + R() * (x1 - x0 - 560); for (let i = 0; i < 5; i++) shards.push({ x: sx + i * 56, dy: -30, got: false }); } };
   seg(800, () => STEP * 0.07); cps.push(300);
   let lastCp = 0;
