@@ -1,3 +1,13 @@
+# Hourstone (2D) and Frostpeak Frontier (3D)
+
+`hourstone/index.html` is the current game: a side-scrolling arcade ski adventure in one file. Arlo Finch chases a
+yeti through six eras (forest, caves, a 1924 expedition, the Ice Age glacier, the Snowglobe at the end of time, and a
+volcano before the first winter). Six chapters of three stages each, with a story told between stages; about an hour
+to finish. Space jumps, arrows brake, push and flip, down tucks and grabs. `node tools/hourstone-bot.js` plays stages
+with a bot; `node tools/hourstone-shots.js` screenshots every era.
+
+The 3D game below is kept for reference.
+
 # Frostpeak Frontier
 
 A cozy open-world ski resort in the browser: six mountains on one map, a village, quests, wildlife and secrets.
