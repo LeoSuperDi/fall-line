@@ -2,6 +2,7 @@
 //   node tools/hourstone-bot.js [chapter stage ...]     (zero-based numbers; no arguments plays all 18 stages)
 const { chromium } = require('playwright'), path = require('path'), routeFonts = require('./hs-fonts');
 (async () => {
+  let failed = 0;
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
   const errs = []; p.on('pageerror', e => errs.push(e.message)); await routeFonts(p);
   await p.goto('file://' + path.resolve(__dirname, '../hourstone/index.html')); await p.waitForTimeout(800);
@@ -23,7 +24,8 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
         if (o || ahead) { key('keydown', 'Space'); key('keyup', 'Space'); }
       }, 16);
     }));
-    console.log('chapter', c + 1, 'stage', s + 1, JSON.stringify(res));
+    console.log('chapter', c + 1, 'stage', s + 1, JSON.stringify(res)); if (res.state !== 'results') failed++;
   }
   console.log('errors', errs.slice(0, 5)); await b.close();
+  if (failed || errs.length) process.exitCode = 1; /* usable as a gate */
 })();
