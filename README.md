@@ -1,5 +1,7 @@
 # Hourstone (2D) and Frostpeak Frontier (3D)
 
+Basecamp: stages are launched from a walkable side-scrolling hub (tape doors, Juni's radio tent, the Lucky Lodge slot machine and coin flip, Dawa's parka shop, twelve hidden pinecones). Every stage has gold, silver and bronze par times (`PACE`/`TIERS` in index.html), three shards, and saves its best time and medal. Shards are play money only.
+
 `hourstone/index.html` is the current game: a side-scrolling arcade ski adventure in one file. Arlo Finch chases a
 yeti through six eras (forest, caves, a 1924 expedition, the Ice Age glacier, the Snowglobe at the end of time, and a
 volcano before the first winter). Six chapters of three stages each, with a story told between stages; about an hour

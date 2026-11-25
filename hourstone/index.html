@@ -143,6 +143,56 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 .stats span { padding: 9px 0; border-bottom: 1px solid var(--line); }
 .stats span:nth-child(even) { text-align: right; font-weight: 700; }
 
+/* basecamp hub, panels, medals, lodge */
+#hubHud { position: fixed; inset: 0; pointer-events: none; }
+#hubHud > * { pointer-events: auto; }
+#hhL { position: absolute; left: calc(var(--gx) + 14px); top: calc(var(--gy) + 14px); display: grid; gap: 6px; pointer-events: none; }
+#hhL small { font: 400 15px var(--body); opacity: .8; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
+#hhR { position: absolute; right: calc(var(--gx) + 14px); top: calc(var(--gy) + 12px); display: flex; gap: 16px; align-items: center; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); font: 700 17px var(--body); font-variant-numeric: tabular-nums; }
+#hhR .sh::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--glow); transform: rotate(45deg); }
+#hhR .cn::before { content: ""; display: inline-block; width: 9px; height: 13px; margin-right: 8px; background: #a8703c; border-radius: 50% 50% 45% 45%; }
+#hhR .md::before { content: ""; display: inline-block; width: 11px; height: 11px; margin-right: 8px; background: #ffcf3f; border-radius: 50%; }
+#hubPrompt { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(max(26px, env(safe-area-inset-bottom, 0px)) + 20px); padding: 10px 16px; border: 1px solid var(--line); border-radius: 4px; background: rgba(13, 15, 19, .72); font: 400 17px var(--body); pointer-events: none; white-space: nowrap; }
+body.touch #hubPrompt { bottom: 130px; }
+.panel.wide { width: min(600px, 100%); }
+.panel .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.panel .bank { font: 700 18px var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.panel .bank::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--glow); transform: rotate(45deg); }
+.srow { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; width: 100%; padding: 12px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
+.srow:hover:not(:disabled) { background: rgba(255, 255, 255, .05); }
+.srow:disabled { opacity: .4; cursor: not-allowed; }
+.srow .sn { font: 26px/1 var(--osd); color: var(--rec); }
+.srow b { display: block; font: 800 24px/1.05 var(--display); }
+.srow small { color: var(--dim); font-size: 14px; }
+.mdl { display: grid; justify-items: end; font: 700 15px var(--body); }
+.mdl small { font-weight: 400; font-variant-numeric: tabular-nums; }
+.mdl::before { content: ""; justify-self: end; width: 12px; height: 12px; margin-bottom: 3px; border-radius: 50%; background: rgba(239, 236, 228, .22); }
+.mdl.m1::before { background: #c8814a; } .mdl.m2::before { background: #c9d0dc; } .mdl.m3::before { background: #ffcf3f; }
+.mrow { display: inline-flex; align-items: center; gap: 8px; }
+.mrow::before { content: ""; width: 12px; height: 12px; border-radius: 50%; background: rgba(239, 236, 228, .22); }
+.mrow.m1::before { background: #c8814a; } .mrow.m2::before { background: #c9d0dc; } .mrow.m3::before { background: #ffcf3f; }
+#parN { font: 22px/1 var(--osd); letter-spacing: .5px; text-shadow: 0 1px 8px rgba(0, 0, 0, .5); }
+#parN.late { opacity: .6; }
+#resNote { color: var(--amber); font-weight: 700; }
+.reels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.reel { display: grid; place-items: center; height: 96px; border: 1px solid var(--line); border-radius: 4px; background: #0d0f13; }
+.reel svg { width: 58px; height: 58px; }
+.reel.win { border-color: var(--amber); }
+.bets { display: flex; gap: 8px; }
+.bets .btn.on { border-color: var(--amber); color: var(--amber); }
+.lgmsg { min-height: 1.5em; font-size: 17px; color: var(--paper); }
+.lgnote { font-size: 14px !important; }
+.pays { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; font-size: 13px; color: var(--dim); text-align: center; }
+.pays span { display: grid; justify-items: center; gap: 2px; }
+.pays svg { width: 26px; height: 26px; }
+.prow { display: grid; grid-template-columns: 30px 1fr auto; gap: 12px; align-items: center; width: 100%; padding: 11px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
+.prow:hover:not(:disabled) { background: rgba(255, 255, 255, .05); }
+.prow:disabled { opacity: .45; cursor: not-allowed; }
+.prow i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); }
+.prow b { font: 800 22px/1 var(--display); } .prow small { color: var(--dim); font-size: 14px; }
+.prow em { font-style: normal; font: 700 15px var(--body); }
+#dlg[data-who=bet] #dlgName { color: var(--amber); } #dlg[data-who=dawa] #dlgName { color: #ff8a6a; }
+
 @media (max-height: 520px) {
   #title h1 { font-size: min(21vh, 16vw); } #title .wrap { gap: 10px; padding-bottom: 22px; } .mi { font-size: 30px; } #title .tag { font-size: 15px; }
   .panel h2 { font-size: 34px; } .sheet h2 { font-size: 40px; } .stats { font-size: 15px; } .stats span { padding: 6px 0; } .panel { padding: 18px 22px; }
@@ -163,7 +213,7 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 <div id="vf"><i></i><i></i><i></i><i></i></div>
 
 <div id="hud" class="hidden">
-  <div id="hudL"><div class="osd rec" id="timeN">00:00:00</div><div id="hudEra">Tape 1</div><div id="hudStage">Ranger Road</div></div>
+  <div id="hudL"><div class="osd rec" id="timeN">00:00:00</div><div id="hudEra">Tape 1</div><div id="hudStage">Ranger Road</div><div id="parN"></div></div>
   <div id="chase" class="hidden"><small id="chaseLbl">Yeti ahead</small><div id="chaseBar"><div id="chaseFill"></div></div></div>
   <div id="hudR"><div id="stat"><span class="batt" id="hearts"><i></i><i></i><i></i></span><span id="shardN">0 / 0</span></div><button class="tb2" id="bMute" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bPause" aria-label="Pause">PAUSE</button></div>
   <div id="score">0<small>points</small></div>
@@ -177,15 +227,16 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 <div id="title" class="ov"><div class="osd rec" id="titleOsd">REC 00:00:00</div><div class="wrap">
   <h1>Hourstone</h1>
   <p class="tag">Arlo Finch needs one photo of the yeti. He's about to chase it through ten thousand years.</p>
-  <div class="menu"><button class="mi go" id="bPlay">New game</button><button class="mi" id="bCont">Continue</button><button class="mi" id="bChapters">Tapes</button></div>
+  <div class="menu"><button class="mi go" id="bPlay">New game</button><button class="mi" id="bCont">Continue</button></div>
   <p class="keys"><kbd>Space</kbd> jump &nbsp; <kbd>←</kbd> brake <kbd>→</kbd> push, or flip in the air &nbsp; <kbd>↓</kbd> tuck, or grab in the air &nbsp; <kbd>P</kbd> pause</p>
 </div></div>
 
-<div id="chapters" class="ov dim hidden"><div class="panel">
-  <h2>Tapes</h2>
-  <div class="list" id="chList"></div>
-  <div class="row"><button class="btn" id="chBack">Back</button></div>
-</div></div>
+<div id="hubHud" class="hidden">
+  <div id="hhL"><div class="osd rec">Basecamp</div><small id="hhHint">Walk to a tape door to ski.</small></div>
+  <div id="hhR"><span class="md" id="hhMed">0 of 18</span><span class="cn" id="hhCone">0 of 12</span><span class="sh" id="hhBank">0</span><button class="tb2" id="bMute2" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bHubMenu" aria-label="Back to the title screen">MENU</button></div>
+</div>
+<div id="hubPrompt" class="hidden"></div>
+<div id="hubPanel" class="ov dim hidden"><div class="panel wide" id="hpBox"></div></div>
 
 <div id="chapterCard" class="ov hidden"><div id="ccNum">TAPE 1</div><div id="ccEra">Today</div><div id="ccTitle">The North Woods</div></div>
 
@@ -195,22 +246,22 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 <div id="results" class="ov dim hidden"><div class="sheet">
   <figure class="print"><img id="resPhoto" alt="Frame grab from the run"><div class="stamp" id="rank">A</div><figcaption id="resCap">Frame grab</figcaption></figure>
   <div class="text">
-    <h2 id="resTitle">Stage clear</h2>
+    <h2 id="resTitle">Stage clear</h2><p id="resNote"></p>
     <div class="stats" id="resStats"></div>
-    <div class="row"><button class="btn go" id="resNext">Next</button><button class="btn" id="resRetry">Ski it again</button></div>
+    <div class="row"><button class="btn go" id="resNext">Next stage</button><button class="btn" id="resRetry">Beat your time</button><button class="btn" id="resHub">Basecamp</button></div>
   </div>
 </div></div>
 
 <div id="fail" class="ov dim hidden"><div class="panel">
   <h2 id="failTitle">Battery dead</h2>
   <p id="failText">Arlo needs a breather. Try the stage again from the top.</p>
-  <div class="row"><button class="btn go" id="failRetry">Try again</button><button class="btn" id="failQuit">Title screen</button></div>
+  <div class="row"><button class="btn go" id="failRetry">Try again</button><button class="btn" id="failQuit">Back to basecamp</button></div>
 </div></div>
 
 <div id="pause" class="ov dim hidden"><div class="panel">
   <h2>Paused</h2>
   <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Land with your skis flat to the slope.</p>
-  <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Title screen</button></div>
+  <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Back to basecamp</button></div>
 </div></div>
 
 <div id="ending" class="ov dim hidden"><div class="sheet">
@@ -219,7 +270,7 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
     <h2>No photo</h2>
     <p>Arlo never got the shot. He got a story, a friend, and a pile of pinecones by the door.</p>
     <div class="stats" id="endStats"></div>
-    <div class="row"><button class="btn go" id="endTitle">Title screen</button></div>
+    <div class="row"><button class="btn go" id="endTitle">Back to basecamp</button></div>
   </div>
 </div></div>
 
@@ -238,6 +289,7 @@ const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
 /* ================= zones (one per era) ================= */
 const ZONES = {
+  camp: { sky: ['#78b4e6', '#ffe3c0'], far: '#9fb4d6', far2: '#c4cfe4', mid: '#2e6a52', ground: '#eef3f8', top: '#ffffff', dirt: '#b8cbe2', pit: '#1b3a4c', weather: 'snow', g: 1, fric: 1, obs: [], gap: 'creek', deco: 'pine', key: 0 },
   forest: { sky: ['#5fb4f2', '#d9f2ff'], far: '#8fb6dd', far2: '#b6d2ee', mid: '#2e6a52', ground: '#e8f1fb', top: '#ffffff', dirt: '#b8cbe2', pit: '#1b3a4c', weather: 'snow', g: 1, fric: 1, obs: ['log', 'rock', 'stump'], gap: 'creek', deco: 'pine', key: 0 },
   cave: { sky: ['#140f26', '#3b2950'], far: '#271d3c', far2: '#33264d', mid: '#45335f', ground: '#6e5a80', top: '#a28cc0', dirt: '#4e3f63', pit: '#07050f', weather: 'dust', g: 1, fric: 1, ceiling: true, obs: ['stalagmite', 'bat', 'crystal'], gap: 'chasm', deco: 'torch', key: 1 },
   expedition: { sky: ['#8e9db6', '#ece3d0'], far: '#a7b2c3', far2: '#c4ccd6', mid: '#7d889a', ground: '#f1ede4', top: '#ffffff', dirt: '#c8c1b1', pit: '#24496e', weather: 'blizzard', g: 1, fric: 1, obs: ['crate', 'sled', 'rock'], gap: 'crevasse', deco: 'flag', sepia: true, key: 2 },
@@ -286,7 +338,7 @@ const CH = [
       { kind: 'escape', len: 40000, name: 'Escape: Run With Oru', before: [[N, "Arlo looks at the camera once. Then he presses it into the Hourstone."], [N, "The stone blazes white. Behind them, the volcano erupts."], [Y, "NOW WE RUN!"], [T, "Outrun the lava. Don't stop."]] }],
     outro: [[N, "The Hourstone sings. The tears in the sky stitch shut, era by era, winter by winter."], [Y, "Thank you, Arlo Finch. Go home. Tell good stories."], [N, "Snow. Pine trees. The frozen pond. Today."], [J, "ARLO! You've been gone ten minutes and you look like you got hit by a volcano. Did you get it?"], [A, "No. I got something better."], [A, "Day 213 of looking for the yeti. Still no photo. Subscribers: 41. Hi, Mom."], [A, "I've got a story for you, though. It starts in a forest..."], [N, "Outside the cabin, a line of enormous footprints leads into the trees. By the door, someone has left a neat little pile of pinecones."]] }
 ];
-const WHO = { arlo: ['Arlo', ''], juni: ['Juni, on the radio', ''], yeti: ['The yeti', ''], edda: ["Edda Finch's journal", 'journal'], narrator: ['', 'narr'], tip: ['How to play', 'tip'] };
+const WHO = { arlo: ['Arlo', ''], juni: ['Juni, on the radio', ''], yeti: ['The yeti', ''], edda: ["Edda Finch's journal", 'journal'], bet: ['Bet, Lucky Lodge', ''], dawa: ['Dawa, outfitter', ''], narrator: ['', 'narr'], tip: ['How to play', 'tip'] };
 
 /* ================= level building ================= */
 const STEP = 10;
@@ -321,7 +373,8 @@ function buildLevel(ci, si) {
   const X = () => gy.length * STEP;
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
   const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
-  const placeShards = (x0, x1) => { if (R() < 0.75 && x1 - x0 > 600) { const sx = x0 + 120 + R() * (x1 - x0 - 560); for (let i = 0; i < 5; i++) shards.push({ x: sx + i * 56, dy: -30, got: false }); } };
+  const cand = []; /* candidate shard spots, three are chosen at the end */
+  const placeShards = (x0, x1) => { if (x1 - x0 > 600) cand.push({ x: x0 + 150 + R() * (x1 - x0 - 450), dy: -34 }); };
   seg(800, () => STEP * 0.07); cps.push(300);
   let lastCp = 0;
   while (X() < S.len) {
@@ -332,13 +385,14 @@ function buildLevel(ci, si) {
       seg(280, () => STEP * 0.22);
       const rs = X(); seg(110, t => -STEP * 0.45 * (0.4 + t)); const lip = X(); kickers.push([rs, lip]);
       if (R() < 0.55 + diff * 0.3) { const w = 120 + R() * (40 + diff * 40), k = Math.round(w / STEP); for (let i = 0; i < k; i++) put(STEP * 0.35, true);
-        for (let i = 0; i < 4; i++) shards.push({ x: lip + 50 + i * 48, dy: -80 - Math.sin(i / 3 * Math.PI) * 44, got: false }); }
+        cand.push({ x: lip + 110, dy: -118 }); }
       put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24);
     }
     else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); }
     else if (r < 0.8) { const len = 900 + R() * 700; seg(len, (t, i) => STEP * 0.2 + Math.sin(i * STEP / 70 * TAU) * 5); placeShards(x0, X()); }
     else { const len = 700 + R() * 500, gr = 0.04 + R() * 0.03; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
   }
+  { const end = X(); for (let k = 0; k < 3; k++) { const pool = cand.filter(c => c.x >= end * k / 3 && c.x < end * (k + 1) / 3 && c.x > 900); const c = pool.length ? pool[Math.floor(R() * pool.length)] : { x: end * (k + 0.5) / 3, dy: -34 }; shards.push({ x: c.x, dy: c.dy, got: false }); } }
   const finish = X() + 300; seg(1600, () => STEP * 0.05);
   for (let x = 200; x < X(); x += 90 + R() * 260) deco.push({ x, s: 0.7 + R() * 0.7, v: R() });
   L = { ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
@@ -476,33 +530,36 @@ function stepFx(dt) {
 
 /* ================= drawing: characters ================= */
 function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+let WALK = null; /* walking phase in the basecamp, null on skis */
 function drawArlo(x, y, rot, crouch, air, t, grab, sc) {
+  const pk = PARK[save.parka] || PARK.orange;
   g.save(); g.translate(x, y); g.rotate(rot); if (sc) g.scale(sc, sc);
   const hip = -28 + crouch * 9, ink = '#14162e';
   g.lineCap = 'round'; g.lineJoin = 'round';
   // skis
-  g.fillStyle = '#e8433a'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(-26, -3, 54, 5, 2.5); g.fill(); g.stroke();
+  if (WALK === null) { g.fillStyle = '#e8433a'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(-26, -3, 54, 5, 2.5); g.fill(); g.stroke();
   g.beginPath(); g.moveTo(26, -1); g.quadraticCurveTo(34, -2, 34, -9); g.lineWidth = 4; g.strokeStyle = '#e8433a'; g.stroke();
   // poles
   g.strokeStyle = '#d7dbe8'; g.lineWidth = 2;
   const hx = air ? (grab ? 14 : 18) : 13, hy = air ? (grab ? -6 : hip - 20) : hip - 2;
-  g.beginPath(); g.moveTo(hx, hy); g.lineTo(air ? hx + 18 : -6, air ? hy - 14 : -2); g.stroke();
+  g.beginPath(); g.moveTo(hx, hy); g.lineTo(air ? hx + 18 : -6, air ? hy - 14 : -2); g.stroke(); }
   // legs
   g.strokeStyle = '#2b3a7a'; g.lineWidth = 8;
+  if (WALK !== null) { const w = Math.sin(WALK) * 9; g.beginPath(); g.moveTo(-3, hip); g.lineTo(-3 + w, -3); g.stroke(); g.beginPath(); g.moveTo(5, hip); g.lineTo(5 - w, -3); g.stroke(); g.fillStyle = ink; rr(-9 + w, -7, 11, 7, 2); g.fill(); rr(-1 - w, -7, 11, 7, 2); g.fill(); } else {
   g.beginPath(); g.moveTo(-4, -6); g.lineTo(-2 + crouch * 6, (hip - 6) / 2 - 2); g.lineTo(-1, hip); g.stroke();
   g.beginPath(); g.moveTo(7, -6); g.lineTo(9 + crouch * 6, (hip - 6) / 2 - 2); g.lineTo(4, hip); g.stroke();
-  g.fillStyle = ink; rr(-9, -9, 9, 7, 2); g.fill(); rr(3, -9, 9, 7, 2); g.fill();
+  g.fillStyle = ink; rr(-9, -9, 9, 7, 2); g.fill(); rr(3, -9, 9, 7, 2); g.fill(); }
   // backpack with the camera strap
   g.fillStyle = '#3b6b4a'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(-18, hip - 24, 10, 19, 3); g.fill(); g.stroke();
   // parka
   g.save(); g.translate(1, hip); g.rotate(-0.15 - crouch * 0.35);
-  g.fillStyle = '#ff7a1a'; rr(-11, -26, 22, 28, 7); g.fill(); g.stroke();
-  g.fillStyle = '#ffd23f'; g.fillRect(-11, -8, 22, 4);
-  g.strokeStyle = '#b84b0a'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(3, -24); g.lineTo(3, 0); g.stroke();
+  g.fillStyle = pk.c; rr(-11, -26, 22, 28, 7); g.fill(); g.stroke();
+  g.fillStyle = pk.s; g.fillRect(-11, -8, 22, 4);
+  g.strokeStyle = pk.a; g.lineWidth = 1.5; g.beginPath(); g.moveTo(3, -24); g.lineTo(3, 0); g.stroke();
   // camera on the chest
   g.fillStyle = ink; rr(4, -20, 9, 7, 2); g.fill(); g.fillStyle = '#7fe3ff'; g.beginPath(); g.arc(9.5, -16.5, 1.8, 0, TAU); g.fill();
   // arm
-  g.strokeStyle = '#ff7a1a'; g.lineWidth = 7;
+  g.strokeStyle = pk.c; g.lineWidth = 7;
   g.beginPath(); g.moveTo(2, -20); if (air && !grab) g.lineTo(16, -30); else if (grab) g.lineTo(13, 4); else g.lineTo(12, -4); g.stroke();
   g.fillStyle = '#3b6b4a'; g.beginPath(); if (air && !grab) g.arc(17, -31, 4, 0, TAU); else if (grab) g.arc(13, 6, 4, 0, TAU); else g.arc(13, -3, 4, 0, TAU); g.fill();
   // scarf trailing behind
@@ -516,23 +573,25 @@ function drawArlo(x, y, rot, crouch, air, t, grab, sc) {
 }
 function drawYeti(x, y, t, run, sc, cracked) {
   g.save(); g.translate(x, y); g.scale(sc || 1, sc || 1);
-  const ink = '#1a2350', bob = run ? Math.abs(Math.sin(t * 2)) * 4 : 0, sw = run ? Math.sin(t * 2) : 0;
+  const ink = '#1a2350', fur = '#f4f8ff', shade = '#cddcf2', bob = run ? Math.abs(Math.sin(t * 2)) * 5 : 0, sw = run ? Math.sin(t * 2) : 0;
   g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = ink; g.lineWidth = 3;
-  g.fillStyle = '#dfe9f8';
-  for (const s of [-1, 1]) { g.save(); g.translate(s * 9, -18 - bob); g.rotate(sw * 0.6 * s); g.beginPath(); g.ellipse(0, 9, 9, 13, 0, 0, TAU); g.fill(); g.stroke(); g.restore(); }
-  g.fillStyle = '#f4f8ff'; g.beginPath(); g.ellipse(0, -52 - bob, 28, 36, 0, 0, TAU); g.fill(); g.stroke();
-  g.strokeStyle = '#b8c8e6'; g.lineWidth = 2; for (let i = 0; i < 6; i++) { const a = -2.4 + i * 0.5; g.beginPath(); g.arc(Math.cos(a) * 18, -52 - bob + Math.sin(a) * 22, 6, a, a + 1.4); g.stroke(); }
-  g.strokeStyle = ink; g.lineWidth = 3; g.fillStyle = '#eef4ff';
-  g.save(); g.translate(-22, -60 - bob); g.rotate(0.6 + sw * 0.8); g.beginPath(); g.ellipse(0, 18, 9, 22, 0, 0, TAU); g.fill(); g.stroke(); g.restore();
-  g.save(); g.translate(22, -60 - bob); g.rotate(-0.6 - sw * 0.8); g.beginPath(); g.ellipse(0, 18, 9, 22, 0, 0, TAU); g.fill(); g.stroke(); g.restore();
-  g.fillStyle = '#7da3d8'; g.beginPath(); g.ellipse(9, -70 - bob, 14, 12, 0, 0, TAU); g.fill(); g.stroke();
-  g.fillStyle = ink; g.beginPath(); g.arc(5, -73 - bob, 2.4, 0, TAU); g.arc(15, -73 - bob, 2.4, 0, TAU); g.fill();
-  g.beginPath(); g.moveTo(5, -64 - bob); g.quadraticCurveTo(10, -61 - bob, 15, -64 - bob); g.stroke();
-  // the Hourstone
+  const limb = (x0, y0, ang, len, w, col, foot) => { g.save(); g.translate(x0, y0); g.rotate(ang); g.fillStyle = col; rr(-w / 2, 0, w, len, w / 2); g.fill(); g.stroke(); if (foot) { g.beginPath(); g.ellipse(7, len - 2, 15, 8, 0, 0, TAU); g.fill(); g.stroke(); } g.restore(); };
+  const blob = (cx, cy, rx, ry, n, j) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * TAU, r = i % 2 ? 1 : 1 + j; g.lineTo(cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r); } g.closePath(); };
+  limb(-8, -80 - bob, -0.3 - sw * 0.8, 56, 19, shade); limb(-10, -34, -sw * 0.65, 36, 21, shade, true);
+  g.fillStyle = fur; blob(0, -62 - bob, 31, 40, 9, 0.12); g.fill(); g.stroke();
+  g.fillStyle = '#e4edfb'; g.beginPath(); g.ellipse(8, -54 - bob, 15, 23, 0, 0, TAU); g.fill();
+  limb(10, -34, sw * 0.65, 36, 22, fur, true); limb(10, -82 - bob, -0.3 + sw * 0.8, 58, 20, fur);
+  g.fillStyle = fur; blob(12, -100 - bob, 22, 20, 7, 0.1); g.fill(); g.stroke();
+  g.fillStyle = '#9ec4ea'; g.beginPath(); g.ellipse(19, -97 - bob, 12, 11, 0, 0, TAU); g.fill(); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.arc(15, -100 - bob, 3.6, 0, TAU); g.arc(25, -100 - bob, 3.6, 0, TAU); g.fill();
+  g.fillStyle = ink; g.beginPath(); g.arc(16, -100 - bob, 1.9, 0, TAU); g.arc(26, -100 - bob, 1.9, 0, TAU); g.fill();
+  g.lineWidth = 3.5; g.beginPath(); g.moveTo(10, -107 - bob); g.lineTo(18, -104 - bob); g.moveTo(31, -108 - bob); g.lineTo(23, -104 - bob); g.stroke(); g.lineWidth = 3;
+  g.beginPath(); g.moveTo(14, -90 - bob); g.quadraticCurveTo(20, -86 - bob, 27, -90 - bob); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(16, -89 - bob); g.lineTo(18.5, -84 - bob); g.lineTo(21, -88 - bob); g.moveTo(21, -88 - bob); g.lineTo(23.5, -84 - bob); g.lineTo(26, -89 - bob); g.fill();
   const glow = 0.6 + 0.4 * Math.sin(t * 3);
-  g.fillStyle = `rgba(127,227,255,${0.25 * glow})`; g.beginPath(); g.arc(4, -44 - bob, 14, 0, TAU); g.fill();
-  g.fillStyle = cracked ? '#9fdcf0' : '#7fe3ff'; g.save(); g.translate(4, -44 - bob); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.strokeRect(-5, -5, 10, 10); g.restore();
-  if (cracked) { g.beginPath(); g.moveTo(0, -48 - bob); g.lineTo(6, -43 - bob); g.lineTo(3, -39 - bob); g.stroke(); }
+  g.fillStyle = `rgba(127,227,255,${0.25 * glow})`; g.beginPath(); g.arc(6, -62 - bob, 15, 0, TAU); g.fill();
+  g.fillStyle = cracked ? '#9fdcf0' : '#7fe3ff'; g.save(); g.translate(6, -62 - bob); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.strokeRect(-5, -5, 10, 10); g.restore();
+  if (cracked) { g.beginPath(); g.moveTo(2, -66 - bob); g.lineTo(8, -61 - bob); g.lineTo(5, -57 - bob); g.stroke(); }
   g.restore();
 }
 function drawObs(o) {
@@ -637,6 +696,7 @@ function drawDeco(VW) {
   }
 }
 function drawMarkers() {
+  if (L.hub) return;
   for (const c of L.cps) { if (c < 400) continue; const y = baseAt(c); g.fillStyle = '#d7dbe8'; g.fillRect(c - 2, y - 80, 4, 80); g.fillStyle = c <= L.cp ? '#7fe3ff' : '#ff5d3a'; g.beginPath(); g.moveTo(c + 2, y - 80); g.lineTo(c + 34, y - 70); g.lineTo(c + 2, y - 58); g.fill(); g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.stroke(); }
   const fx = L.finish, fy = baseAt(fx);
   if (L.yeti && !L.yeti.friendly) { const px = fx + 420, py = baseAt(px); const gr = g.createRadialGradient(px, py - 80, 10, px, py - 80, 110); gr.addColorStop(0, 'rgba(255,255,255,.95)'); gr.addColorStop(0.4, 'rgba(127,227,255,.6)'); gr.addColorStop(1, 'rgba(155,107,255,0)'); g.fillStyle = gr; g.beginPath(); g.ellipse(px, py - 80, 60 + Math.sin(P.t * 4) * 6, 100, 0, 0, TAU); g.fill(); }
@@ -677,10 +737,11 @@ function render(dt) {
   drawBackground(VW);
   const sh = reduced ? 0 : shake * 6;
   g.save(); g.translate(-cam.x + (Math.random() - 0.5) * sh, -cam.y + (Math.random() - 0.5) * sh);
-  drawDeco(VW); drawTerrain(VW); drawMarkers(); drawShards();
+  drawDeco(VW); drawTerrain(VW); drawMarkers(); drawShards(); if (L.hub) drawHub(VW);
   for (const o of L.obs) if (o.x > cam.x - 120 && o.x < cam.x + VW + 120) drawObs(o);
   if (L.yeti) drawYeti(L.yeti.x, L.yeti.y, L.yeti.ph, L.yeti.s > 40, 1, L.ci > 0 || L.si === 2);
-  if (!(P.inv > 0 && Math.floor(P.inv * 12) % 2)) drawArlo(P.x, P.y, P.rot, P.crouch, !P.ground && P.crash <= 0, P.t, P.grabT > 0.05 && !P.ground, 1);
+  if (L.hub) { WALK = P.walkT || 0; g.save(); g.translate(P.x, 0); g.scale(P.face || 1, 1); g.translate(-P.x, 0); drawArlo(P.x, P.y, P.rot * (P.face || 1), 0.1, false, P.t, false, 1); g.restore(); WALK = null; }
+  else if (!(P.inv > 0 && Math.floor(P.inv * 12) % 2)) drawArlo(P.x, P.y, P.rot, P.crouch, !P.ground && P.crash <= 0, P.t, P.grabT > 0.05 && !P.ground, 1);
   for (const p of parts) { g.globalAlpha = clamp(p.life * 2, 0, 1); g.fillStyle = p.col; g.beginPath(); g.arc(p.x, p.y, p.r, 0, TAU); g.fill(); }
   g.globalAlpha = 1;
   drawLava(VW);
@@ -693,17 +754,77 @@ function render(dt) {
   const vg = g.createRadialGradient(VW / 2, 270, 200, VW / 2, 270, VW * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, Z.key === 1 ? 'rgba(5,3,12,.6)' : 'rgba(10,12,40,.25)'); g.fillStyle = vg; g.fillRect(0, 0, VW, 540);
 }
 
+
+/* ================= drawing: basecamp ================= */
+function drawPerson(x, y, body, cap, capCol) {
+  const b = Math.sin(P.t * 2 + x) * 1.2;
+  g.save(); g.translate(x, y); g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.lineJoin = 'round';
+  g.fillStyle = '#2b3a7a'; rr(-9, -22, 8, 22, 2); g.fill(); rr(1, -22, 8, 22, 2); g.fill();
+  g.fillStyle = body; rr(-12, -54 + b, 24, 36, 7); g.fill(); g.stroke();
+  g.fillStyle = '#d9a37c'; g.beginPath(); g.arc(0, -64 + b, 9, 0, TAU); g.fill(); g.stroke();
+  g.fillStyle = capCol; g.beginPath(); g.arc(0, -66 + b, 9.5, Math.PI, 0); g.fill(); g.stroke();
+  if (cap === 'pom') { g.fillStyle = '#fff7e8'; g.beginPath(); g.arc(0, -78 + b, 3.5, 0, TAU); g.fill(); g.stroke(); }
+  g.restore();
+}
+function drawCone(x, y) {
+  g.save(); g.translate(x, y); g.fillStyle = 'rgba(20,22,46,.18)'; g.beginPath(); g.ellipse(0, 1, 11, 3, 0, 0, TAU); g.fill();
+  g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.fillStyle = '#a8703c'; g.beginPath(); g.ellipse(0, -13, 8, 12, 0.2, 0, TAU); g.fill(); g.stroke();
+  g.strokeStyle = '#5e3a1c'; g.lineWidth = 2; g.beginPath(); g.moveTo(-6, -15); g.quadraticCurveTo(0, -11, 6, -15); g.moveTo(-5, -9); g.quadraticCurveTo(0, -5, 5, -9); g.stroke(); g.restore();
+}
+function drawHub(VW) {
+  const ink = '#14162e', t = P.t, vis = x => x > cam.x - 240 && x < cam.x + VW + 240;
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  const board = (x, y, w, l1, l2) => { g.fillStyle = '#5a3a22'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(x - w / 2, y, w, 40, 4); g.fill(); g.stroke(); g.fillStyle = '#efece4'; g.textAlign = 'center'; g.font = '800 21px "Big Shoulders Display", Impact, sans-serif'; g.fillText(l1, x, y + 19); g.font = '400 12px "Hanken Grotesk", sans-serif'; g.fillStyle = '#d9cdb4'; g.fillText(l2, x, y + 34); };
+  /* welcome sign and campfire */
+  if (vis(140)) { const y = baseAt(140); g.fillStyle = '#5a3a22'; g.fillRect(136, y - 90, 8, 90); board(140, y - 128, 150, 'Basecamp', '2,140 metres'); }
+  if (vis(600)) { const y = baseAt(600), f = 0.85 + Math.sin(t * 11) * 0.15; g.fillStyle = '#5a3a22'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(580, y - 8, 40, 8, 3); g.fill(); g.stroke(); g.fillStyle = '#ff7a1a'; g.beginPath(); g.moveTo(588, y - 8); g.quadraticCurveTo(594, y - 40 * f, 600, y - 48 * f); g.quadraticCurveTo(606, y - 36 * f, 612, y - 8); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#ffd23f'; g.beginPath(); g.moveTo(595, y - 8); g.quadraticCurveTo(600, y - 28 * f, 605, y - 8); g.fill(); g.fillStyle = 'rgba(255,170,60,.12)'; g.beginPath(); g.arc(600, y - 24, 70, 0, TAU); g.fill(); }
+  /* Juni's radio tent */
+  if (vis(HUBX.juni)) { const x = HUBX.juni - 60, y = baseAt(x); g.fillStyle = '#6a3fb0'; g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); g.moveTo(x - 70, y); g.lineTo(x, y - 96); g.lineTo(x + 70, y); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#3a2470'; g.beginPath(); g.moveTo(x - 16, y); g.lineTo(x, y - 52); g.lineTo(x + 16, y); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = '#d7dbe8'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 40, y - 30); g.lineTo(x + 40, y - 130); g.stroke(); g.fillStyle = Math.sin(t * 5) > 0 ? '#ff4a2b' : '#702010'; g.beginPath(); g.arc(x + 40, y - 132, 4, 0, TAU); g.fill();
+    drawPerson(HUBX.juni + 20, baseAt(HUBX.juni + 20), '#6a3fb0', 'pom', '#b79cff'); }
+  /* tape doors */
+  const nx = CH.findIndex((C, i) => tapeOpen(i) && !save.best[i + '-2']);
+  CH.forEach((C, i) => {
+    const x = HUBX.door(i); if (!vis(x)) return; const y = baseAt(x), open = tapeOpen(i), Zc = ZONES[C.zone];
+    g.fillStyle = '#8a5a38'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(x - 62, y - 86, 124, 90); g.strokeRect(x - 62, y - 86, 124, 90);
+    g.fillStyle = '#3a2a22'; g.beginPath(); g.moveTo(x - 80, y - 84); g.lineTo(x, y - 134); g.lineTo(x + 80, y - 84); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = '#fff'; g.lineWidth = 7; g.beginPath(); g.moveTo(x - 76, y - 88); g.lineTo(x, y - 134); g.lineTo(x + 76, y - 88); g.stroke(); g.strokeStyle = ink; g.lineWidth = 2.5; g.stroke();
+    const gr = g.createLinearGradient(0, y - 62, 0, y); gr.addColorStop(0, open ? Zc.sky[0] : '#3a3f4a'); gr.addColorStop(1, open ? Zc.sky[1] : '#2a2e36');
+    g.fillStyle = gr; g.strokeStyle = ink; g.lineWidth = 3; rr(x - 20, y - 62, 40, 62, 16); g.fill(); g.stroke();
+    if (!open) { g.fillStyle = '#c9ced8'; rr(x - 8, y - 32, 16, 12, 2); g.fill(); g.stroke(); g.strokeStyle = '#c9ced8'; g.lineWidth = 3; g.beginPath(); g.arc(x, y - 33, 6, Math.PI, 0); g.stroke(); }
+    if (i === nx) { const k = 0.6 + Math.sin(t * 4) * 0.4; g.strokeStyle = 'rgba(255,74,43,' + k + ')'; g.lineWidth = 4; rr(x - 24, y - 66, 48, 66, 18); g.stroke(); }
+    board(x, y - 186, 150, 'Tape ' + (i + 1), C.era);
+    for (let s = 0; s < 3; s++) { const b = save.best[i + '-' + s], m = b ? b.medal || 0 : 0; g.fillStyle = m === 3 ? '#ffcf3f' : m === 2 ? '#c9d0dc' : m === 1 ? '#c8814a' : 'rgba(20,22,46,.25)'; g.strokeStyle = ink; g.lineWidth = 2; g.beginPath(); g.arc(x - 18 + s * 18, y + 18, 6, 0, TAU); g.fill(); g.stroke(); }
+    if (i === nx) { g.fillStyle = '#ff4a2b'; g.strokeStyle = ink; g.lineWidth = 2.5; const ay = y - 204 + Math.sin(t * 5) * 5; g.beginPath(); g.moveTo(x - 10, ay - 14); g.lineTo(x + 10, ay - 14); g.lineTo(x, ay); g.closePath(); g.fill(); g.stroke(); }
+  });
+  /* the Lucky Lodge */
+  if (vis(HUBX.lodge)) { const x = HUBX.lodge, y = baseAt(x); g.fillStyle = '#6b3f2a'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(x - 110, y - 100, 220, 104); g.strokeRect(x - 110, y - 100, 220, 104);
+    g.fillStyle = '#7a2a2a'; g.beginPath(); g.moveTo(x - 128, y - 98); g.lineTo(x, y - 156); g.lineTo(x + 128, y - 98); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = '#ffd88a'; g.strokeStyle = ink; rr(x - 70, y - 70, 44, 48, 4); g.fill(); g.stroke(); rr(x + 26, y - 70, 44, 48, 4); g.fill(); g.stroke();
+    for (let k = 0; k < 11; k++) { g.fillStyle = (k + Math.floor(t * 3)) % 2 ? '#ffcf3f' : '#ff4a2b'; g.beginPath(); g.arc(x - 100 + k * 20, y - 100 - Math.sin(k / 10 * Math.PI) * 4, 4, 0, TAU); g.fill(); }
+    board(x, y - 214, 170, 'Lucky Lodge', 'Play money only'); drawPerson(HUBX.bet, baseAt(HUBX.bet), '#245a3c', 'visor', '#2f7a55'); }
+  /* Dawa's outfitters */
+  if (vis(HUBX.shop)) { const x = HUBX.shop, y = baseAt(x); g.strokeStyle = ink; g.lineWidth = 3; g.fillStyle = '#5a3a22'; g.fillRect(x - 100, y - 100, 6, 100); g.fillRect(x + 94, y - 100, 6, 100); g.fillRect(x - 100, y - 70, 200, 5);
+    for (let k = 0; k < 8; k++) { g.fillStyle = k % 2 ? '#fff7e8' : '#c0392b'; g.beginPath(); g.moveTo(x - 110 + k * 27.5, y - 112); g.lineTo(x - 82.5 + k * 27.5, y - 112); g.lineTo(x - 90 + k * 27.5, y - 86); g.lineTo(x - 105 + k * 27.5 + 10, y - 86); g.closePath(); g.fill(); g.stroke(); }
+    Object.keys(PARK).forEach((id, k) => { const px = x - 70 + k * 28; g.fillStyle = PARK[id].c; g.strokeStyle = ink; g.lineWidth = 2; rr(px - 9, y - 66, 18, 30, 5); g.fill(); g.stroke(); g.fillStyle = PARK[id].s; g.fillRect(px - 9, y - 50, 18, 3); });
+    board(x, y - 168, 170, 'Dawa’s outfitters', 'Parkas for shards'); drawPerson(HUBX.dawa, baseAt(HUBX.dawa), '#c0392b', 'pom', '#e6c23a'); }
+  CONES.forEach((cx, i) => { if (!save.cones.includes(i) && vis(cx)) drawCone(cx, baseAt(cx)); });
+  g.textAlign = 'start';
+}
+
 /* ================= face portraits ================= */
 const fg = $('face').getContext('2d');
 function drawFace(who) {
   fg.setTransform(1, 0, 0, 1, 0, 0); fg.clearRect(0, 0, 192, 192);
-  const bgc = { arlo: '#2c3180', juni: '#3a2a6a', yeti: '#2a5a8a', edda: '#c9b48a' }[who] || '#2c3180';
+  const bgc = { arlo: '#2c3180', juni: '#3a2a6a', yeti: '#2a5a8a', edda: '#c9b48a', bet: '#5a2a2a', dawa: '#2a5a4a' }[who] || '#2c3180';
   fg.fillStyle = bgc; fg.fillRect(0, 0, 192, 192);
-  if (who === 'arlo') { swap(() => { drawArlo(0, 0, 0, 0.1, false, P.t, false, 1); }, 96, 188, 3.9); }
-  else if (who === 'yeti') { swap(() => drawYeti(0, 0, 0, false, 1, true), 96, 290, 3.4); }
+  if (who === 'arlo') { swap(() => { drawArlo(0, 0, 0, 0.1, false, P.t, false, 1); }, 100, 178, 2.05); }
+  else if (who === 'yeti') { swap(() => drawYeti(0, 0, 0, false, 1, true), 57, 340, 2.6); }
   else if (who === 'juni') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#6a3fb0'; k.beginPath(); k.ellipse(96, 190, 60, 50, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 100, 42, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#1e1a2a'; k.beginPath(); k.arc(96, 88, 44, Math.PI * 1.05, Math.PI * 1.95); k.fill(); k.beginPath(); k.arc(130, 62, 16, 0, TAU); k.fill(); k.fillStyle = '#14162e'; k.beginPath(); k.arc(82, 102, 5, 0, TAU); k.arc(112, 102, 5, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.arc(97, 118, 10, 0.2, Math.PI - 0.2); k.stroke(); k.strokeStyle = '#7fe3ff'; k.lineWidth = 7; k.beginPath(); k.arc(96, 98, 50, Math.PI * 1.1, Math.PI * 1.9); k.stroke(); k.fillStyle = '#7fe3ff'; k.fillRect(40, 92, 14, 26); k.fillRect(138, 92, 14, 26);
     for (let i = 0; i < 6; i++) { k.fillStyle = 'rgba(255,255,255,.12)'; k.fillRect(0, (P.t * 90 + i * 37) % 192, 192, 3); } }
   else if (who === 'edda') { const k = fg; k.strokeStyle = '#3b2a14'; k.lineWidth = 6; k.fillStyle = '#8a6a44'; k.beginPath(); k.arc(96, 104, 62, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#e9cfa6'; k.beginPath(); k.arc(96, 108, 38, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#5a4630'; k.fillRect(60, 70, 72, 16); k.fillStyle = '#c9b48a'; k.beginPath(); k.arc(76, 78, 11, 0, TAU); k.arc(116, 78, 11, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#3b2a14'; k.beginPath(); k.arc(84, 112, 4, 0, TAU); k.arc(108, 112, 4, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.moveTo(86, 128); k.lineTo(106, 128); k.stroke(); }
+  else if (who === 'bet') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#245a3c'; k.beginPath(); k.ellipse(96, 192, 62, 46, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#a8734f'; k.beginPath(); k.arc(96, 104, 44, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#2f7a55'; k.beginPath(); k.moveTo(44, 84); k.quadraticCurveTo(96, 40, 148, 84); k.lineTo(170, 90); k.lineTo(44, 90); k.closePath(); k.fill(); k.stroke(); k.fillStyle = '#14162e'; k.fillRect(72, 104, 8, 8); k.fillRect(112, 104, 8, 8); k.strokeStyle = '#2b1a10'; k.lineWidth = 7; k.beginPath(); k.moveTo(74, 130); k.quadraticCurveTo(96, 120, 118, 130); k.stroke(); }
+  else if (who === 'dawa') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#c0392b'; k.beginPath(); k.ellipse(96, 192, 62, 46, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 106, 44, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#e6c23a'; k.beginPath(); k.arc(96, 80, 46, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#fff7e8'; k.beginPath(); k.arc(96, 28, 12, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#7fe3ff'; k.fillRect(60, 84, 72, 14); k.strokeRect(60, 84, 72, 14); k.fillStyle = '#14162e'; k.fillRect(74, 112, 7, 7); k.fillRect(111, 112, 7, 7); k.beginPath(); k.arc(96, 134, 11, 0.1, Math.PI - 0.1); k.stroke(); }
   function swap(fn, x, y, s) { const og = g; gSwap(fg); fg.save(); fg.translate(x, y); fg.scale(s, s); fn(); fg.restore(); gSwap(og); }
 }
 function gSwap(ctx) { g = ctx; }
@@ -738,62 +859,225 @@ function music() {
   while (AU.next < AU.ac.currentTime + 0.2) {
     const st = AU.step++, bar = Math.floor(st / 8) % 4, root = S.ch[bar], t = AU.next;
     if (st % 2 === 0) tone(mf(root - 12), spb * 1.6, 'triangle', 0.07, 0, t);
-    if (state === 'play' || state === 'title') { const r = rng(st * 7 + bar)(); if (r < 0.6) tone(mf(root + 12 + S.sc[Math.floor(r * 10) % S.sc.length]), spb * 0.9, 'square', 0.025, 0, t); }
+    if (state === 'play' || state === 'title' || state === 'hub') { const r = rng(st * 7 + bar)(); if (r < 0.6) tone(mf(root + 12 + S.sc[Math.floor(r * 10) % S.sc.length]), spb * 0.9, 'square', 0.025, 0, t); }
     AU.next += spb;
   }
 }
-function setMute(m) { AU.muted = m; store.set('hourstone_mute', m); if (AU.m) AU.m.gain.value = m ? 0 : 0.6; $('bMute').textContent = m ? 'MUTED' : 'SOUND'; }
+function setMute(m) { AU.muted = m; store.set('hourstone_mute', m); if (AU.m) AU.m.gain.value = m ? 0 : 0.6; $('bMute').textContent = $('bMute2').textContent = m ? 'MUTED' : 'SOUND'; }
 
 /* ================= flow ================= */
-let state = 'title', save = store.get('hourstone_save', { ci: 0, si: 0, best: {} }), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
+const PARK = {
+  orange: { n: 'Patrol orange', c: '#ff7a1a', s: '#ffd23f', a: '#b84b0a', p: 0 }, glacier: { n: 'Glacier blue', c: '#3f8fdc', s: '#d6f1ff', a: '#1f5a98', p: 60 },
+  pine: { n: 'Pine green', c: '#2f7a55', s: '#e8d9a0', a: '#1d4a35', p: 80 }, violet: { n: 'Dusk violet', c: '#8a5bd6', s: '#ffb7e6', a: '#4f2f94', p: 100 },
+  gold: { n: 'Gold shell', c: '#e9b73a', s: '#fff3c4', a: '#8a6414', p: 200 }, fur: { n: 'Yeti fur', c: '#eef3f8', s: '#9fdcff', a: '#7f98b0', p: 0, cones: 12 }
+};
+const PACE = 850, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
+const parOf = S => TIERS.map(k => Math.round(S.len / PACE * k)); /* gold, silver, bronze in whole seconds */
+const medalOf = (S, t) => { const p = parOf(S); return t <= p[0] ? 3 : t <= p[1] ? 2 : t <= p[2] ? 1 : 0; };
+function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'] }; }
+let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save', {})), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
+if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
+const hideHub = () => ['hubHud', 'hubPrompt', 'hubPanel'].forEach(i => show(i, false));
 function persist() { store.set('hourstone_save', save); store.set('hourstone_run', runStats); }
+const tapeOpen = ci => ci === 0 || !!save.best[(ci - 1) + '-2'];
+const stageOpen = (ci, si) => tapeOpen(ci) && (si === 0 || !!save.best[ci + '-' + (si - 1)]);
 function startTitle() {
   state = 'title'; buildLevel(0, 0); demo = true; P.hearts = 99; respawn(true); cam.x = P.x - 200; cam.y = P.y - 230;
-  ['hud', 'touch', 'dlg', 'lbTop', 'results', 'fail', 'pause', 'ending', 'chapters', 'chapterCard'].forEach(i => show(i, false)); show('title', true);
-  $('bCont').disabled = !(save.ci > 0 || save.si > 0);
+  ['hud', 'touch', 'dlg', 'lbTop', 'results', 'fail', 'pause', 'ending', 'chapterCard'].forEach(i => show(i, false)); hideHub(); show('title', true);
+  $('bCont').disabled = !save.told.welcome;
 }
-function startChapter(ci, fresh) {
-  show('title', false); show('chapters', false); demo = false;
+function startChapter(ci) {
+  show('title', false); hideHub(); demo = false;
   buildLevel(ci, 0); respawn(true); camSnap();
   state = 'card'; $('ccNum').textContent = 'TAPE ' + (ci + 1) + ' OF ' + CH.length; $('ccEra').textContent = CH[ci].era; $('ccTitle').textContent = CH[ci].title; show('chapterCard', true); sfx.clear();
   setTimeout(() => { show('chapterCard', false); dialog(CH[ci].intro, () => startStage(ci, 0, true)); }, 2400);
 }
 function startStage(ci, si, skipBefore) {
-  const st = CH[ci].stages[si];
+  const st = CH[ci].stages[si], bk = 'b' + ci + '-' + si;
   const go = () => {
-    ['title', 'chapters', 'fail', 'results', 'pause', 'chapterCard', 'ending'].forEach(i => show(i, false));
+    ['title', 'fail', 'results', 'pause', 'chapterCard', 'ending'].forEach(i => show(i, false)); hideHub();
     demo = false; buildLevel(ci, si); P.hearts = 3; respawn(true); camSnap(); state = 'play';
-    save.ci = Math.max(save.ci, ci); if (ci === save.ci) save.si = Math.max(si, ci === save.ci ? save.si : 0); persist();
-    show('hud', true); show('touch', isTouch); show('chase', !!L.yeti);
-    $('hudEra').textContent = 'Tape ' + (ci + 1) + ', ' + CH[ci].era; $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'LAVA' : 'YETI';
+    show('hud', true); show('touch', isTouch); show('chase', !!L.yeti); $('tJ').textContent = 'Jump';
+    $('hudEra').textContent = 'Tape ' + (ci + 1) + ', ' + CH[ci].era; $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'LAVA' : 'YETI'; hudT = 1;
   };
-  if (!skipBefore && st.before) { buildLevel(ci, si); respawn(true); camSnap(); dialog(st.before, go); } else go();
+  if (!skipBefore && st.before && !save.told[bk]) { save.told[bk] = 1; persist(); hideHub(); buildLevel(ci, si); respawn(true); camSnap(); dialog(st.before, go); } else go();
 }
 function finishStage() {
   if (state !== 'play') return; state = 'results'; sfx.clear();
   const tot = L.shards.length, ratio = tot ? L.got / tot : 1;
   const rank = ratio >= 0.85 && L.crashes === 0 ? 'S' : ratio >= 0.65 && L.crashes <= 1 ? 'A' : ratio >= 0.4 ? 'B' : 'C';
   runStats.time += L.time; runStats.shards += L.got; runStats.crashes += L.crashes;
-  const key = L.ci + '-' + L.si, prev = save.best[key];
-  if (!prev || L.score > prev.score) save.best[key] = { score: L.score, rank };
-  const last = L.si === CH[L.ci].stages.length - 1;
-  if (last) { if (L.ci + 1 > save.ci) { save.ci = L.ci + 1; save.si = 0; } } else if (L.ci === save.ci) save.si = Math.max(save.si, L.si + 1);
-  persist();
+  const key = L.ci + '-' + L.si, prev = save.best[key], par = parOf(L.S), med = medalOf(L.S, L.time), pm = prev && prev.medal ? prev.medal : 0;
+  const newBest = !prev || !prev.time || L.time < prev.time, top = Math.max(med, pm), gain = L.got + MBONUS[top] - MBONUS[pm];
+  const nb = { score: prev ? prev.score : 0, rank: prev ? prev.rank : rank, time: newBest ? L.time : prev.time, medal: top };
+  if (!prev || L.score > prev.score) { nb.score = L.score; nb.rank = rank; }
+  save.best[key] = nb; save.bank += gain;
+  const last = L.si === CH[L.ci].stages.length - 1; persist();
   $('resTitle').textContent = L.S.name; $('rank').textContent = rank; $('resCap').textContent = 'Frame grab, ' + fmt(L.time) + '. Tape ' + (L.ci + 1) + ', ' + L.C.era + '.';
+  $('resNote').textContent = (med > pm ? MEDAL[med] + ' medal earned. ' : newBest && prev && prev.time ? 'New best time. ' : '') + (med < 3 ? MEDAL[med + 1] + ' needs ' + fmt(par[2 - med]) + ' or less.' : 'Gold. You can’t go faster than this.');
   { const t = document.createElement('canvas'); t.width = 640; t.height = Math.round(640 * cvs.height / cvs.width); t.getContext('2d').drawImage(cvs, 0, 0, t.width, t.height); $('resPhoto').src = t.toDataURL('image/jpeg', 0.82); }
-  $('resStats').innerHTML = `<span>Time</span><span>${fmt(L.time)}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}</span><span>Crashes</span><span>${L.crashes}</span><span>Points</span><span>${L.score}</span>`;
+  $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}</span><span>Crashes</span><span>${L.crashes}</span><span>Banked</span><span>+${gain} shards</span>`;
+  $('resNext').textContent = last ? 'Back to basecamp' : 'Next stage'; show('resHub', !last);
   show('hud', false); show('touch', false); show('results', true); $('resNext').focus();
 }
 function nextAfterResults() {
   show('results', false);
   const ci = L.ci, si = L.si;
-  if (si + 1 < CH[ci].stages.length) startStage(ci, si + 1);
-  else dialog(CH[ci].outro, () => { if (ci + 1 < CH.length) startChapter(ci + 1); else showEnding(); });
+  if (si + 1 < CH[ci].stages.length) { startStage(ci, si + 1); return; }
+  const done = () => { if (ci + 1 >= CH.length && !save.told.end) { save.told.end = 1; persist(); showEnding(); } else startHub(ci); };
+  if (!save.told['o' + ci]) { save.told['o' + ci] = 1; persist(); dialog(CH[ci].outro, done); } else done();
+}
+
+/* ================= basecamp: the walkable hub ================= */
+const HUB_W = 5000, HUBX = { juni: 360, door: i => 760 + i * 470, lodge: 3700, bet: 3790, shop: 4300, dawa: 4390 };
+const CONES = [120, 430, 980, 1480, 1960, 2420, 2900, 3380, 3980, 4600, 4880, 3250];
+const hubHeight = x => Math.sin(x / 700) * 16 + Math.sin(x / 230) * 4;
+function buildHub() {
+  const n = Math.round(HUB_W / STEP) + 2, gy = [], gap = [], deco = [], R = rng(77);
+  for (let i = 0; i < n; i++) { gy.push(hubHeight(i * STEP)); gap.push(false); }
+  const spots = [HUBX.juni, HUBX.lodge, HUBX.shop, 140, 600].concat([0, 1, 2, 3, 4, 5].map(HUBX.door));
+  for (let x = 120; x < HUB_W; x += 70 + R() * 150) if (spots.every(sx => Math.abs(sx - x) > 140)) deco.push({ x, s: 0.7 + R() * 0.8, v: R() });
+  L = { hub: true, ci: -1, si: 0, C: {}, S: {}, Z: ZONES.camp, gy, gap, obs: [], shards: [], kickers: [], cps: [200], deco, finish: 1e9, n, cp: 200, time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
+}
+function hubStats() {
+  let gold = 0, tot = 0; CH.forEach((C, ci) => C.stages.forEach((S, si) => { tot++; const b = save.best[ci + '-' + si]; if (b && b.medal === 3) gold++; }));
+  $('hhMed').textContent = gold + ' of ' + tot + ' gold'; $('hhCone').textContent = save.cones.length + ' of ' + CONES.length; $('hhBank').textContent = save.bank;
+  const nx = CH.findIndex((C, i) => tapeOpen(i) && !save.best[i + '-2']);
+  $('hhHint').textContent = nx >= 0 ? 'Next tape: ' + CH[nx].title + '.' : 'Every tape cleared. Go after gold times, pinecones and the lodge.';
+}
+function startHub(from) {
+  ['title', 'fail', 'results', 'pause', 'chapterCard', 'ending', 'dlg', 'lbTop', 'hud', 'hubPanel', 'hubPrompt'].forEach(i => show(i, false));
+  buildHub(); demo = false; state = 'hub'; P.hearts = 3; P.crash = 0; P.inv = 0; P.hv = 0; P.face = 1; P.walkT = 0; P.rot = 0; P.trick = 0; P.t = P.t || 0;
+  P.x = from == null ? 200 : HUBX.door(from); P.y = baseAt(P.x); cam.x = P.x - 400; cam.y = P.y - 540 * 0.62; L.near = null; L.nearTxt = '';
+  show('hubHud', true); show('touch', isTouch); $('tJ').textContent = 'Enter'; hubStats();
+}
+function backToHub() { state = 'hub'; show('hubHud', true); show('touch', isTouch); hubStats(); }
+function hubDialog(lines, cb) { show('hubHud', false); show('hubPrompt', false); show('touch', false); dialog(lines, () => { if (cb) cb(); else backToHub(); }); }
+function hubTargets() {
+  const t = [{ x: HUBX.juni + 20, kind: 'juni', label: 'Talk to Juni' }];
+  CH.forEach((C, i) => t.push({ x: HUBX.door(i), kind: 'door', i, label: tapeOpen(i) ? 'Enter ' + C.title : 'Locked. Clear the last stage of tape ' + i + '.' }));
+  t.push({ x: HUBX.bet, kind: 'lodge', label: 'Talk to Bet at the Lucky Lodge' }, { x: HUBX.dawa, kind: 'shop', label: 'Talk to Dawa' });
+  return t;
+}
+function hubNear() { let b = null, bd = 70; for (const t of hubTargets()) { const d = Math.abs(t.x - P.x); if (d < bd) { bd = d; b = t; } } return b; }
+function stepHub(dt) {
+  const dir = (keys.ArrowRight || keys.KeyD || touch.r ? 1 : 0) - (keys.ArrowLeft || keys.KeyA || touch.l ? 1 : 0);
+  P.hv = lerp(P.hv || 0, dir * (keys.ShiftLeft || keys.ShiftRight ? 470 : 300), 1 - Math.exp(-12 * dt));
+  P.x = clamp(P.x + P.hv * dt, 50, HUB_W - 50); P.y = baseAt(P.x); P.rot = slopeAt(P.x) * 0.7; P.t += dt;
+  if (Math.abs(P.hv) > 8) { P.face = P.hv > 0 ? 1 : -1; P.walkT = (P.walkT || 0) + dt * Math.abs(P.hv) * 0.034; }
+  CONES.forEach((cx, i) => { if (!save.cones.includes(i) && Math.abs(cx - P.x) < 34) { save.cones.push(i); persist(); popup(P.x, P.y - 90, 'Pinecone ' + save.cones.length + ' of ' + CONES.length, '#e8a566'); sfx.shard(); hubStats(); } });
+  const nr = hubNear(), txt = nr ? (isTouch ? nr.label + '. Tap Enter.' : '<kbd>↑</kbd> ' + nr.label) : '';
+  if (txt !== L.nearTxt) { L.nearTxt = txt; $('hubPrompt').innerHTML = txt; show('hubPrompt', !!txt); }
+}
+function hubAct() {
+  const t = state === 'hub' ? hubNear() : null; if (!t) return;
+  if (t.kind === 'door') { if (tapeOpen(t.i)) openTape(t.i); else { popup(P.x, P.y - 90, 'Locked', '#ff9a6a'); sfx.land(); } }
+  else if (t.kind === 'juni') { const first = !save.told.welcome; save.told.welcome = 1; persist(); hubDialog(first ? WELCOME : [JTIPS[(save.tipI = ((save.tipI || 0) + 1)) % JTIPS.length]]); }
+  else if (t.kind === 'lodge') { if (save.told.bet) openLodge(); else { save.told.bet = 1; persist(); hubDialog(BET_INTRO, openLodge); } }
+  else if (t.kind === 'shop') { if (save.told.dawa) openShop(); else { save.told.dawa = 1; persist(); hubDialog(DAWA_INTRO, openShop); } }
+}
+const WELCOME = [[J, "Arlo, you made it to Basecamp. Radio check: can you hear me?"], [A, "Loud and clear. Day 212. Still no yeti."], [J, "Then start at the first door. Every stage has a gold, silver and bronze time, so go back and beat them whenever you like."], [T, "Left and right to walk, up at a door to go in. There are pinecones lying around camp, so look around."]];
+const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Bet runs the Lucky Lodge at the east end. Play money only. Shards are for fun and parkas, nothing else."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."]];
+const BET_INTRO = [['bet', "Welcome to the Lucky Lodge. Shards on the table, no real money, ever."], [A, "I'm not very lucky."], ['bet', "Nobody is. That's what makes the lights fun."]];
+const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
+
+/* panels */
+function panel(html) { $('hpBox').innerHTML = html; show('hubPanel', true); show('hubPrompt', false); state = 'panel'; const c = $('hpClose'); if (c) c.onclick = closePanel; }
+function closePanel() { if (lg.spinning) return; show('hubPanel', false); backToHub(); }
+function openTape(ci) {
+  const C = CH[ci];
+  const rows = C.stages.map((S, si) => {
+    const ok = stageOpen(ci, si), b = save.best[ci + '-' + si], par = parOf(S), m = b ? b.medal || 0 : 0;
+    return `<button class="srow" data-s="${si}" ${ok ? '' : 'disabled'}><span class="sn">${si + 1}</span><span><b>${S.name}</b><small>${ok ? 'Gold under ' + fmt(par[0]) : 'Clear the stage before this one'}</small></span><span class="mdl m${m}">${b ? MEDAL[m] : 'Not cleared'}<small>${b && b.time ? fmtT(b.time) : ''}</small></span></button>`;
+  }).join('');
+  panel(`<div class="top"><h2>${C.title}</h2><span class="bank">${save.bank}</span></div><p>${C.era}. Faster times earn medals and bonus shards.</p><div>${rows}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
+  $('hpBox').querySelectorAll('.srow').forEach(b => b.onclick = () => launch(ci, +b.dataset.s));
+}
+function launch(ci, si) {
+  audioInit(); show('hubPanel', false);
+  if (si === 0 && !save.told['i' + ci]) { save.told['i' + ci] = 1; persist(); startChapter(ci); } else startStage(ci, si);
+}
+
+/* the Lucky Lodge: a slot machine and a coin flip, played with shards (play money earned by skiing) */
+const SYM = [
+  { w: 1, pay: 25, svg: '<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="16" fill="#eef3f8" stroke="#14162e" stroke-width="3"/><circle cx="18" cy="24" r="2.5" fill="#14162e"/><circle cx="30" cy="24" r="2.5" fill="#14162e"/><path d="M17 32q7 5 14 0" fill="none" stroke="#14162e" stroke-width="3" stroke-linecap="round"/><path d="M12 13l4 6M36 13l-4 6" stroke="#9fdcff" stroke-width="3" stroke-linecap="round"/></svg>' },
+  { w: 2, pay: 12, svg: '<svg viewBox="0 0 48 48"><polygon points="24,5 40,24 24,43 8,24" fill="#7fe3ff" stroke="#14162e" stroke-width="3" stroke-linejoin="round"/><polygon points="24,12 33,24 24,36 15,24" fill="#d8f8ff"/></svg>' },
+  { w: 3, pay: 8, svg: '<svg viewBox="0 0 48 48"><rect x="6" y="14" width="36" height="24" rx="4" fill="#2b3040" stroke="#14162e" stroke-width="3"/><circle cx="24" cy="26" r="8" fill="#7fe3ff" stroke="#14162e" stroke-width="3"/><rect x="12" y="8" width="10" height="6" fill="#ff4a2b" stroke="#14162e" stroke-width="2"/></svg>' },
+  { w: 4, pay: 5, svg: '<svg viewBox="0 0 48 48"><ellipse cx="24" cy="27" rx="12" ry="17" fill="#a8703c" stroke="#14162e" stroke-width="3"/><path d="M14 21q10 6 20 0M13 29q11 6 22 0M16 36q8 5 16 0" fill="none" stroke="#5e3a1c" stroke-width="2.5"/><path d="M24 10V5" stroke="#14162e" stroke-width="3"/></svg>' },
+  { w: 5, pay: 3, svg: '<svg viewBox="0 0 48 48"><g stroke="#eef3f8" stroke-width="4" stroke-linecap="round"><path d="M24 6v36M8.4 15l31.2 18M8.4 33l31.2-18"/></g><circle cx="24" cy="24" r="3.5" fill="#7fe3ff"/></svg>' }
+];
+const SYMW = SYM.reduce((a, s) => a + s.w, 0);
+const lgPick = () => { let r = Math.random() * SYMW; for (let i = 0; i < SYM.length; i++) { r -= SYM[i].w; if (r < 0) return i; } return SYM.length - 1; };
+const lg = { bet: 10, spinning: false, pend: 0 };
+const lgMsg = t => { const m = $('lgMsg'); if (m) m.textContent = t; };
+function lgRefresh() {
+  const b = $('lgBank'); if (!b) return; b.textContent = save.bank;
+  if (save.bank < lg.bet) lg.bet = [100, 50, 10].find(v => v <= save.bank) || 10;
+  $('bets').innerHTML = [10, 50, 100].map(v => `<button class="btn ${v === lg.bet ? 'on' : ''}" data-b="${v}" ${save.bank < v || lg.spinning ? 'disabled' : ''}>${v}</button>`).join('');
+  $('bets').querySelectorAll('button').forEach(x => x.onclick = () => { lg.bet = +x.dataset.b; lgRefresh(); });
+  $('lgSpin').disabled = lg.spinning || save.bank < lg.bet; $('lgDbl').hidden = !(lg.pend > 0) || lg.spinning; $('lgLoan').hidden = !(save.bank < 10) || lg.spinning;
+  $('lgDbl').textContent = 'Double or nothing, ' + lg.pend; $('hpClose').disabled = lg.spinning;
+}
+function openLodge() {
+  lg.spinning = false; lg.pend = 0;
+  panel(`<div class="top"><h2>The Lucky Lodge</h2><span class="bank" id="lgBank"></span></div>
+    <div class="reels" id="reels"><div class="reel">${SYM[0].svg}</div><div class="reel">${SYM[1].svg}</div><div class="reel">${SYM[2].svg}</div></div>
+    <div class="lgmsg" id="lgMsg">Pick a bet and spin.</div>
+    <div class="bets" id="bets"></div>
+    <div class="row"><button class="btn go" id="lgSpin">Spin</button><button class="btn" id="lgDbl" hidden>Double or nothing</button><button class="btn" id="lgLoan" hidden>Bet covers you, 20 shards</button><button class="btn" id="hpClose">Leave</button></div>
+    <div class="pays">${SYM.map(s => `<span>${s.svg}${s.pay}×</span>`).join('')}</div>
+    <p class="lgnote">Three matching symbols pay the number shown. Any two matching pay 1.2×. Shards are play money you earn by skiing, and nothing here costs or pays out real money.</p>`);
+  $('lgSpin').onclick = lgSpin; $('lgDbl').onclick = lgDouble; $('lgLoan').onclick = () => { save.bank += 20; persist(); lgMsg('Bet slides you 20 shards. Pay it forward.'); lgRefresh(); };
+  lgRefresh();
+}
+function lgSpin() {
+  if (lg.spinning || save.bank < lg.bet) return;
+  lg.spinning = true; save.bank -= lg.bet; lg.pend = 0; persist(); lgRefresh(); lgMsg('');
+  const res = [lgPick(), lgPick(), lgPick()], rs = [...document.querySelectorAll('#reels .reel')], done = [false, false, false];
+  rs.forEach(r => r.classList.remove('win'));
+  const iv = setInterval(() => { rs.forEach((r, i) => { if (!done[i]) r.innerHTML = SYM[Math.floor(Math.random() * SYM.length)].svg; }); tone(260 + Math.random() * 120, 0.03, 'square', 0.02); }, 70);
+  [550, 850, 1150].forEach((ms, i) => setTimeout(() => { done[i] = true; rs[i].innerHTML = SYM[res[i]].svg; sfx.blip(); if (i === 2) { clearInterval(iv); lgResolve(res, rs); } }, ms));
+}
+function lgResolve(res, rs) {
+  const [a, b, c] = res; let mult = 0;
+  if (a === b && b === c) mult = SYM[a].pay; else if (a === b || b === c || a === c) mult = 1.2;
+  const win = Math.floor(lg.bet * mult + 1e-9); lg.spinning = false;
+  if (win > 0) {
+    save.bank += win; lg.pend = win;
+    rs.forEach((r, i) => { if (mult > 1.2 || res.filter(v => v === res[i]).length > 1) r.classList.add('win'); });
+    lgMsg(mult > 1.2 ? 'Three in a row. Pays ' + win + '.' : 'A pair. Pays ' + win + '.'); if (mult > 1.2) sfx.trick(); else sfx.shard();
+  } else lgMsg('Nothing lined up. The house keeps the ' + lg.bet + '.');
+  persist(); lgRefresh();
+}
+function lgDouble() {
+  if (lg.spinning || !lg.pend) return; lg.spinning = true; lgMsg('The coin is in the air...'); lgRefresh(); tone(700, 0.5, 'triangle', 0.04, 1400);
+  setTimeout(() => {
+    if (Math.random() < 0.5) { save.bank += lg.pend; lg.pend *= 2; lgMsg('Heads. Doubled to ' + lg.pend + '.'); sfx.trick(); }
+    else { save.bank -= lg.pend; lgMsg('Tails. The ' + lg.pend + ' goes back to the house.'); lg.pend = 0; sfx.crash(); }
+    lg.spinning = false; persist(); lgRefresh();
+  }, 900);
+}
+
+/* Dawa's outfitters: parkas for shards, or for pinecones */
+function openShop() {
+  const rows = Object.keys(PARK).map(id => {
+    const p = PARK[id], own = save.owned.includes(id), eq = save.parka === id, nC = save.cones.length;
+    const can = own || (p.cones ? nC >= p.cones : save.bank >= p.p);
+    const st = eq ? 'Wearing' : own ? 'Wear' : p.cones ? (nC >= p.cones ? 'Claim' : nC + ' of ' + p.cones + ' pinecones') : p.p + ' shards';
+    return `<button class="prow" data-p="${id}" ${!can || eq ? 'disabled' : ''}><i style="background:${p.c}"></i><span><b>${p.n}</b><br><small>${p.cones ? 'Free for twelve pinecones' : p.p ? 'Costs ' + p.p + ' shards' : 'Standard issue'}</small></span><em>${st}</em></button>`;
+  }).join('');
+  panel(`<div class="top"><h2>Dawa's outfitters</h2><span class="bank">${save.bank}</span></div><p>Parkas change how Arlo looks on the mountain, not how he skis.</p><div>${rows}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
+  $('hpBox').querySelectorAll('.prow').forEach(b => b.onclick = () => {
+    const id = b.dataset.p, p = PARK[id];
+    if (!save.owned.includes(id)) { if (!p.cones) save.bank -= p.p; save.owned.push(id); sfx.clear(); }
+    save.parka = id; persist(); openShop();
+  });
 }
 function failStage(title, text) { if (state !== 'play') return; state = 'fail'; $('failTitle').textContent = title; $('failText').textContent = text; show('hud', false); show('touch', false); show('fail', true); $('failRetry').focus(); }
 function showEnding() { state = 'ending'; $('endStats').innerHTML = `<span>Time on skis</span><span>${fmt(runStats.time)}</span><span>Shards found</span><span>${runStats.shards}</span><span>Crashes</span><span>${runStats.crashes}</span>`; show('ending', true); }
 function fmtTC(t) { const p = n => (n < 10 ? '0' : '') + n; return p(Math.floor(t / 60)) + ':' + p(Math.floor(t % 60)) + ':' + p(Math.floor((t % 1) * 30)); }
+function fmtT(t) { return fmt(t) + '.' + Math.floor((t % 1) * 10); }
 function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
 function camSnap() { const sc = cvs.height / 540, VW = cvs.width / sc; cam.x = P.x - VW * 0.3; cam.y = P.y - 540 * 0.45; }
 
@@ -817,6 +1101,8 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.repeat) return;
   if (state === 'dialog' && ['Space', 'Enter', 'KeyZ', 'ArrowRight'].includes(e.code)) { advance(); return; }
+  if (state === 'hub' && ['ArrowUp', 'KeyW', 'Enter', 'KeyE', 'Space'].includes(e.code)) hubAct();
+  else if (state === 'panel' && e.code === 'Escape') closePanel();
   if (state === 'play') { if (['Space', 'ArrowUp', 'KeyW', 'KeyZ'].includes(e.code)) P.jumpBuf = 0.14; if (e.code === 'KeyP' || e.code === 'Escape') pause(true); }
   else if (state === 'paused' && (e.code === 'KeyP' || e.code === 'Escape')) pause(false);
   if (e.code === 'KeyM') setMute(!AU.muted);
@@ -827,25 +1113,22 @@ if (isTouch) document.querySelector('#title .keys').textContent = 'Jump button t
 $('dlg').addEventListener('click', () => advance()); $('dlgMore').textContent = isTouch ? 'TAP' : 'SPACE';
 const hold = (id, key) => { const b = $(id); const on = e => { e.preventDefault(); audioInit(); touch[key] = true; }, off = e => { e.preventDefault(); touch[key] = false; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); };
 hold('tL', 'l'); hold('tR', 'r'); hold('tD', 'd');
-$('tJ').addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); if (state === 'play') P.jumpBuf = 0.14; else if (state === 'dialog') advance(); });
+$('tJ').addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); if (state === 'play') P.jumpBuf = 0.14; else if (state === 'dialog') advance(); else if (state === 'hub') hubAct(); });
+document.body.classList.toggle('touch', isTouch);
 function pause(on) { if (on && state === 'play') { state = 'paused'; show('pause', true); $('pResume').focus(); } else if (!on && state === 'paused') { state = 'play'; show('pause', false); } }
 $('bPause').onclick = () => pause(true); $('pResume').onclick = () => pause(false);
 $('pRestart').onclick = () => { show('pause', false); startStage(L.ci, L.si, true); };
-$('pQuit').onclick = () => startTitle();
+$('pQuit').onclick = () => startHub(L.ci >= 0 ? L.ci : undefined);
+$('bMute2').onclick = () => { audioInit(); setMute(!AU.muted); }; $('bHubMenu').onclick = () => startTitle();
 $('bMute').onclick = () => { audioInit(); setMute(!AU.muted); };
-$('bPlay').onclick = () => { audioInit(); save = { ci: 0, si: 0, best: {} }; runStats = { time: 0, shards: 0, crashes: 0 }; persist(); startChapter(0); };
-$('bCont').onclick = () => { audioInit(); if (save.si === 0) startChapter(Math.min(save.ci, CH.length - 1)); else { show('title', false); startStage(save.ci, save.si); } };
-$('bChapters').onclick = () => {
-  $('chList').innerHTML = CH.map((c, i) => `<button data-c="${i}" ${i > save.ci ? 'disabled' : ''}><span class="tn">TAPE ${i + 1}</span><span><b>${c.title}</b><small>${i > save.ci ? 'Not found yet' : c.era}</small></span></button>`).join('');
-  $('chList').querySelectorAll('button').forEach(b => b.onclick = () => { audioInit(); startChapter(+b.dataset.c); });
-  show('chapters', true);
-};
-$('chBack').onclick = () => show('chapters', false);
+$('bPlay').onclick = () => { audioInit(); save = freshSave(); runStats = { time: 0, shards: 0, crashes: 0 }; save.told.welcome = 1; persist(); startHub(); hubDialog(WELCOME); };
+$('bCont').onclick = () => { audioInit(); startHub(); };
 $('resNext').onclick = () => nextAfterResults();
 $('resRetry').onclick = () => { show('results', false); startStage(L.ci, L.si, true); };
+$('resHub').onclick = () => startHub(L.ci);
 $('failRetry').onclick = () => { show('fail', false); startStage(L.ci, L.si, true); };
-$('failQuit').onclick = () => startTitle();
-$('endTitle').onclick = () => startTitle();
+$('failQuit').onclick = () => startHub(L.ci);
+$('endTitle').onclick = () => startHub(CH.length - 1);
 
 /* ================= main loop ================= */
 function resize() { const dpr = Math.min(window.devicePixelRatio || 1, 2); cvs.width = Math.round(innerWidth * dpr); cvs.height = Math.round(innerHeight * dpr); }
@@ -861,20 +1144,22 @@ function frame(now) {
     if (state === 'play') L.time += dt;
     if (state === 'title' && P.x > L.finish - 400) respawn(true);
   }
+  if (state === 'hub') stepHub(dt);
   if (state === 'dialog') typeTick(dt);
   stepFx(dt);
   const sc = cvs.height / 540, VW = cvs.width / sc;
-  const tx = P.x - VW * 0.3, ty = P.y - 540 * 0.45;
+  const hb = L && L.hub, tx = hb ? clamp(P.x - VW * 0.5, -60, HUB_W + 60 - VW) : P.x - VW * 0.3, ty = P.y - 540 * (hb ? 0.62 : 0.45);
   cam.x = lerp(cam.x, tx, 1 - Math.exp(-8 * dt)); cam.y = lerp(cam.y, ty, 1 - Math.exp(-5 * dt));
   render(dt);
   if (state === 'play' && (hudT += dt) > 0.1) {
     hudT = 0; $('hearts').innerHTML = [0, 1, 2].map(k => '<i class="' + (k < P.hearts ? 'on' : '') + '"></i>').join(''); $('hearts').classList.toggle('low', P.hearts === 1); $('shardN').textContent = L.got + ' / ' + L.shards.length; $('timeN').textContent = fmtTC(L.time);
     $('score').firstChild.nodeValue = L.score;
+    { const pr = parOf(L.S), k = L.time <= pr[0] ? 0 : L.time <= pr[1] ? 1 : L.time <= pr[2] ? 2 : 3; $('parN').textContent = k < 3 ? ['Gold ', 'Silver ', 'Bronze '][k] + fmt(pr[k]) : 'Past bronze time'; $('parN').classList.toggle('late', k === 3); }
     { let pc = -1; if (L.yeti && !L.lava) pc = clamp(100 - (L.yeti.x - P.x - 200) / 10, 4, 100); if (L.lava) pc = clamp((P.x - L.lava.x) / 12, 3, 100); if (pc >= 0) { $('chaseFill').style.width = pc + '%'; $('chase').classList.toggle('low', pc < 25); } }
   }
 }
 startTitle();
 requestAnimationFrame(frame);
-window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog };
+window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
 })();
 </script>

@@ -8,7 +8,13 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
   const shot = async n => p.screenshot({ path: path.join(__dirname, 'shots', 'hs-' + n + (mobile ? '-m' : '') + '.png') });
   const clear = () => p.evaluate(() => { document.querySelectorAll('.ov, #dlg, #lbTop').forEach(e => { if (e.id !== 'title') e.classList.add('hidden'); }); });
   await shot('title');
-  await p.click('#bChapters'); await p.waitForTimeout(300); await shot('tapes'); await p.click('#chBack');
+  await p.evaluate(() => { const S = __hs.save; S.bank = 140; S.best = { '0-0': { score: 1, rank: 'A', time: 48, medal: 3 }, '0-1': { score: 1, rank: 'B', time: 70, medal: 1 } }; S.cones = [0, 1, 2, 3]; S.told.welcome = 1; });
+  await p.evaluate(() => __hs.startHub(0)); await p.waitForTimeout(700); await p.keyboard.down('ArrowRight'); await p.waitForTimeout(400); await p.keyboard.up('ArrowRight'); await shot('hub');
+  await p.evaluate(() => { __hs.P.x = 3300; }); await p.keyboard.down('ArrowRight'); await p.waitForTimeout(1100); await p.keyboard.up('ArrowRight'); await shot('hub-lodge');
+  await p.evaluate(() => __hs.openTape(0)); await p.waitForTimeout(250); await shot('tape-select');
+  await p.evaluate(() => __hs.openLodge()); await p.waitForTimeout(250); await p.click('#lgSpin'); await p.waitForTimeout(1700); await shot('lodge');
+  await p.evaluate(() => __hs.openShop()); await p.waitForTimeout(250); await shot('shop');
+  await p.evaluate(() => { document.getElementById('hubPanel').classList.add('hidden'); __hs.startHub(2); __hs.save.parka = 'glacier'; });
   await p.evaluate(() => __hs.startStage(0, 1, true)); await p.waitForTimeout(3600); await p.keyboard.press('Space'); await p.waitForTimeout(260); await shot('play');
   await p.evaluate(() => __hs.startStage(0, 2, true)); await p.waitForTimeout(3000); await shot('chase');
   await clear(); await p.evaluate(() => __hs.dialog([['arlo', "Dad saw it here, Juni. Right on this ridge, thirty years ago."]], () => {})); await p.waitForTimeout(1200); await shot('dialog-arlo');
