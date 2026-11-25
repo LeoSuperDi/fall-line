@@ -92,6 +92,12 @@ function buildBorder() { // four wide, coarse strips beyond the tiles so the out
     scene.add(new THREE.Mesh(g, terrainMat));
   }
 }
+function meshH(x, z) { // the height of the drawn ground at (x, z): the detailed tile's triangles, not the smooth formula, so marks sit exactly on what you see
+  const st = TILE / HI_SEG, gx = (x - TX0) / st, gz = (z - TZ0) / st, i = Math.floor(gx), j = Math.floor(gz), fx = gx - i, fz = gz - j;
+  const X0 = TX0 + i * st, Z0 = TZ0 + j * st, h01 = Hm(X0, Z0 + st), h10 = Hm(X0 + st, Z0);
+  if (fx + fz <= 1) { const h00 = Hm(X0, Z0); return h00 + (h10 - h00) * fx + (h01 - h00) * fz; }
+  const h11 = Hm(X0 + st, Z0 + st); return h11 + (h01 - h11) * (1 - fx) + (h10 - h11) * (1 - fz);
+}
 function tileDist(t, x, z) { return Math.max(0, Math.hypot(t.cx - x, t.cz - z) - TILE * 0.7); }
 const frustum = new THREE.Frustum(), projM = new THREE.Matrix4();
 let job = null; const loQueue = new Set(); // far tiles finish loading in the background after start-up

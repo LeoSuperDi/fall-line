@@ -132,12 +132,8 @@ const FLATS = POIS.filter(p => p.flat).map(p => ({ x: p.x, z: p.z, r: p.flat, h:
 const SNOW_D = 0.5; // depth of the snow layer that sits on top of the ground
 function Hm(x, z) {
   const h0 = Hraw(x, z); let h = h0 + SNOW_D * (1 - sstep(0.15, 0.75, thawAt(x, z, h0)));
-  if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const hw = RUNS[pn.run].w / 2; if (pn.d < hw + 16) {
-    // only smooth out small bumps across the trail; never cut into the mountain or build it up
-    const w = (1 - sstep(hw - 2, hw + 12, pn.d)) * (1 - sstep(1.5, 7, Math.abs(h - pn.hc)));
-    h = lerp(h, pn.hc + SNOW_D, w);
-    h += -0.35 * (1 - sstep(hw - 2, hw + 1, pn.d)) + 0.22 * Math.exp(-Math.pow((pn.d - hw - 3) / 4, 2)); // packed trail, a low soft snowbank along its edges
-  } } }
+  if (PG.size) { const pn = pisteNear(x, z); if (pn.run >= 0) { const hw = RUNS[pn.run].w / 2; // trails follow the ground exactly, just packed a little lower: no shelves, walls or banks
+    h -= 0.3 * (1 - sstep(hw - 3, hw + 2, pn.d)); } }
   for (const f of FLATS) { const dx = x - f.x, dz = z - f.z; if (dx * dx + dz * dz < f.r * f.r) h = lerp(h, f.h, 1 - sstep(f.r * 0.5, f.r, Math.sqrt(dx * dx + dz * dz))); }
   const dl = Math.hypot((x - LAKE.x) / LAKE.rx, (z - LAKE.z) / LAKE.rz);
   if (dl < 1.7) h = lerp(h, LAKE.h, 1 - sstep(1.0, 1.7, dl));

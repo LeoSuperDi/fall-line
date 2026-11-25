@@ -77,19 +77,19 @@ const XS = [-1.7, -1.2, -0.65, 0, 0.65, 1.2, 1.7], XH = [0.01, 0.05, 0.02, 0.012
 const trGeo = new THREE.BufferGeometry(), trPosA = new Float32Array(TRN * 2 * NV * 3), trColA = new Float32Array(TRN * 2 * NV * 3);
 trGeo.setAttribute('position', new THREE.BufferAttribute(trPosA, 3)); trGeo.setAttribute('color', new THREE.BufferAttribute(trColA, 3));
 trGeo.setIndex(new THREE.BufferAttribute(new Uint32Array(TRN * 2 * (NV - 1) * 6), 1));
-const trail = new THREE.Mesh(trGeo, new THREE.MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+const trail = new THREE.Mesh(trGeo, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -6 }) /* the strip faces down for some directions of travel, so draw both sides */);
 trail.frustumCulled = false; trail.renderOrder = 1; scene.add(trail);
-const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#fbfcfe'), TR_FOOT = C('#e1e7f1'), TR_WALL = C('#b9c5dc'), TRAIL_COL = { groomed: C('#a7b6d4'), powder: C('#8ea2cf'), deep: C('#8499c9'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
+const TRAIL_FADE = C('#dfe6f1'), TR_BERM = C('#fbfcfe'), TR_FOOT = C('#e1e7f1'), TR_WALL = C('#a3b2d2'), TRAIL_COL = { groomed: C('#8597c2'), powder: C('#6f84ba'), deep: C('#6478b2'), ice: C('#c4d6ea'), blueice: C('#9cc6e4'), sand: C('#b07a45'), ash: C('#5b575c') };
 function trailPush(p, nx, nz) {
   trDist += Math.hypot(p.x - lastTrail.x, p.z - lastTrail.z); lastTrail.x = p.x; lastTrail.z = p.z;
   if (trDist < 0.7 && !trailBreak) return; trDist = 0;
   if (p.s < 0.5 && !trailBreak) return;
   if (trCount === TRN) { trX.copyWithin(0, 2); trZ.copyWithin(0, 2); trY.copyWithin(0, 2); trBrk.copyWithin(0, 1); trWArr.copyWithin(0, 1); trDeep.copyWithin(0, 1); trCol.copyWithin(0, 3); trCount--; }
   const i = trCount++, off = 0.14 + p.brakeA * 0.1;
-  for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1, x = p.x + nx * off * sd, z = p.z + nz * off * sd; trX[i * 2 + k] = x; trZ[i * 2 + k] = z; trY[i * 2 + k] = H(x, z); }
+  for (let k = 0; k < 2; k++) { const sd = k ? 1 : -1, x = p.x + nx * off * sd, z = p.z + nz * off * sd; trX[i * 2 + k] = x; trZ[i * 2 + k] = z; trY[i * 2 + k] = meshH(x, z) + mogulH(x, z) + 0.04; }
   trBrk[i] = trailBreak ? 1 : 0; trailBreak = false;
   const c = TRAIL_COL[p.snow] || TRAIL_COL.powder; trCol[i * 3] = c.r; trCol[i * 3 + 1] = c.g; trCol[i * 3 + 2] = c.b;
-  trWArr[i] = (p.snow === 'powder' || p.snow === 'deep' ? 0.12 : 0.05) + p.brakeA * 0.08 + p.skidI * 0.05; // powder takes a wide bite
+  trWArr[i] = (p.snow === 'powder' || p.snow === 'deep' || p.snow === 'sand' ? 0.2 : 0.11) + p.brakeA * 0.1 + p.skidI * 0.06; // wide enough to read from the camera; powder takes a bigger bite
   trDeep[i] = { powder: 1.6, deep: 2.1, sand: 1.2, ash: 1.1, thin: 0.6, ice: 0.25, blueice: 0.25, groomed: 0.45, windpack: 0.7 }[p.snow] || 1;
   rebuildTrail();
 }
