@@ -201,7 +201,7 @@ body.touch #hubPrompt { bottom: 130px; }
 .panel.paper .btn:hover { background: rgba(43, 42, 51, .07); }
 .panel.paper .cnt { font: italic 400 17px Georgia, serif; color: #5a5446; white-space: nowrap; }
 .book { display: grid; gap: 18px; max-height: 58vh; overflow: auto; padding: 4px 6px 10px 2px; }
-.book h3 { margin: 0; font: italic 400 22px/1.2 Georgia, serif; color: #2b2a33; text-decoration: underline wavy rgba(43, 42, 51, .3); text-underline-offset: 5px; }
+.book h3 { margin: 0; font: italic 400 22px/1.2 Georgia, serif; color: #2b2a33; text-decoration: underline wavy rgba(200, 70, 60, .5); text-underline-offset: 5px; }
 .book h3 small { font-size: 15px; color: #7a7466; margin-left: 6px; text-decoration: none; display: inline-block; }
 .notes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 20px 12px; padding-top: 6px; }
 .note { position: relative; display: grid; justify-items: center; gap: 5px; transform: rotate(var(--r, 0deg)); }
@@ -209,9 +209,9 @@ body.touch #hubPrompt { bottom: 130px; }
 .note::before { content: ""; position: absolute; top: -8px; left: 50%; width: 44px; height: 14px; margin-left: -22px; background: rgba(240, 220, 140, .65); transform: rotate(calc(var(--r, 0deg) * -2)); }
 .note b { font: italic 400 14px/1.15 Georgia, serif; text-align: center; color: #2b2a33; }
 .note small { font: italic 400 12px Georgia, serif; color: #7a7466; }
-.note .q4 { color: #7a7466; } .note .q3, .note .q4 { font-weight: 700; } .note .pc { color: #8a8476; font-size: 11px; } .odt { display: flex; flex-wrap: wrap; gap: 6px 14px; font: italic 13px Georgia, serif; color: #5a5446; } .odt span::before { content: none; }
-.note .q0, .note .q1, .note .q2, .note .q3 { color: #7a7466; }
-.note:not(.no)::after { content: "\2713"; position: absolute; top: -6px; right: -4px; width: 24px; height: 24px; border-radius: 50%; background: #2b2a33; color: #ede5d1; font: 700 14px/24px var(--body); text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.note .q4 { color: #b8338f; } .note .pc { color: #8a8476; font-size: 11px; } .odt { width: 100%; border-collapse: collapse; font: italic 14px/1.3 Georgia, serif; color: #5a5446; font-variant-numeric: tabular-nums; } .odt th, .odt td { padding: 3px 6px; text-align: right; font-weight: 400; white-space: nowrap; } .odt th:first-child { text-align: left; padding-left: 0; } .odt tr:first-child th { font-size: 12px; color: #8a8476; } 
+.note .q0 { color: #7a7466; } .note .q1 { color: #2f7a4a; } .note .q2 { color: #2f5e9c; } .note .q3 { color: #a8740a; }
+.note:not(.no)::after { content: "\2713"; position: absolute; top: -6px; right: -4px; width: 24px; height: 24px; border-radius: 50%; background: #2f7a4a; color: #fff; font: 700 15px/24px var(--body); text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
 .note.no canvas { background: rgba(120,110,90,.08); box-shadow: none; outline: 1.5px dashed rgba(43, 42, 51, .3); outline-offset: -4px; }
 .note.no::before { display: none; } .note.no b { color: #8a8476; } .note.no { opacity: .8; }
 @media (max-width: 700px) { .notes { grid-template-columns: repeat(3, 1fr); } }
@@ -1160,12 +1160,12 @@ function openFinale() {
 /* ink doodles for the album: wobbly double-stroked lines and slightly off-register colour, like a pen sketch */
 function doodle(cv, idx, found) {
   const k = cv.getContext('2d'), R = rng(idx * 97 + 13), j = a => (R() - 0.5) * a;
-  k.setTransform(cv.width / 120, 0, 0, cv.height / 90, 0, 0); k.lineCap = 'round'; k.lineJoin = 'round'; k.filter = 'saturate(.45) sepia(.15)'; /* muted pencil colours */
+  k.setTransform(cv.width / 120, 0, 0, cv.height / 90, 0, 0); k.lineCap = 'round'; k.lineJoin = 'round';
   const ink = found ? '#2b2a33' : 'rgba(150,140,120,.55)';
   const path = pts => { k.beginPath(); pts.forEach(([x, y], i) => i ? k.lineTo(x, y) : k.moveTo(x, y)); };
   const L = (pts, w = 1.6) => { k.strokeStyle = ink; for (let pass = 0; pass < 2; pass++) { path(pts.map(([x, y]) => [x + j(1.4), y + j(1.4)])); k.lineWidth = pass ? w * 0.55 : w; k.stroke(); } };
   const ring = (cx, cy, rx, ry, a0 = 0, a1 = TAU) => { const n = 20, o = R() * 0.4, pts = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n + (a1 - a0 >= TAU - 0.01 ? o : 0); pts.push([cx + Math.cos(a) * rx * (1 + j(0.07)), cy + Math.sin(a) * ry * (1 + j(0.07))]); } if (a1 - a0 >= TAU - 0.01) pts.push(pts[1]); return pts; };
-  const tint = (pts, col) => { k.fillStyle = found ? col : '#d2c9b4'; k.globalAlpha = found ? 0.45 : 1; path(pts.map(([x, y]) => [x + 1.6, y + 1.2])); k.fill(); k.globalAlpha = 1; };
+  const tint = (pts, col) => { k.fillStyle = found ? col : '#d2c9b4'; k.globalAlpha = found ? 0.6 : 1; path(pts.map(([x, y]) => [x + 1.6, y + 1.2])); k.fill(); k.globalAlpha = 1; };
   const E = (cx, cy, rx, ry, col) => { const p = ring(cx, cy, rx, ry); if (col) tint(p, col); L(p); };
   const P = (col, ...pts) => { const p = pts.concat([pts[0]]); if (col) tint(p, col); L(p); };
   const D = (x, y, r, col) => { k.fillStyle = found ? col || ink : 'rgba(43,42,51,.25)'; k.beginPath(); k.arc(x + j(0.6), y + j(0.6), r, 0, TAU); k.fill(); };
@@ -1219,7 +1219,7 @@ function openAlbum() {
   const zones = CH.map((C, z) => `<section><h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of ${ITEMS.filter(it => it.zone === z).length}</small></h3><div class="notes">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i]
     ? `<div class="note" style="--r:${rot(i)}"><canvas width="240" height="180" data-i="${i}" data-f="1"></canvas><b>${it.name}</b><small class="q${it.r}">${RARITY[it.r].toLowerCase()}${save.album[i] > 1 ? ', \u00d7' + save.album[i] : ''}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`
     : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`).join('')}</div></section>`).join('');
-  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<div class="odt"><b style="font-weight:400;min-width:90px">${['One flip', 'Double flip', 'Triple flip'][n - 1]}</b><span style="--c:#d2c9b4">nothing ${pct(o.miss)}</span>${o.r.map((p, r) => `<span style="--c:${['#c4c6bc', '#4aa874', '#5d8fd0', '#e0b030', '#d050b0'][r]}">${RARITY[r].toLowerCase()} ${pct(p)}</span>`).join('')}</div>`; }).join('')}<div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
+  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p><table class="odt"><tr><th></th><th>nothing</th>${RARITY.map(r => `<th>${r.toLowerCase()}</th>`).join('')}</tr>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<tr><th>${['One flip', 'Double flip', 'Triple flip'][n - 1]}</th><td>${pct(o.miss)}</td>${o.r.map(p => `<td>${pct(p)}</td>`).join('')}</tr>`; }).join('')}</table><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
   $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
 }
 
