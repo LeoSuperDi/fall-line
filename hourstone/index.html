@@ -691,11 +691,29 @@ function drawBackground(VW) {
 }
 function drawTerrain(VW) {
   const Z = L.Z, i0 = Math.max(0, Math.floor(cam.x / STEP) - 2), i1 = Math.min(L.n - 1, Math.ceil((cam.x + VW) / STEP) + 2), bot = cam.y + 700;
-  // pits
-  for (let i = i0; i < i1; i++) if (L.gap[i]) {
-    const x = i * STEP, y = L.gy[i];
-    if (Z.gap === 'lava') { const gr = g.createLinearGradient(0, y + 40, 0, y + 200); gr.addColorStop(0, '#ffcf3f'); gr.addColorStop(1, '#c0280f'); g.fillStyle = gr; g.fillRect(x, y + 60 + Math.sin(P.t * 3 + i) * 4, STEP + 1, bot - y); }
-    else { g.fillStyle = Z.pit; g.fillRect(x, y + 20, STEP + 1, bot - y); }
+  /* pits: each gap is drawn as one scene (creek, ice crevasse, cave chasm, starry void or lava), never a black hole */
+  for (let i = i0; i < i1; i++) if (L.gap[i] && (i === i0 || !L.gap[i - 1])) {
+    let e = i; while (e + 1 < L.n && L.gap[e + 1]) e++;
+    const xl = i * STEP, xr = (e + 1) * STEP, yl = L.gy[Math.max(0, i - 1)], yr = L.gy[Math.min(L.n - 1, e + 1)], top = Math.min(yl, yr), deep = Math.max(yl, yr), t = P.t;
+    if (Z.gap === 'lava') { const gr = g.createLinearGradient(0, deep + 40, 0, deep + 200); gr.addColorStop(0, '#ffcf3f'); gr.addColorStop(1, '#c0280f'); g.fillStyle = gr; g.beginPath(); g.moveTo(xl, yl); for (let x = xl; x <= xr; x += 10) g.lineTo(x, deep + 60 + Math.sin(t * 3 + x * 0.05) * 4); g.lineTo(xr, yr); g.lineTo(xr, bot); g.lineTo(xl, bot); g.closePath(); g.fill(); continue; }
+    const cols = { creek: ['#9fd3ec', '#3f86b0', '#245a7e'], crevasse: ['#d6f2ff', '#6fb8e6', '#2c6aa0'], chasm: ['#6a5590', '#3e2f5e', '#2a2044'], void: ['#8a6ad8', '#4a2f96', '#2a1a66'] }[Z.gap] || ['#9fd3ec', '#3f86b0', '#245a7e'];
+    const gr = g.createLinearGradient(0, deep, 0, deep + 300); gr.addColorStop(0, cols[0]); gr.addColorStop(0.45, cols[1]); gr.addColorStop(1, cols[2]);
+    g.fillStyle = gr; g.fillRect(xl, deep - 2, xr - xl, bot - deep); /* the inside of the gap, from the lower rim down */
+    g.save(); g.beginPath(); g.rect(xl, top - 10, xr - xl, bot - top); g.clip();
+    if (Z.gap === 'creek') {
+      const wy = deep + 90; g.fillStyle = '#4c9ccc'; g.fillRect(xl, wy, xr - xl, bot - wy); g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 2;
+      for (let k = 0; k < 4; k++) { const ry = wy + 6 + k * 14, off = (t * 30 + k * 40) % 60; g.beginPath(); for (let x = xl + off - 60; x < xr; x += 60) { g.moveTo(x, ry); g.lineTo(x + 22, ry); } g.stroke(); }
+      g.fillStyle = '#f2f8ff'; for (let x = xl + 20; x < xr - 20; x += 70) { g.beginPath(); g.ellipse(x + Math.sin(t + x) * 6, wy + 2, 16, 4, 0, 0, TAU); g.fill(); }
+    } else if (Z.gap === 'crevasse') {
+      g.fillStyle = '#f4fdff'; for (let x = xl + 6; x < xr - 6; x += 14) { const h = 10 + hash(x) * 22, ry = x - xl < (xr - xl) / 2 ? yl : yr; g.beginPath(); g.moveTo(x - 5, ry); g.lineTo(x, ry + h); g.lineTo(x + 5, ry); g.fill(); }
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 3; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(xl + 10 + k * 8, deep + 40 + k * 50); g.lineTo(xl + 30 + k * 10, deep + 80 + k * 50); g.stroke(); }
+    } else if (Z.gap === 'chasm') {
+      for (let k = 0; k < 5; k++) { const cx = xl + 10 + hash(i + k) * (xr - xl - 20), cy = deep + 60 + hash(i * 3 + k) * 160, gl = 0.6 + 0.4 * Math.sin(t * 2 + k); g.fillStyle = `rgba(255,155,224,${0.25 * gl})`; g.beginPath(); g.arc(cx, cy, 14, 0, TAU); g.fill(); g.fillStyle = '#ff9be0'; g.beginPath(); g.moveTo(cx - 4, cy + 6); g.lineTo(cx, cy - 8); g.lineTo(cx + 4, cy + 6); g.fill(); }
+      g.fillStyle = 'rgba(200,180,240,.18)'; g.fillRect(xl, deep + 150 + Math.sin(t) * 6, xr - xl, 30);
+    } else {
+      for (let k = 0; k < 14; k++) { const sx = xl + hash(i + k * 7) * (xr - xl), sy = top + 30 + hash(i + k * 11) * 260, a = 0.5 + 0.5 * Math.sin(t * 3 + k); g.fillStyle = `rgba(255,255,255,${a})`; g.fillRect(sx, sy, 2.5, 2.5); }
+    }
+    g.restore();
   }
   // ground in runs between gaps
   let i = i0;
