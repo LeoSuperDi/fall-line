@@ -157,6 +157,7 @@ body.touch #hubPrompt { bottom: 130px; }
 .panel.wide { width: min(600px, 100%); }
 .panel .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .panel .bank { font: 700 18px var(--body); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.panel .bank.plain::before { display: none; }
 .panel .bank::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; background: var(--glow); transform: rotate(45deg); }
 .srow { display: grid; grid-template-columns: 34px 1fr auto; gap: 12px; align-items: center; width: 100%; padding: 12px 4px; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; }
 .srow:hover:not(:disabled) { background: rgba(255, 255, 255, .05); }
@@ -193,6 +194,16 @@ body.touch #hubPrompt { bottom: 130px; }
 .prow em { font-style: normal; font: 700 15px var(--body); }
 #dlg[data-who=bet] #dlgName { color: var(--amber); } #dlg[data-who=dawa] #dlgName { color: #ff8a6a; }
 
+.rar { font-weight: 700; } .r0 { color: #c4c6bc; } .r1 { color: #7fe3a0; } .r2 { color: #8fbcff; } .r3 { color: #ffcf3f; }
+.album { display: grid; gap: 14px; max-height: 56vh; overflow: auto; padding-right: 4px; }
+.album h3 { margin: 4px 0 0; font: 800 22px/1 var(--display); } .album h3 small { font: 400 14px var(--body); color: var(--dim); margin-left: 8px; }
+.cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.card { display: grid; justify-items: center; gap: 4px; padding: 10px 4px 8px; border: 1px solid var(--line); border-radius: 4px; background: #0d0f13; text-align: center; font-size: 12px; line-height: 1.15; min-height: 96px; align-content: start; }
+.card svg { width: 34px; height: 34px; fill: currentColor; } .card b { font-weight: 700; } .card small { color: var(--dim); font-size: 11px; }
+.card.r3 { border-color: #ffcf3f; box-shadow: 0 0 14px rgba(255, 207, 63, .25); } .card.r2 { border-color: #5d8fd0; } .card.r1 { border-color: #4aa874; }
+.card.no { color: #3a3d46; border-style: dashed; } .card.no b { color: #5a5d66; }
+.card .n { color: var(--dim); }
+@media (max-width: 700px) { .cards { grid-template-columns: repeat(3, 1fr); } }
 @media (max-height: 520px) {
   #title h1 { font-size: min(21vh, 16vw); } #title .wrap { gap: 10px; padding-bottom: 22px; } .mi { font-size: 30px; } #title .tag { font-size: 15px; }
   .panel h2 { font-size: 34px; } .sheet h2 { font-size: 40px; } .stats { font-size: 15px; } .stats span { padding: 6px 0; } .panel { padding: 18px 22px; }
@@ -233,7 +244,7 @@ body.touch #hubPrompt { bottom: 130px; }
 
 <div id="hubHud" class="hidden">
   <div id="hhL"><div class="osd rec">Basecamp</div><small id="hhHint">Walk to a tape door to ski.</small></div>
-  <div id="hhR"><span class="md" id="hhMed">0 of 18</span><span class="cn" id="hhCone">0 of 12</span><span class="sh" id="hhBank">0</span><button class="tb2" id="bMute2" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bHubMenu" aria-label="Back to the title screen">MENU</button></div>
+  <div id="hhR"><span class="md" id="hhMed">0 of 18</span><span class="cn" id="hhCone">0 of 12</span><span class="sh" id="hhBank">0</span><button class="tb2" id="bAlbum" aria-label="Open the album">ALBUM</button><button class="tb2" id="bMute2" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bHubMenu" aria-label="Back to the title screen">MENU</button></div>
 </div>
 <div id="hubPrompt" class="hidden"></div>
 <div id="hubPanel" class="ov dim hidden"><div class="panel wide" id="hpBox"></div></div>
@@ -265,10 +276,10 @@ body.touch #hubPrompt { bottom: 130px; }
 </div></div>
 
 <div id="ending" class="ov dim hidden"><div class="sheet">
-  <figure class="print"><div class="blank"></div><figcaption>Frame 1 of 1. Not taken.</figcaption></figure>
+  <figure class="print"><div class="blank"></div><figcaption id="endCap">Frame 1 of 1. Not taken.</figcaption></figure>
   <div class="text">
-    <h2>No photo</h2>
-    <p>Arlo never got the shot. He got a story, a friend, and a pile of pinecones by the door.</p>
+    <h2 id="endH">No photo</h2>
+    <p id="endP">Arlo never got the shot. He got a story, a friend, and a pile of pinecones by the door.</p>
     <div class="stats" id="endStats"></div>
     <div class="row"><button class="btn go" id="endTitle">Back to basecamp</button></div>
   </div>
@@ -385,17 +396,17 @@ function buildLevel(ci, si) {
       seg(280, () => STEP * 0.22);
       const rs = X(); seg(110, t => -STEP * 0.45 * (0.4 + t)); const lip = X(); kickers.push([rs, lip]);
       if (R() < 0.55 + diff * 0.3) { const w = 120 + R() * (40 + diff * 40), k = Math.round(w / STEP); for (let i = 0; i < k; i++) put(STEP * 0.35, true);
-        cand.push({ x: lip + 110, dy: -118 }); }
+        cand.push({ x: lip + 60, dy: -100, kick: true }); }
       put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24);
     }
     else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); }
     else if (r < 0.8) { const len = 900 + R() * 700; seg(len, (t, i) => STEP * 0.2 + Math.sin(i * STEP / 70 * TAU) * 5); placeShards(x0, X()); }
     else { const len = 700 + R() * 500, gr = 0.04 + R() * 0.03; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
   }
-  { const end = X(); for (let k = 0; k < 3; k++) { const pool = cand.filter(c => c.x >= end * k / 3 && c.x < end * (k + 1) / 3 && c.x > 900); const c = pool.length ? pool[Math.floor(R() * pool.length)] : { x: end * (k + 0.5) / 3, dy: -34 }; shards.push({ x: c.x, dy: c.dy, got: false }); } }
+  { const end = X(); for (let k = 0; k < 3; k++) { const pool = cand.filter(c => c.x >= end * k / 3 && c.x < end * (k + 1) / 3 && c.x > 900); let c = pool.length ? pool[Math.floor(R() * pool.length)] : { x: end * (k + 0.5) / 3, dy: -34 }; if (!c.kick) { let ix = Math.floor(c.x / STEP); while (ix < gap.length - 2 && (gap[ix] || gap[ix + 1] || gap[ix - 1])) ix++; c = { x: ix * STEP, dy: -34 }; } shards.push({ x: c.x, dy: c.dy, got: false }); } }
   const finish = X() + 300; seg(1600, () => STEP * 0.05);
   for (let x = 200; x < X(); x += 90 + R() * 260) deco.push({ x, s: 0.7 + R() * 0.7, v: R() });
-  L = { ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
+  L = { finds: [], ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
   if (S.kind === 'chase' || S.kind === 'escape') L.yeti = { x: 900, y: 0, s: 400, ph: 0, air: 0, vy: 0, friendly: S.kind === 'escape' };
   if (S.kind === 'escape') L.lava = { x: -900, s: 430 };
   L.chaseBase = 560 + ci * 18;
@@ -433,6 +444,7 @@ function land(gy) {
     const pts = flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), name = (flips ? (flips > 1 ? flips + 'x ' : '') + (P.trick > 0 ? 'Front flip' : 'Back flip') : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
     L.score += pts; L.tricks++; P.s = Math.min(MAXS, P.s + 90 * flips + (grab ? 40 : 0));
     popup(P.x, P.y - 70, name + '  +' + pts, '#ffcf3f'); sfx.trick();
+    if (flips && !demo && L.finds && Math.random() < Math.min(0.6, 0.2 * flips + (grab ? 0.08 : 0))) { const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist(); popup(P.x, P.y - 112, (f.isNew ? 'New find: ' : 'Find: ') + f.it.name, ['#e8e9e2', '#7fe3a0', '#8fbcff', '#ffcf3f'][f.it.r]); } /* landed flips are lucky: each one can turn up an album photo */
   }
   burst(P.x, P.y, 10, L.Z.top); sfx.land(); P.trick = 0; P.grabT = 0;
 }
@@ -457,7 +469,7 @@ function stepPlayer(dt) {
   const k = input(), Z = L.Z, G = 1750 * Z.g;
   P.jumpBuf -= dt; P.coyote -= dt;
   if (P.ground) {
-    const a = slopeAt(P.x); let s = P.s;
+    const a = Math.atan2(baseAt(P.x) - baseAt(P.x - 8), 8); let s = P.s; /* slope behind the skis, so a lip or drop-off launches you instead of steering you down the wall */
     s += G * 0.45 * Math.sin(a) * dt;
     s -= 55 * Z.fric * dt;
     s -= s * s * (k.d ? 0.00017 : 0.00042) * dt;
@@ -494,7 +506,7 @@ function stepPlayer(dt) {
     if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) { crash('hit:' + o.k); break; }
   }
   // shards
-  for (const sd of L.shards) { if (sd.got) continue; const sx = sd.x, sy = baseAt(sx) + sd.dy; if (Math.abs(sx - P.x) < 28 && Math.abs(sy - (P.y - 24)) < 34) { sd.got = true; L.got++; L.score += 100; sfx.shard(); burst(sx, sy, 10, '#7fe3ff'); } }
+  for (const sd of L.shards) { if (sd.got) continue; const sx = sd.x, sy = baseAt(sx) + sd.dy; if (Math.abs(sx - P.x) < 38 && Math.abs(sy - (P.y - 24)) < 50) { sd.got = true; L.got++; L.score += 100; sfx.shard(); burst(sx, sy, 10, '#7fe3ff'); } }
   // checkpoints and finish
   for (const c of L.cps) if (P.x > c && c > L.cp) { L.cp = c; popup(c, baseAt(c) - 90, 'Checkpoint', '#7fe3ff'); sfx.cp(); }
   if (P.x > L.finish && !demo) finishStage();
@@ -507,9 +519,9 @@ function stepWorld(dt) {
   for (const o of L.obs) if (o.vx && Math.abs(o.x - P.x) < 1400) o.x += o.vx * dt;
   if (L.yeti) {
     const Yt = L.yeti, d = Yt.x - P.x;
-    let tgt = L.chaseBase; if (Yt.friendly) tgt = P.s * (d > 420 ? 0.92 : 1.06); else if (d > 900) tgt = Math.min(tgt * 0.7, P.s * 0.75); else if (d > 620) tgt = Math.min(tgt * 0.85, P.s * 0.95); else if (d < 260) tgt *= 1.25; // he waits if you fall behind, and bolts if you get close
+    let tgt = L.chaseBase; if (Yt.friendly) tgt = P.s * (d > 420 ? 0.92 : 1.06); else if (d > 900) tgt = Math.min(tgt * 0.7, P.s * 0.75); else if (d > 620) tgt = Math.min(tgt * 0.85, P.s * 0.95); else if (d < 300) tgt = Math.max(tgt * 1.25, P.s + 220); /* he waits if you fall behind, and bolts if you get close */
     if (Yt.x > L.finish + 260) tgt = 0;
-    Yt.s = lerp(Yt.s, tgt, 1 - Math.exp(-2 * dt)); Yt.x += Yt.s * dt; Yt.ph += dt * (Yt.s / 60);
+    Yt.s = lerp(Yt.s, tgt, 1 - Math.exp(-(d < 300 ? 8 : 2) * dt)); Yt.x += Yt.s * dt; if (Yt.x < P.x + (Yt.friendly ? 70 : 170) && P.crash <= 0) { Yt.x = P.x + (Yt.friendly ? 70 : 170); Yt.s = Math.max(Yt.s, P.s); } /* you can't overtake him */ Yt.ph += dt * (Yt.s / 60);
     const gy = groundAt(Yt.x);
     if (isNaN(gy)) { Yt.air += dt; Yt.y = baseAt(Yt.x) - 120 * Math.sin(clamp(Yt.air * 2.6, 0, Math.PI)); } else { Yt.air = 0; Yt.y = gy; }
     if (!Yt.friendly && P.crash <= 0 && !demo) { if (d > 1300) L.lostT += dt; else L.lostT = Math.max(0, L.lostT - dt * 2); if (L.lostT > 2.5) failStage('The yeti got away', 'He was too fast this time. Keep your speed up: tuck, push, and don\'t crash.'); }
@@ -573,25 +585,28 @@ function drawArlo(x, y, rot, crouch, air, t, grab, sc) {
 }
 function drawYeti(x, y, t, run, sc, cracked) {
   g.save(); g.translate(x, y); g.scale(sc || 1, sc || 1);
-  const ink = '#1a2350', fur = '#f4f8ff', shade = '#cddcf2', bob = run ? Math.abs(Math.sin(t * 2)) * 5 : 0, sw = run ? Math.sin(t * 2) : 0;
-  g.lineJoin = 'round'; g.lineCap = 'round'; g.strokeStyle = ink; g.lineWidth = 3;
-  const limb = (x0, y0, ang, len, w, col, foot) => { g.save(); g.translate(x0, y0); g.rotate(ang); g.fillStyle = col; rr(-w / 2, 0, w, len, w / 2); g.fill(); g.stroke(); if (foot) { g.beginPath(); g.ellipse(7, len - 2, 15, 8, 0, 0, TAU); g.fill(); g.stroke(); } g.restore(); };
-  const blob = (cx, cy, rx, ry, n, j) => { g.beginPath(); for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * TAU, r = i % 2 ? 1 : 1 + j; g.lineTo(cx + Math.cos(a) * rx * r, cy + Math.sin(a) * ry * r); } g.closePath(); };
-  limb(-8, -80 - bob, -0.3 - sw * 0.8, 56, 19, shade); limb(-10, -34, -sw * 0.65, 36, 21, shade, true);
-  g.fillStyle = fur; blob(0, -62 - bob, 31, 40, 9, 0.12); g.fill(); g.stroke();
-  g.fillStyle = '#e4edfb'; g.beginPath(); g.ellipse(8, -54 - bob, 15, 23, 0, 0, TAU); g.fill();
-  limb(10, -34, sw * 0.65, 36, 22, fur, true); limb(10, -82 - bob, -0.3 + sw * 0.8, 58, 20, fur);
-  g.fillStyle = fur; blob(12, -100 - bob, 22, 20, 7, 0.1); g.fill(); g.stroke();
-  g.fillStyle = '#9ec4ea'; g.beginPath(); g.ellipse(19, -97 - bob, 12, 11, 0, 0, TAU); g.fill(); g.stroke();
-  g.fillStyle = '#fff'; g.beginPath(); g.arc(15, -100 - bob, 3.6, 0, TAU); g.arc(25, -100 - bob, 3.6, 0, TAU); g.fill();
-  g.fillStyle = ink; g.beginPath(); g.arc(16, -100 - bob, 1.9, 0, TAU); g.arc(26, -100 - bob, 1.9, 0, TAU); g.fill();
-  g.lineWidth = 3.5; g.beginPath(); g.moveTo(10, -107 - bob); g.lineTo(18, -104 - bob); g.moveTo(31, -108 - bob); g.lineTo(23, -104 - bob); g.stroke(); g.lineWidth = 3;
-  g.beginPath(); g.moveTo(14, -90 - bob); g.quadraticCurveTo(20, -86 - bob, 27, -90 - bob); g.stroke();
-  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(16, -89 - bob); g.lineTo(18.5, -84 - bob); g.lineTo(21, -88 - bob); g.moveTo(21, -88 - bob); g.lineTo(23.5, -84 - bob); g.lineTo(26, -89 - bob); g.fill();
+  const ink = '#1a2350', fur = '#f6f9ff', shade = '#cbd8ee', bob = run ? Math.abs(Math.sin(t * 2)) * 5 : 0, sw = run ? Math.sin(t * 2) : 0, by = -bob;
+  g.lineJoin = 'round'; g.lineCap = 'round';
+  const C = (cx, cy, r) => { g.moveTo(cx + r, cy); g.arc(cx, cy, r, 0, TAU); };
+  const solid = (build, col) => { g.beginPath(); build(); g.strokeStyle = ink; g.lineWidth = 6; g.stroke(); g.fillStyle = col; g.fill(); };
+  const limb = (x0, y0, ang, len, r0, r1) => { const dx = Math.sin(-ang), dy = Math.cos(ang); for (let k = 0; k <= 6; k++) C(x0 + dx * len * k / 6, y0 + dy * len * k / 6, r0 + (r1 - r0) * k / 6); };
+  const leg = (x0, ang) => () => { limb(x0, -34 + by * 0.5, ang, 26, 11, 10); const fx = x0 + Math.sin(-ang) * 28, fy = -34 + Math.cos(ang) * 28 + by * 0.5; g.moveTo(fx + 18, fy); g.ellipse(fx + 5, fy, 15, 8, 0, 0, TAU); };
+  const arm = (x0, ang) => () => { limb(x0, -78 + by, ang, 46, 10, 9); const hx = x0 + Math.sin(-ang) * 50, hy = -78 + by + Math.cos(ang) * 50; C(hx, hy, 11); };
+  solid(arm(-6, -0.25 - sw * 0.8), shade); solid(leg(-10, -sw * 0.6), shade);
+  solid(() => { C(0, -60 + by, 31); for (let i = 0; i < 12; i++) { const a = i / 12 * TAU; C(Math.cos(a) * 29, -60 + by + Math.sin(a) * 34, 10); } C(12, -98 + by, 24); for (const [hx, hy, r] of [[-2, -116, 8], [9, -121, 9], [20, -116, 8]]) C(hx, hy + by, r); }, fur);
+  g.fillStyle = '#e3ecfa'; g.beginPath(); g.ellipse(8, -52 + by, 16, 22, 0, 0, TAU); g.fill();
+  solid(leg(10, sw * 0.6), fur); solid(arm(14, -0.6 + sw * 0.8), fur);
+  g.strokeStyle = ink; g.lineWidth = 3;
+  g.fillStyle = '#86a8d8'; g.beginPath(); g.ellipse(17, -96 + by, 13, 12, 0, 0, TAU); g.fill(); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); C(12, -99 + by, 4.6); C(23, -99 + by, 4.6); g.fill();
+  g.fillStyle = ink; g.beginPath(); C(13.5, -99 + by, 2.4); C(24.5, -99 + by, 2.4); g.fill();
+  g.beginPath(); g.moveTo(7, -106 + by); g.lineTo(15, -104 + by); g.moveTo(29, -106 + by); g.lineTo(21, -104 + by); g.stroke();
+  g.beginPath(); g.moveTo(13, -89 + by); g.quadraticCurveTo(18, -86 + by, 24, -89 + by); g.stroke();
+  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(15, -88.6 + by); g.lineTo(16.5, -85 + by); g.lineTo(18, -88 + by); g.moveTo(19.5, -88 + by); g.lineTo(21, -85 + by); g.lineTo(22.5, -88.6 + by); g.fill();
   const glow = 0.6 + 0.4 * Math.sin(t * 3);
-  g.fillStyle = `rgba(127,227,255,${0.25 * glow})`; g.beginPath(); g.arc(6, -62 - bob, 15, 0, TAU); g.fill();
-  g.fillStyle = cracked ? '#9fdcf0' : '#7fe3ff'; g.save(); g.translate(6, -62 - bob); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.strokeRect(-5, -5, 10, 10); g.restore();
-  if (cracked) { g.beginPath(); g.moveTo(2, -66 - bob); g.lineTo(8, -61 - bob); g.lineTo(5, -57 - bob); g.stroke(); }
+  g.fillStyle = `rgba(127,227,255,${0.3 * glow})`; g.beginPath(); C(8, -62 + by, 15); g.fill();
+  g.fillStyle = cracked ? '#9fdcf0' : '#7fe3ff'; g.save(); g.translate(8, -62 + by); g.rotate(Math.PI / 4); g.fillRect(-5, -5, 10, 10); g.strokeRect(-5, -5, 10, 10); g.restore();
+  if (cracked) { g.beginPath(); g.moveTo(4, -66 + by); g.lineTo(10, -61 + by); g.lineTo(7, -57 + by); g.stroke(); }
   g.restore();
 }
 function drawObs(o) {
@@ -603,8 +618,8 @@ function drawObs(o) {
     case 'rock': case 'lavarock': g.fillStyle = o.k === 'rock' ? (Z.key === 3 ? '#7c9bb4' : '#8a8f9e') : '#2a2022'; g.beginPath(); g.moveTo(o.x - 22, by); g.lineTo(o.x - 16, by - 22); g.lineTo(o.x - 2, by - 30); g.lineTo(o.x + 16, by - 24); g.lineTo(o.x + 22, by); g.closePath(); g.fill(); g.stroke();
       if (o.k === 'lavarock') { g.strokeStyle = '#ff8a2a'; g.beginPath(); g.moveTo(o.x - 10, by - 18); g.lineTo(o.x - 2, by - 10); g.lineTo(o.x + 8, by - 20); g.stroke(); } else { g.fillStyle = '#fff'; g.beginPath(); g.moveTo(o.x - 16, by - 22); g.lineTo(o.x - 2, by - 30); g.lineTo(o.x + 12, by - 25); g.lineTo(o.x - 4, by - 24); g.fill(); } break;
     case 'stump': g.fillStyle = '#6b4226'; g.fillRect(o.x - 13, by - 30, 26, 30); g.strokeRect(o.x - 13, by - 30, 26, 30); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(o.x, by - 31, 14, 5, 0, 0, TAU); g.fill(); g.stroke(); break;
-    case 'stalagmite': case 'icespike': g.fillStyle = o.k === 'icespike' ? '#bfeeff' : '#8a76a6'; g.beginPath(); g.moveTo(o.x - 14, by); g.lineTo(o.x, by - o.h); g.lineTo(o.x + 14, by); g.closePath(); g.fill(); g.stroke(); break;
-    case 'crystal': g.fillStyle = '#c69bff'; for (const [dx, h, a] of [[-8, 26, -0.3], [2, 36, 0], [10, 22, 0.35]]) { g.save(); g.translate(o.x + dx, by); g.rotate(a); g.beginPath(); g.moveTo(-5, 0); g.lineTo(0, -h); g.lineTo(5, 0); g.closePath(); g.fill(); g.stroke(); g.restore(); } break;
+    case 'stalagmite': case 'icespike': if (o.k === 'stalagmite') { g.fillStyle = 'rgba(255,90,60,.16)'; g.beginPath(); g.ellipse(o.x, by - o.h * 0.45, 26, o.h * 0.65, 0, 0, TAU); g.fill(); } g.fillStyle = o.k === 'icespike' ? '#bfeeff' : '#ece2fb'; g.lineWidth = 3; g.beginPath(); g.moveTo(o.x - 14, by); g.lineTo(o.x, by - o.h); g.lineTo(o.x + 14, by); g.closePath(); g.fill(); g.stroke(); if (o.k === 'stalagmite') { g.fillStyle = '#ff6a4a'; g.beginPath(); g.moveTo(o.x - 4, by - o.h + 12); g.lineTo(o.x, by - o.h); g.lineTo(o.x + 4, by - o.h + 12); g.closePath(); g.fill(); g.stroke(); } break;
+    case 'crystal': g.fillStyle = 'rgba(255,120,200,.2)'; g.beginPath(); g.arc(o.x, by - 18, 30, 0, TAU); g.fill(); g.fillStyle = '#ff9be0'; g.lineWidth = 3; for (const [dx, h, a] of [[-8, 26, -0.3], [2, 36, 0], [10, 22, 0.35]]) { g.save(); g.translate(o.x + dx, by); g.rotate(a); g.beginPath(); g.moveTo(-5, 0); g.lineTo(0, -h); g.lineTo(5, 0); g.closePath(); g.fill(); g.stroke(); g.restore(); } break;
     case 'bat': { const f = Math.sin(P.t * 18 + o.ph); g.fillStyle = '#2a1f3a'; g.beginPath(); g.ellipse(o.x, top + 9, 6, 7, 0, 0, TAU); g.fill(); g.beginPath(); g.moveTo(o.x - 4, top + 8); g.lineTo(o.x - 18, top + 2 + f * 8); g.lineTo(o.x - 8, top + 12); g.moveTo(o.x + 4, top + 8); g.lineTo(o.x + 18, top + 2 + f * 8); g.lineTo(o.x + 8, top + 12); g.fill(); g.fillStyle = '#ffcf3f'; g.fillRect(o.x - 3, top + 6, 2, 2); g.fillRect(o.x + 1, top + 6, 2, 2); break; }
     case 'crate': g.fillStyle = '#a8763e'; g.fillRect(o.x - 20, by - 36, 40, 36); g.strokeRect(o.x - 20, by - 36, 40, 36); g.beginPath(); g.moveTo(o.x - 20, by - 36); g.lineTo(o.x + 20, by); g.stroke(); g.fillStyle = '#fff'; g.fillRect(o.x - 21, by - 39, 42, 4); break;
     case 'sled': g.fillStyle = '#9a5a2e'; g.fillRect(o.x - 34, by - 18, 68, 10); g.strokeRect(o.x - 34, by - 18, 68, 10); g.strokeStyle = '#3a2a1e'; g.beginPath(); g.moveTo(o.x - 36, by - 2); g.lineTo(o.x + 30, by - 2); g.quadraticCurveTo(o.x + 40, by - 2, o.x + 38, by - 12); g.stroke(); g.fillStyle = '#5b7a9a'; g.fillRect(o.x - 24, by - 26, 30, 9); break;
@@ -627,6 +642,10 @@ function drawObs(o) {
 function ridge(x, s) { return Math.sin(x * 0.0021 + s) * 0.5 + Math.sin(x * 0.0057 + s * 2) * 0.3 + Math.sin(x * 0.013 + s * 3) * 0.2; }
 function drawBackground(VW) {
   const Z = L.Z, t = P.t;
+  if (L.hub) { const cx = VW * 0.62 - cam.x * 0.03 + 60, top = 70;
+    g.fillStyle = '#a9bbd9'; g.beginPath(); g.moveTo(cx - 760, 480); g.lineTo(cx - 180, 170); g.lineTo(cx, top); g.lineTo(cx + 210, 190); g.lineTo(cx + 780, 480); g.closePath(); g.fill();
+    g.fillStyle = '#f4f8ff'; g.beginPath(); g.moveTo(cx - 118, 136); g.lineTo(cx, top); g.lineTo(cx + 120, 136); g.lineTo(cx + 80, 150); g.lineTo(cx + 40, 132); g.lineTo(cx, 156); g.lineTo(cx - 44, 134); g.lineTo(cx - 84, 152); g.closePath(); g.fill();
+    const gl = 0.6 + 0.4 * Math.sin(t * 1.5), gr = g.createRadialGradient(cx, top, 2, cx, top, 60); gr.addColorStop(0, 'rgba(143,230,255,' + gl + ')'); gr.addColorStop(1, 'rgba(143,230,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(cx, top, 60, 0, TAU); g.fill(); }
   // far ridges
   for (const [p, col, base, amp, s] of [[0.05, Z.far2, 250, 70, 1], [0.12, Z.far, 320, 80, 4]]) {
     g.fillStyle = col; g.beginPath(); g.moveTo(0, 540);
@@ -640,7 +659,7 @@ function drawBackground(VW) {
   for (let i = i0; i <= i1; i++) {
     const sx = i * sp - off + hash(i) * 60, h = hash(i + 7);
     if (Z.key === 0) { const b = 460 - h * 40, ht = 110 + h * 70; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(sx - 26 + k * 7, b - k * ht * 0.3); g.lineTo(sx, b - ht - k * 10); g.lineTo(sx + 26 - k * 7, b - k * ht * 0.3); g.fill(); } g.fillRect(sx - 4, b, 8, 30); }
-    else if (Z.key === 1) { g.beginPath(); g.moveTo(sx - 40, 0); g.lineTo(sx, 90 + h * 120); g.lineTo(sx + 40, 0); g.fill(); g.beginPath(); g.moveTo(sx + 60, 540); g.lineTo(sx + 90, 380 - h * 60); g.lineTo(sx + 120, 540); g.fill();
+    else if (Z.key === 1) { g.beginPath(); g.moveTo(sx - 40, 0); g.lineTo(sx, 90 + h * 120); g.lineTo(sx + 40, 0); g.fill(); g.save(); g.fillStyle = '#2f2342'; g.beginPath(); g.moveTo(sx + 60, 540); g.lineTo(sx + 90, 380 - h * 60); g.lineTo(sx + 120, 540); g.fill(); g.restore();
       if (hash(i + 3) > 0.6) { g.save(); g.strokeStyle = '#c9683a'; g.fillStyle = '#c9683a'; g.lineWidth = 3; const cx = sx + 30, cy = 300; g.beginPath(); g.arc(cx, cy, 9, 0, TAU); g.stroke(); g.beginPath(); g.moveTo(cx, cy + 9); g.lineTo(cx, cy + 36); g.moveTo(cx - 14, cy + 18); g.lineTo(cx + 14, cy + 18); g.moveTo(cx, cy + 36); g.lineTo(cx - 10, cy + 54); g.moveTo(cx, cy + 36); g.lineTo(cx + 10, cy + 54); g.stroke();
         for (const dx of [-40, 40]) { g.beginPath(); g.arc(cx + dx, cy + 18, 5, 0, TAU); g.fill(); g.beginPath(); g.moveTo(cx + dx, cy + 23); g.lineTo(cx + dx, cy + 42); g.stroke(); } g.restore(); g.fillStyle = Z.mid; } }
     else if (Z.key === 2) { if (h > 0.55) { g.beginPath(); g.moveTo(sx - 26, 440); g.lineTo(sx, 400); g.lineTo(sx + 26, 440); g.fill(); g.fillRect(sx - 1, 380, 2, 24); g.fillStyle = ['#c0392b', '#2f6fb0', '#e1b43a', '#2e8b57'][i & 3]; g.fillRect(sx + 1, 380, 12, 8); g.fillStyle = Z.mid; } }
@@ -687,7 +706,7 @@ function drawDeco(VW) {
     const y = groundAt(d.x); if (isNaN(y)) continue; const s = d.s;
     g.save(); g.translate(d.x, y + 4); g.scale(s, s); g.strokeStyle = '#14162e'; g.lineWidth = 2.5 / s;
     if (Z.deco === 'pine') { g.fillStyle = '#5a3a22'; g.fillRect(-4, -14, 8, 14); for (let k = 0; k < 3; k++) { g.fillStyle = k % 2 ? '#2f7a55' : '#246647'; g.beginPath(); g.moveTo(-26 + k * 6, -12 - k * 22); g.lineTo(0, -58 - k * 22); g.lineTo(26 - k * 6, -12 - k * 22); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(-8 + k * 2, -46 - k * 22); g.lineTo(0, -58 - k * 22); g.lineTo(8 - k * 2, -46 - k * 22); g.fill(); } }
-    else if (Z.deco === 'torch') { if (d.v > 0.6) { g.fillStyle = '#5a3a22'; g.fillRect(-3, -40, 6, 40); const f = 0.8 + Math.sin(P.t * 12 + d.x) * 0.2; g.fillStyle = '#ffcf3f'; g.beginPath(); g.ellipse(0, -48, 7 * f, 12 * f, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,180,60,.18)'; g.beginPath(); g.arc(0, -46, 50, 0, TAU); g.fill(); } else { g.fillStyle = '#8a76a6'; g.beginPath(); g.moveTo(-10, 0); g.lineTo(0, -30); g.lineTo(10, 0); g.fill(); } }
+    else if (Z.deco === 'torch') { if (d.v > 0.6) { g.fillStyle = '#5a3a22'; g.fillRect(-3, -40, 6, 40); const f = 0.8 + Math.sin(P.t * 12 + d.x) * 0.2; g.fillStyle = '#ffcf3f'; g.beginPath(); g.ellipse(0, -48, 7 * f, 12 * f, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,180,60,.18)'; g.beginPath(); g.arc(0, -46, 50, 0, TAU); g.fill(); } else if (d.v > 0.3) { g.fillStyle = '#d9cfe8'; g.fillRect(-2, -12, 4, 12); g.fillStyle = '#5fd6c0'; g.beginPath(); g.ellipse(0, -13, 9, 5, 0, Math.PI, 0); g.fill(); g.fillStyle = 'rgba(95,214,192,.18)'; g.beginPath(); g.arc(0, -12, 16, 0, TAU); g.fill(); } } /* harmless glowing mushrooms, so only real hazards are spiky */
     else if (Z.deco === 'flag') { if (d.v > 0.5) { g.fillStyle = '#5a3a22'; g.fillRect(-2, -60, 4, 60); g.fillStyle = ['#c0392b', '#2f6fb0', '#e1b43a'][Math.floor(d.v * 30) % 3]; g.beginPath(); g.moveTo(2, -60); g.lineTo(28 + Math.sin(P.t * 8 + d.x) * 4, -54); g.lineTo(2, -46); g.fill(); g.stroke(); } else { g.fillStyle = '#d9cfb8'; g.beginPath(); g.moveTo(-30, 0); g.lineTo(0, -34); g.lineTo(30, 0); g.closePath(); g.fill(); g.stroke(); } }
     else if (Z.deco === 'ice') { g.fillStyle = '#e6f8ff'; g.beginPath(); g.moveTo(-14, 0); g.lineTo(-6, -50 - d.v * 30); g.lineTo(4, -30); g.lineTo(14, 0); g.closePath(); g.fill(); g.stroke(); }
     else if (Z.deco === 'lamp') { g.fillStyle = '#3a2a6a'; g.fillRect(-2, -54, 4, 54); g.fillStyle = '#ffd1ef'; g.beginPath(); g.arc(0, -58, 7, 0, TAU); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,209,239,.2)'; g.beginPath(); g.arc(0, -58, 30, 0, TAU); g.fill(); }
@@ -783,19 +802,67 @@ function drawHub(VW) {
     g.strokeStyle = '#d7dbe8'; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 40, y - 30); g.lineTo(x + 40, y - 130); g.stroke(); g.fillStyle = Math.sin(t * 5) > 0 ? '#ff4a2b' : '#702010'; g.beginPath(); g.arc(x + 40, y - 132, 4, 0, TAU); g.fill();
     drawPerson(HUBX.juni + 20, baseAt(HUBX.juni + 20), '#6a3fb0', 'pom', '#b79cff'); }
   /* tape doors */
+  /* packed trail through camp */
+  { g.strokeStyle = 'rgba(120,140,175,.28)'; g.lineWidth = 16; g.beginPath(); for (let x = Math.max(0, cam.x - 40); x < Math.min(HUB_W, cam.x + VW + 40); x += 20) { const yy = baseAt(x) + 12; x === Math.max(0, cam.x - 40) ? g.moveTo(x, yy) : g.lineTo(x, yy); } g.stroke(); }
+  /* lantern strings between the sign posts */
+  for (let i = 0; i < CH.length - 1; i++) { const x0 = HUBX.door(i) - 90, x1 = HUBX.door(i + 1) - 90; if (x1 < cam.x - 60 || x0 > cam.x + VW + 60) continue; const y0 = baseAt(x0) - 150, y1 = baseAt(x1) - 150;
+    g.strokeStyle = 'rgba(20,22,46,.6)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 + 60, x1, y1); g.stroke();
+    for (let k = 1; k < 14; k++) { const u = k / 14, lx = x0 + (x1 - x0) * u, ly = (1 - u) * (1 - u) * y0 + 2 * u * (1 - u) * ((y0 + y1) / 2 + 60) + u * u * y1; g.fillStyle = ['#ffcf3f', '#ff7a6a', '#8fe6ff', '#b79cff'][(k + i) % 4]; g.beginPath(); g.arc(lx, ly + 4, 4, 0, TAU); g.fill(); } }
+  /* a fox who lives in camp */
+  { const fx = 2240 + Math.sin(t * 0.25) * 330, dir = Math.cos(t * 0.25) >= 0 ? 1 : -1; if (vis(fx)) { const fy = baseAt(fx), st = Math.sin(t * 9) * 3; g.save(); g.translate(fx, fy); g.scale(dir, 1); g.strokeStyle = ink; g.lineWidth = 2.5; g.fillStyle = '#e0702a';
+    g.beginPath(); g.moveTo(-16, -14); g.quadraticCurveTo(-34, -24, -36, -10); g.quadraticCurveTo(-28, -8, -16, -10); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.beginPath(); g.arc(-35, -12, 3, 0, TAU); g.fill();
+    g.fillStyle = '#e0702a'; g.beginPath(); g.ellipse(0, -14, 17, 8, 0, 0, TAU); g.fill(); g.stroke(); g.lineWidth = 3; g.beginPath(); g.moveTo(-9, -8); g.lineTo(-9 + st, 0); g.moveTo(9, -8); g.lineTo(9 - st, 0); g.stroke(); g.lineWidth = 2.5;
+    g.beginPath(); g.moveTo(13, -18); g.lineTo(26, -16); g.lineTo(16, -9); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.moveTo(14, -19); g.lineTo(17, -27); g.lineTo(20, -18); g.fill(); g.stroke(); g.fillStyle = ink; g.beginPath(); g.arc(19, -15, 1.4, 0, TAU); g.fill(); g.restore(); } }
+  /* tape doors: one hut per era */
   const nx = CH.findIndex((C, i) => tapeOpen(i) && !save.best[i + '-2']);
   CH.forEach((C, i) => {
     const x = HUBX.door(i); if (!vis(x)) return; const y = baseAt(x), open = tapeOpen(i), Zc = ZONES[C.zone];
-    g.fillStyle = '#8a5a38'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(x - 62, y - 86, 124, 90); g.strokeRect(x - 62, y - 86, 124, 90);
-    g.fillStyle = '#3a2a22'; g.beginPath(); g.moveTo(x - 80, y - 84); g.lineTo(x, y - 134); g.lineTo(x + 80, y - 84); g.closePath(); g.fill(); g.stroke();
-    g.strokeStyle = '#fff'; g.lineWidth = 7; g.beginPath(); g.moveTo(x - 76, y - 88); g.lineTo(x, y - 134); g.lineTo(x + 76, y - 88); g.stroke(); g.strokeStyle = ink; g.lineWidth = 2.5; g.stroke();
-    const gr = g.createLinearGradient(0, y - 62, 0, y); gr.addColorStop(0, open ? Zc.sky[0] : '#3a3f4a'); gr.addColorStop(1, open ? Zc.sky[1] : '#2a2e36');
-    g.fillStyle = gr; g.strokeStyle = ink; g.lineWidth = 3; rr(x - 20, y - 62, 40, 62, 16); g.fill(); g.stroke();
-    if (!open) { g.fillStyle = '#c9ced8'; rr(x - 8, y - 32, 16, 12, 2); g.fill(); g.stroke(); g.strokeStyle = '#c9ced8'; g.lineWidth = 3; g.beginPath(); g.arc(x, y - 33, 6, Math.PI, 0); g.stroke(); }
-    if (i === nx) { const k = 0.6 + Math.sin(t * 4) * 0.4; g.strokeStyle = 'rgba(255,74,43,' + k + ')'; g.lineWidth = 4; rr(x - 24, y - 66, 48, 66, 18); g.stroke(); }
-    board(x, y - 186, 150, 'Tape ' + (i + 1), C.era);
-    for (let s = 0; s < 3; s++) { const b = save.best[i + '-' + s], m = b ? b.medal || 0 : 0; g.fillStyle = m === 3 ? '#ffcf3f' : m === 2 ? '#c9d0dc' : m === 1 ? '#c8814a' : 'rgba(20,22,46,.25)'; g.strokeStyle = ink; g.lineWidth = 2; g.beginPath(); g.arc(x - 18 + s * 18, y + 18, 6, 0, TAU); g.fill(); g.stroke(); }
-    if (i === nx) { g.fillStyle = '#ff4a2b'; g.strokeStyle = ink; g.lineWidth = 2.5; const ay = y - 204 + Math.sin(t * 5) * 5; g.beginPath(); g.moveTo(x - 10, ay - 14); g.lineTo(x + 10, ay - 14); g.lineTo(x, ay); g.closePath(); g.fill(); g.stroke(); }
+    g.fillStyle = '#5a3a22'; g.strokeStyle = ink; g.lineWidth = 2.5; g.fillRect(x - 93, y - 150, 6, 150); g.strokeRect(x - 93, y - 150, 6, 150);
+    const portal = (draw) => { const gr = g.createLinearGradient(0, y - 72, 0, y); gr.addColorStop(0, open ? Zc.sky[0] : '#3a3f4a'); gr.addColorStop(1, open ? Zc.sky[1] : '#2a2e36'); g.fillStyle = gr; g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); draw(); g.fill(); g.stroke(); };
+    const arch = (w, h) => () => { g.moveTo(x - w / 2, y); g.lineTo(x - w / 2, y - h + w / 2); g.arc(x, y - h + w / 2, w / 2, Math.PI, 0); g.lineTo(x + w / 2, y); g.closePath(); };
+    g.strokeStyle = ink; g.lineWidth = 3;
+    if (C.zone === 'forest') {
+      for (let k = 0; k < 3; k++) { const sy = y - 150 - ((t * 22 + k * 22) % 66); g.fillStyle = 'rgba(235,240,250,' + (0.7 - ((t * 22 + k * 22) % 66) / 100) + ')'; g.beginPath(); g.arc(x + 42 + Math.sin(t + k) * 4, sy, 7 + k * 2, 0, TAU); g.fill(); }
+      g.fillStyle = '#5a3a22'; g.fillRect(x + 34, y - 140, 16, 40); g.strokeRect(x + 34, y - 140, 16, 40);
+      g.fillStyle = '#8a5a38'; g.fillRect(x - 62, y - 86, 124, 90); g.strokeRect(x - 62, y - 86, 124, 90);
+      g.strokeStyle = 'rgba(20,22,46,.35)'; g.lineWidth = 2; for (let k = 1; k < 6; k++) { g.beginPath(); g.moveTo(x - 62, y - 86 + k * 15); g.lineTo(x + 62, y - 86 + k * 15); g.stroke(); }
+      g.strokeStyle = ink; g.lineWidth = 3; g.fillStyle = '#3a2a22'; g.beginPath(); g.moveTo(x - 80, y - 84); g.lineTo(x, y - 134); g.lineTo(x + 80, y - 84); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle = '#fff'; g.lineWidth = 7; g.beginPath(); g.moveTo(x - 76, y - 88); g.lineTo(x, y - 134); g.lineTo(x + 76, y - 88); g.stroke();
+      portal(arch(40, 62));
+    } else if (C.zone === 'cave') {
+      g.fillStyle = '#4e3f63'; g.beginPath(); g.moveTo(x - 84, y + 2); g.quadraticCurveTo(x - 90, y - 118, x - 10, y - 126); g.quadraticCurveTo(x + 86, y - 122, x + 84, y + 2); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#6e5a80'; for (const [rx, ry, r] of [[-50, -70, 14], [44, -90, 11], [52, -30, 13], [-30, -108, 9]]) { g.beginPath(); g.arc(x + rx, y + ry, r, 0, TAU); g.fill(); }
+      portal(arch(48, 76));
+      for (const dx of [-60, 60]) { const fl = 0.8 + Math.sin(t * 12 + dx) * 0.2; g.fillStyle = '#5a3a22'; g.fillRect(x + dx - 3, y - 50, 6, 50); g.fillStyle = '#ffcf3f'; g.beginPath(); g.ellipse(x + dx, y - 58, 6 * fl, 11 * fl, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,180,60,.1)'; g.beginPath(); g.arc(x + dx, y - 56, 20, 0, TAU); g.fill(); }
+    } else if (C.zone === 'expedition') {
+      g.fillStyle = '#d9cfb4'; g.beginPath(); g.moveTo(x - 86, y); g.lineTo(x - 4, y - 120); g.lineTo(x + 86, y); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(20,22,46,.3)'; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 4, y - 120); g.lineTo(x - 40, y); g.moveTo(x - 4, y - 120); g.lineTo(x + 40, y); g.stroke();
+      portal(() => { g.moveTo(x - 26, y); g.lineTo(x - 2, y - 72); g.lineTo(x + 24, y); g.closePath(); });
+      g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 66, y); g.lineTo(x + 66, y - 150); g.stroke();
+      ['#c0392b', '#2f6fb0', '#e1b43a'].forEach((col, k) => { g.fillStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 66, y - 148 + k * 16); g.lineTo(x + 92 + Math.sin(t * 6 + k) * 4, y - 142 + k * 16); g.lineTo(x + 66, y - 136 + k * 16); g.fill(); g.stroke(); });
+      g.fillStyle = '#8a6a44'; g.lineWidth = 2.5; g.fillRect(x - 84, y - 22, 26, 22); g.strokeRect(x - 84, y - 22, 26, 22); g.fillRect(x - 78, y - 40, 20, 18); g.strokeRect(x - 78, y - 40, 20, 18);
+    } else if (C.zone === 'glacier') {
+      g.fillStyle = '#e6f8ff'; g.beginPath(); g.arc(x, y, 80, Math.PI, 0); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle = '#9fcfe6'; g.lineWidth = 2; for (const r of [28, 52]) { g.beginPath(); g.arc(x, y, 80, Math.PI + Math.asin(r / 80) * 0, 0); } for (let k = 1; k < 4; k++) { const hy = y - k * 20, hw = Math.sqrt(80 * 80 - (k * 20) * (k * 20)); g.beginPath(); g.moveTo(x - hw, hy); g.lineTo(x + hw, hy); g.stroke(); for (let j = -3; j <= 3; j++) { const sx = x + j * 22 + (k % 2) * 11; if (Math.abs(sx - x) < hw - 4) { g.beginPath(); g.moveTo(sx, hy); g.lineTo(sx, hy + 20); g.stroke(); } } }
+      g.fillStyle = '#cfeefc'; g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); arch(60, 64)(); g.fill(); g.stroke();
+      portal(arch(38, 52));
+    } else if (C.zone === 'globe') {
+      g.fillStyle = '#3a2a6a'; g.fillRect(x - 74, y - 16, 148, 18); g.strokeRect(x - 74, y - 16, 148, 18);
+      g.fillStyle = 'rgba(210,190,255,.35)'; g.beginPath(); g.arc(x, y - 16, 70, Math.PI, 0); g.closePath(); g.fill();
+      for (let k = 0; k < 14; k++) { const px = x - 55 + hash(k) * 110, py = y - 20 - ((t * 18 + hash(k + 9) * 70) % 70); if (Math.hypot(px - x, py - y + 16) < 64) { g.fillStyle = '#fff'; g.fillRect(px, py, 2.5, 2.5); } }
+      g.save(); g.beginPath(); g.arc(x, y - 16, 70, Math.PI, 0); g.strokeStyle = '#d8ccff'; g.lineWidth = 4; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.beginPath(); g.arc(x, y - 16, 58, Math.PI * 1.15, Math.PI * 1.4); g.stroke(); g.restore();
+      portal(() => { g.save(); g.restore(); const yy = y - 16; g.moveTo(x - 18, yy); g.lineTo(x - 18, yy - 40); g.arc(x, yy - 40, 18, Math.PI, 0); g.lineTo(x + 18, yy); g.closePath(); });
+    } else {
+      for (let k = 0; k < 5; k++) { const ex = x - 50 + hash(k) * 100, ey = y - 120 - ((t * 30 + hash(k + 3) * 80) % 80); g.fillStyle = 'rgba(255,150,60,' + (1 - ((t * 30 + hash(k + 3) * 80) % 80) / 80) + ')'; g.fillRect(ex, ey, 3, 3); }
+      g.fillStyle = '#241a1d'; g.beginPath(); g.moveTo(x - 72, y + 2); g.lineTo(x - 72, y - 84); g.lineTo(x - 50, y - 112); g.lineTo(x - 22, y - 96); g.lineTo(x + 4, y - 128); g.lineTo(x + 30, y - 100); g.lineTo(x + 56, y - 116); g.lineTo(x + 72, y - 84); g.lineTo(x + 72, y + 2); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(255,122,26,' + (0.6 + Math.sin(t * 3) * 0.3) + ')'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x - 60, y - 70); g.lineTo(x - 44, y - 50); g.lineTo(x - 50, y - 28); g.moveTo(x + 50, y - 90); g.lineTo(x + 40, y - 66); g.lineTo(x + 56, y - 40); g.stroke();
+      portal(arch(40, 64));
+    }
+    if (!open) { g.fillStyle = '#c9ced8'; g.strokeStyle = ink; g.lineWidth = 2.5; rr(x - 8, y - 30, 16, 12, 2); g.fill(); g.stroke(); g.strokeStyle = '#c9ced8'; g.lineWidth = 3; g.beginPath(); g.arc(x, y - 31, 6, Math.PI, 0); g.stroke(); }
+    if (i === nx) { const k = 0.6 + Math.sin(t * 4) * 0.4; g.fillStyle = 'rgba(255,74,43,' + (k * 0.18) + ')'; g.beginPath(); g.ellipse(x, y - 30, 46, 46, 0, 0, TAU); g.fill(); }
+    board(x - 90, y - 196, 150, 'Tape ' + (i + 1), C.era);
+    for (let st = 0; st < 3; st++) { const b = save.best[i + '-' + st], m = b ? b.medal || 0 : 0; g.fillStyle = m === 3 ? '#ffcf3f' : m === 2 ? '#c9d0dc' : m === 1 ? '#c8814a' : 'rgba(20,22,46,.25)'; g.strokeStyle = ink; g.lineWidth = 2; g.beginPath(); g.arc(x - 18 + st * 18, y + 18, 6, 0, TAU); g.fill(); g.stroke(); }
+    if (i === nx) { g.fillStyle = '#ff4a2b'; g.strokeStyle = ink; g.lineWidth = 2.5; const ay = y - 214 + Math.sin(t * 5) * 5; g.beginPath(); g.moveTo(x - 100, ay - 14); g.lineTo(x - 80, ay - 14); g.lineTo(x - 90, ay); g.closePath(); g.fill(); g.stroke(); }
   });
   /* the Lucky Lodge */
   if (vis(HUBX.lodge)) { const x = HUBX.lodge, y = baseAt(x); g.fillStyle = '#6b3f2a'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(x - 110, y - 100, 220, 104); g.strokeRect(x - 110, y - 100, 220, 104);
@@ -819,7 +886,7 @@ function drawFace(who) {
   const bgc = { arlo: '#2c3180', juni: '#3a2a6a', yeti: '#2a5a8a', edda: '#c9b48a', bet: '#5a2a2a', dawa: '#2a5a4a' }[who] || '#2c3180';
   fg.fillStyle = bgc; fg.fillRect(0, 0, 192, 192);
   if (who === 'arlo') { swap(() => { drawArlo(0, 0, 0, 0.1, false, P.t, false, 1); }, 100, 178, 2.05); }
-  else if (who === 'yeti') { swap(() => drawYeti(0, 0, 0, false, 1, true), 57, 340, 2.6); }
+  else if (who === 'yeti') { swap(() => drawYeti(0, 0, 0, false, 1, true), 54, 330, 2.35); }
   else if (who === 'juni') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#6a3fb0'; k.beginPath(); k.ellipse(96, 190, 60, 50, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 100, 42, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#1e1a2a'; k.beginPath(); k.arc(96, 88, 44, Math.PI * 1.05, Math.PI * 1.95); k.fill(); k.beginPath(); k.arc(130, 62, 16, 0, TAU); k.fill(); k.fillStyle = '#14162e'; k.beginPath(); k.arc(82, 102, 5, 0, TAU); k.arc(112, 102, 5, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.arc(97, 118, 10, 0.2, Math.PI - 0.2); k.stroke(); k.strokeStyle = '#7fe3ff'; k.lineWidth = 7; k.beginPath(); k.arc(96, 98, 50, Math.PI * 1.1, Math.PI * 1.9); k.stroke(); k.fillStyle = '#7fe3ff'; k.fillRect(40, 92, 14, 26); k.fillRect(138, 92, 14, 26);
     for (let i = 0; i < 6; i++) { k.fillStyle = 'rgba(255,255,255,.12)'; k.fillRect(0, (P.t * 90 + i * 37) % 192, 192, 3); } }
   else if (who === 'edda') { const k = fg; k.strokeStyle = '#3b2a14'; k.lineWidth = 6; k.fillStyle = '#8a6a44'; k.beginPath(); k.arc(96, 104, 62, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#e9cfa6'; k.beginPath(); k.arc(96, 108, 38, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#5a4630'; k.fillRect(60, 70, 72, 16); k.fillStyle = '#c9b48a'; k.beginPath(); k.arc(76, 78, 11, 0, TAU); k.arc(116, 78, 11, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#3b2a14'; k.beginPath(); k.arc(84, 112, 4, 0, TAU); k.arc(108, 112, 4, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.moveTo(86, 128); k.lineTo(106, 128); k.stroke(); }
@@ -874,7 +941,7 @@ const PARK = {
 const PACE = 850, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
 const parOf = S => TIERS.map(k => Math.round(S.len / PACE * k)); /* gold, silver, bronze in whole seconds */
 const medalOf = (S, t) => { const p = parOf(S); return t <= p[0] ? 3 : t <= p[1] ? 2 : t <= p[2] ? 1 : 0; };
-function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'] }; }
+function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'], album: {}, endings: [] }; }
 let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save', {})), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
 if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -913,11 +980,12 @@ function finishStage() {
   const nb = { score: prev ? prev.score : 0, rank: prev ? prev.rank : rank, time: newBest ? L.time : prev.time, medal: top };
   if (!prev || L.score > prev.score) { nb.score = L.score; nb.rank = rank; }
   save.best[key] = nb; save.bank += gain;
+  const find = rollFind(RW[med], L.ci), allF = L.finds.concat(find), newF = allF.filter(f => f.isNew);
   const last = L.si === CH[L.ci].stages.length - 1; persist();
   $('resTitle').textContent = L.S.name; $('rank').textContent = rank; $('resCap').textContent = 'Frame grab, ' + fmt(L.time) + '. Tape ' + (L.ci + 1) + ', ' + L.C.era + '.';
-  $('resNote').textContent = (med > pm ? MEDAL[med] + ' medal earned. ' : newBest && prev && prev.time ? 'New best time. ' : '') + (med < 3 ? MEDAL[med + 1] + ' needs ' + fmt(par[2 - med]) + ' or less.' : 'Gold. You can’t go faster than this.');
+  $('resNote').textContent = (newF.length ? 'New in the album: ' + newF.map(f => f.it.name + ' (' + RARITY[f.it.r].toLowerCase() + ')').join(', ') + '. ' : 'No new album photos this time. ') + (med > pm ? MEDAL[med] + ' medal earned. ' : newBest && prev && prev.time ? 'New best time. ' : '') + (med < 3 ? MEDAL[med + 1] + ' needs ' + fmt(par[2 - med]) + ' or less.' : med > pm ? '' : 'Gold again. Nothing left to beat but your own time.');
   { const t = document.createElement('canvas'); t.width = 640; t.height = Math.round(640 * cvs.height / cvs.width); t.getContext('2d').drawImage(cvs, 0, 0, t.width, t.height); $('resPhoto').src = t.toDataURL('image/jpeg', 0.82); }
-  $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}</span><span>Crashes</span><span>${L.crashes}</span><span>Banked</span><span>+${gain} shards</span>`;
+  $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}</span><span>Crashes</span><span>${L.crashes}</span><span>Banked</span><span>+${gain} shards</span><span>Field finds</span><span>${allF.length}${allF.length > 1 ? ', ' + (allF.length - 1) + ' from flips' : ''}</span>`;
   $('resNext').textContent = last ? 'Back to basecamp' : 'Next stage'; show('resHub', !last);
   show('hud', false); show('touch', false); show('results', true); $('resNext').focus();
 }
@@ -925,8 +993,67 @@ function nextAfterResults() {
   show('results', false);
   const ci = L.ci, si = L.si;
   if (si + 1 < CH[ci].stages.length) { startStage(ci, si + 1); return; }
-  const done = () => { if (ci + 1 >= CH.length && !save.told.end) { save.told.end = 1; persist(); showEnding(); } else startHub(ci); };
+  const done = () => { startHub(ci); if (ci + 1 >= CH.length && !save.told.end) openFinale(); };
   if (!save.told['o' + ci]) { save.told['o' + ci] = 1; persist(); dialog(CH[ci].outro, done); } else done();
+}
+
+/* ================= field finds (the luck collectible) and endings ================= */
+const RARITY = ['Common', 'Uncommon', 'Rare', 'Legendary'], DUPE = [5, 10, 25, 100], RW = [[60, 28, 10, 2], [55, 30, 12, 3], [48, 32, 16, 4], [38, 34, 22, 6]];
+const ITEMS = [
+  [0, 'Red fox', 0, 'paw'], [0, 'Snowy owl', 0, 'wing'], [0, 'Elk', 1, 'paw'], [0, 'Lynx', 2, 'paw'], [0, 'The white stag', 3, 'star'],
+  [1, 'Cave bats', 0, 'wing'], [1, 'Painted handprint', 0, 'gear'], [1, 'Cave bear', 1, 'paw'], [1, 'Cave lion', 2, 'paw'], [1, 'Glowing crystal', 3, 'gem'],
+  [2, 'Brass compass', 0, 'gear'], [2, 'Pemba’s mitten', 0, 'gear'], [2, 'Biscuit the sled dog', 1, 'paw'], [2, 'Edda’s camera', 2, 'gear'], [2, 'The lost glass plate', 3, 'star'],
+  [3, 'Arctic hare', 0, 'paw'], [3, 'Snow petrel', 0, 'wing'], [3, 'Woolly rhino', 1, 'paw'], [3, 'Mammoth calf', 2, 'paw'], [3, 'Sabre-tooth cat', 3, 'paw'],
+  [4, 'Upside-down snowflake', 0, 'star'], [4, 'Clock gear', 0, 'gear'], [4, 'Glass fish', 1, 'gem'], [4, 'Moon moth', 2, 'wing'], [4, 'The star whale', 3, 'star'],
+  [5, 'Fire salamander', 0, 'paw'], [5, 'Ember moth', 0, 'wing'], [5, 'Obsidian flake', 1, 'gem'], [5, 'Pterosaur', 2, 'wing'], [5, 'Oru’s first shard', 3, 'gem']
+].map(([zone, name, r, gl]) => ({ zone, name, r, gl }));
+const GLYPH = {
+  paw: '<ellipse cx="24" cy="32" rx="10" ry="8"/><circle cx="12" cy="22" r="4.5"/><circle cx="20" cy="14" r="4.5"/><circle cx="29" cy="14" r="4.5"/><circle cx="37" cy="22" r="4.5"/>',
+  wing: '<path d="M6 30C14 10 34 8 42 14C34 16 30 22 28 34C22 28 14 28 6 30Z"/>',
+  gear: '<circle cx="24" cy="24" r="10" fill="none" stroke="currentColor" stroke-width="5"/><path d="M24 4v8M24 36v8M4 24h8M36 24h8M10 10l6 6M32 32l6 6M38 10l-6 6M16 32l-6 6" stroke="currentColor" stroke-width="5"/>',
+  gem: '<polygon points="24,5 40,24 24,43 8,24"/>', star: '<polygon points="24,4 29,18 44,18 32,27 36,42 24,33 12,42 16,27 4,18 19,18"/>'
+};
+const albumCount = () => Object.keys(save.album).length;
+function rollFind(weights, zone) {
+  let r = Math.random() * weights.reduce((a, b) => a + b, 0), rar = 0; for (let i = 0; i < 4; i++) { r -= weights[i]; if (r < 0) { rar = i; break; } }
+  const pool = ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.r === rar && (zone == null || o.it.zone === zone));
+  const pick = pool[Math.floor(Math.random() * pool.length)], isNew = !save.album[pick.i];
+  save.album[pick.i] = (save.album[pick.i] || 0) + 1; if (!isNew) save.bank += DUPE[rar];
+  return { i: pick.i, it: pick.it, isNew, dupe: isNew ? 0 : DUPE[rar] };
+}
+const findTxt = f => f.it.name + ', ' + RARITY[f.it.r].toLowerCase() + (f.isNew ? '. New in the album.' : '. Already had it, +' + f.dupe + ' shards.');
+const END = {
+  stone: { t: 'No photo', p: 'Arlo never got the shot. He got a story, a friend, and a pile of pinecones by the door.', c: 'Frame 1 of 1. Not taken.',
+    l: [[N, "Arlo presses the camera into the Hourstone. The shards hum, then go quiet."], [A, "I'll just tell it instead."], [Y, "Stories keep longer than pictures."]] },
+  proof: { t: 'Proof', p: 'The photo is real and everyone sees it. The north woods are never quiet again. Arlo keeps a print in a drawer and never shows his mother.', c: 'Frame 1 of 1. Developed.',
+    l: [[N, "Arlo lifts the camera. Oru does not run. He only looks at the lens."], [N, "FLASH."], [Y, "...I see."], [J, "Arlo, the whole internet is looking for the north woods."]] },
+  keeper: { t: 'The keeper', p: 'The ranger finds Arlo’s skis by the frozen pond and a note that says he’s fine. Two sets of tracks go up the mountain. One is very large.', c: 'Frame 1 of 1. Still recording.',
+    l: [[N, "Arlo holds out the camera. Oru takes it in one huge hand, very carefully."], [Y, "Keepers do not take photographs."], [A, "Then teach me what they do."], [N, "The Hourstone hums. Snow starts to fall, right on time."]] },
+  guide: { t: 'The field guide', p: 'No yeti. Instead, a book of everything else Arlo met on the way. His channel finally takes off, and the comments are mostly about the big footprints in frame twelve.', c: 'Frames 1 to 30. Published.',
+    l: [[N, "Arlo puts the camera away and opens his album instead."], [J, "Arlo. Arlo. People are asking where you got the mammoth."], [A, "Tell them I took the long way home."], [Y, "Hrrm. Good."]] }
+};
+const ENDORDER = ['stone', 'proof', 'keeper', 'guide'];
+function showEnding(id) {
+  id = id || 'stone'; const E = END[id]; state = 'ending'; show('hubHud', false); show('hubPrompt', false);
+  if (!save.endings.includes(id)) { save.endings.push(id); persist(); }
+  $('endH').textContent = E.t; $('endP').textContent = E.p; $('endCap').textContent = E.c;
+  $('endStats').innerHTML = `<span>Time on skis</span><span>${fmt(runStats.time)}</span><span>Shards found</span><span>${runStats.shards}</span><span>Album</span><span>${albumCount()} of ${ITEMS.length}</span><span>Endings seen</span><span>${save.endings.length} of ${ENDORDER.length}</span>`;
+  show('ending', true);
+}
+function openFinale() {
+  const nA = albumCount(), nC = save.cones.length;
+  const opts = [
+    { id: 'stone', ok: true, t: 'Press the camera into the Hourstone', d: 'Give up the photo so time can heal.' },
+    { id: 'proof', ok: true, t: 'Take the photo', d: 'One frame. Proof at last.' },
+    { id: 'keeper', ok: nC >= CONES.length, t: 'Hand the camera to Oru', d: nC >= CONES.length ? 'Stay and learn what a keeper does.' : 'Needs all ' + CONES.length + ' pinecones. You have ' + nC + '.' },
+    { id: 'guide', ok: nA >= 20, t: 'Put the camera away and open the album', d: nA >= 20 ? 'Show everyone everything else you saw.' : 'Needs 20 album photos. You have ' + nA + '.' }
+  ];
+  panel(`<h2>The last frame</h2><p>The stone is whole. The camera is in Arlo’s hands. What does he do?</p><div>${opts.map(o => `<button class="prow" data-e="${o.id}" ${o.ok ? '' : 'disabled'}><i style="background:${save.endings.includes(o.id) ? '#efece4' : 'transparent'}"></i><span><b>${o.t}</b><br><small>${o.d}</small></span><em>${save.endings.includes(o.id) ? 'Seen' : ''}</em></button>`).join('')}</div><div class="row"><button class="btn" id="hpClose">Not yet</button></div>`);
+  $('hpBox').querySelectorAll('.prow').forEach(b => b.onclick = () => { const id = b.dataset.e; save.told.end = 1; persist(); show('hubPanel', false); hubDialog(END[id].l, () => showEnding(id)); });
+}
+function openAlbum() {
+  const zones = CH.map((C, z) => `<h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of 5</small></h3><div class="cards">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i] ? `<div class="card r${it.r}"><svg viewBox="0 0 48 48" class="r${it.r}">${GLYPH[it.gl]}</svg><b>${it.name}</b><small class="r${it.r}">${RARITY[it.r]}</small>${save.album[i] > 1 ? '<small class="n">x' + save.album[i] + '</small>' : ''}</div>` : `<div class="card no"><svg viewBox="0 0 48 48">${GLYPH[it.gl]}</svg><b>Not found</b><small>${RARITY[it.r]}</small></div>`).join('')}</div>`).join('');
+  panel(`<div class="top"><h2>Arlo’s album</h2><span class="bank plain">${albumCount()} of ${ITEMS.length} found</span></div><p>Clearing a stage turns up a field find, and every landed flip has a chance at one too. Bigger flips and better medals make rare ones likelier. Duplicates sell for shards.</p><div class="album">${zones}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
 }
 
 /* ================= basecamp: the walkable hub ================= */
@@ -978,7 +1105,7 @@ function hubAct() {
   else if (t.kind === 'shop') { if (save.told.dawa) openShop(); else { save.told.dawa = 1; persist(); hubDialog(DAWA_INTRO, openShop); } }
 }
 const WELCOME = [[J, "Arlo, you made it to Basecamp. Radio check: can you hear me?"], [A, "Loud and clear. Day 212. Still no yeti."], [J, "Then start at the first door. Every stage has a gold, silver and bronze time, so go back and beat them whenever you like."], [T, "Left and right to walk, up at a door to go in. There are pinecones lying around camp, so look around."]];
-const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Bet runs the Lucky Lodge at the east end. Play money only. Shards are for fun and parkas, nothing else."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."]];
+const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Bet runs the Lucky Lodge at the east end. Play money only. Shards are for fun and parkas, nothing else."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."]];
 const BET_INTRO = [['bet', "Welcome to the Lucky Lodge. Shards on the table, no real money, ever."], [A, "I'm not very lucky."], ['bet', "Nobody is. That's what makes the lights fun."]];
 const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
 
@@ -991,8 +1118,8 @@ function openTape(ci) {
     const ok = stageOpen(ci, si), b = save.best[ci + '-' + si], par = parOf(S), m = b ? b.medal || 0 : 0;
     return `<button class="srow" data-s="${si}" ${ok ? '' : 'disabled'}><span class="sn">${si + 1}</span><span><b>${S.name}</b><small>${ok ? 'Gold under ' + fmt(par[0]) : 'Clear the stage before this one'}</small></span><span class="mdl m${m}">${b ? MEDAL[m] : 'Not cleared'}<small>${b && b.time ? fmtT(b.time) : ''}</small></span></button>`;
   }).join('');
-  panel(`<div class="top"><h2>${C.title}</h2><span class="bank">${save.bank}</span></div><p>${C.era}. Faster times earn medals and bonus shards.</p><div>${rows}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
-  $('hpBox').querySelectorAll('.srow').forEach(b => b.onclick = () => launch(ci, +b.dataset.s));
+  panel(`<div class="top"><h2>${C.title}</h2><span class="bank">${save.bank}</span></div><p>${C.era}. Faster times earn medals and bonus shards.</p><div>${rows}${ci === CH.length - 1 && save.best[ci + '-2'] ? `<button class="srow" id="finRow"><span class="sn">F</span><span><b>The last frame</b><small>Choose how the story ends</small></span><span class="mdl">${save.endings.length} of ${ENDORDER.length} endings</span></button>` : ''}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
+  $('hpBox').querySelectorAll('.srow[data-s]').forEach(b => b.onclick = () => launch(ci, +b.dataset.s)); if ($('finRow')) $('finRow').onclick = openFinale;
 }
 function launch(ci, si) {
   audioInit(); show('hubPanel', false);
@@ -1017,7 +1144,7 @@ function lgRefresh() {
   $('bets').innerHTML = [10, 50, 100].map(v => `<button class="btn ${v === lg.bet ? 'on' : ''}" data-b="${v}" ${save.bank < v || lg.spinning ? 'disabled' : ''}>${v}</button>`).join('');
   $('bets').querySelectorAll('button').forEach(x => x.onclick = () => { lg.bet = +x.dataset.b; lgRefresh(); });
   $('lgSpin').disabled = lg.spinning || save.bank < lg.bet; $('lgDbl').hidden = !(lg.pend > 0) || lg.spinning; $('lgLoan').hidden = !(save.bank < 10) || lg.spinning;
-  $('lgDbl').textContent = 'Double or nothing, ' + lg.pend; $('hpClose').disabled = lg.spinning;
+  $('lgDbl').textContent = 'Double or nothing, ' + lg.pend; $('hpClose').disabled = lg.spinning; $('lgFilm').disabled = lg.spinning || save.bank < 40;
 }
 function openLodge() {
   lg.spinning = false; lg.pend = 0;
@@ -1025,9 +1152,10 @@ function openLodge() {
     <div class="reels" id="reels"><div class="reel">${SYM[0].svg}</div><div class="reel">${SYM[1].svg}</div><div class="reel">${SYM[2].svg}</div></div>
     <div class="lgmsg" id="lgMsg">Pick a bet and spin.</div>
     <div class="bets" id="bets"></div>
-    <div class="row"><button class="btn go" id="lgSpin">Spin</button><button class="btn" id="lgDbl" hidden>Double or nothing</button><button class="btn" id="lgLoan" hidden>Bet covers you, 20 shards</button><button class="btn" id="hpClose">Leave</button></div>
+    <div class="row"><button class="btn go" id="lgSpin">Spin</button><button class="btn" id="lgDbl" hidden>Double or nothing</button><button class="btn" id="lgLoan" hidden>Bet covers you, 20 shards</button><button class="btn" id="lgFilm">Develop a film roll, 40</button><button class="btn" id="hpClose">Leave</button></div>
     <div class="pays">${SYM.map(s => `<span>${s.svg}${s.pay}×</span>`).join('')}</div>
-    <p class="lgnote">Three matching symbols pay the number shown. Any two matching pay 1.2×. Shards are play money you earn by skiing, and nothing here costs or pays out real money.</p>`);
+    <p class="lgnote">Film rolls turn up a random field find for your album, rare ones included. Three matching symbols pay the number shown. Any two matching pay 1.2×. Shards are play money you earn by skiing, and nothing here costs or pays out real money.</p>`);
+  $('lgFilm').onclick = () => { if (lg.spinning || save.bank < 40) return; save.bank -= 40; const f = rollFind(RW[0]); persist(); lgMsg('Developed: ' + findTxt(f)); (f.it.r >= 2 ? sfx.trick : sfx.shard)(); lgRefresh(); };
   $('lgSpin').onclick = lgSpin; $('lgDbl').onclick = lgDouble; $('lgLoan').onclick = () => { save.bank += 20; persist(); lgMsg('Bet slides you 20 shards. Pay it forward.'); lgRefresh(); };
   lgRefresh();
 }
@@ -1075,7 +1203,6 @@ function openShop() {
   });
 }
 function failStage(title, text) { if (state !== 'play') return; state = 'fail'; $('failTitle').textContent = title; $('failText').textContent = text; show('hud', false); show('touch', false); show('fail', true); $('failRetry').focus(); }
-function showEnding() { state = 'ending'; $('endStats').innerHTML = `<span>Time on skis</span><span>${fmt(runStats.time)}</span><span>Shards found</span><span>${runStats.shards}</span><span>Crashes</span><span>${runStats.crashes}</span>`; show('ending', true); }
 function fmtTC(t) { const p = n => (n < 10 ? '0' : '') + n; return p(Math.floor(t / 60)) + ':' + p(Math.floor(t % 60)) + ':' + p(Math.floor((t % 1) * 30)); }
 function fmtT(t) { return fmt(t) + '.' + Math.floor((t % 1) * 10); }
 function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
@@ -1101,6 +1228,7 @@ addEventListener('keydown', e => {
   keys[e.code] = true;
   if (e.repeat) return;
   if (state === 'dialog' && ['Space', 'Enter', 'KeyZ', 'ArrowRight'].includes(e.code)) { advance(); return; }
+  if (state === 'hub' && e.code === 'KeyI') openAlbum();
   if (state === 'hub' && ['ArrowUp', 'KeyW', 'Enter', 'KeyE', 'Space'].includes(e.code)) hubAct();
   else if (state === 'panel' && e.code === 'Escape') closePanel();
   if (state === 'play') { if (['Space', 'ArrowUp', 'KeyW', 'KeyZ'].includes(e.code)) P.jumpBuf = 0.14; if (e.code === 'KeyP' || e.code === 'Escape') pause(true); }
@@ -1119,7 +1247,7 @@ function pause(on) { if (on && state === 'play') { state = 'paused'; show('pause
 $('bPause').onclick = () => pause(true); $('pResume').onclick = () => pause(false);
 $('pRestart').onclick = () => { show('pause', false); startStage(L.ci, L.si, true); };
 $('pQuit').onclick = () => startHub(L.ci >= 0 ? L.ci : undefined);
-$('bMute2').onclick = () => { audioInit(); setMute(!AU.muted); }; $('bHubMenu').onclick = () => startTitle();
+$('bMute2').onclick = () => { audioInit(); setMute(!AU.muted); }; $('bHubMenu').onclick = () => startTitle(); $('bAlbum').onclick = () => { if (state === 'hub') openAlbum(); };
 $('bMute').onclick = () => { audioInit(); setMute(!AU.muted); };
 $('bPlay').onclick = () => { audioInit(); save = freshSave(); runStats = { time: 0, shards: 0, crashes: 0 }; save.told.welcome = 1; persist(); startHub(); hubDialog(WELCOME); };
 $('bCont').onclick = () => { audioInit(); startHub(); };
@@ -1128,7 +1256,7 @@ $('resRetry').onclick = () => { show('results', false); startStage(L.ci, L.si, t
 $('resHub').onclick = () => startHub(L.ci);
 $('failRetry').onclick = () => { show('fail', false); startStage(L.ci, L.si, true); };
 $('failQuit').onclick = () => startHub(L.ci);
-$('endTitle').onclick = () => startHub(CH.length - 1);
+$('endTitle').onclick = () => { show('ending', false); startHub(CH.length - 1); };
 
 /* ================= main loop ================= */
 function resize() { const dpr = Math.min(window.devicePixelRatio || 1, 2); cvs.width = Math.round(innerWidth * dpr); cvs.height = Math.round(innerHeight * dpr); }
@@ -1160,6 +1288,6 @@ function frame(now) {
 }
 startTitle();
 requestAnimationFrame(frame);
-window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
+window.__hs = { get P() { return P; }, get L() { return L; }, get state() { return state; }, startStage, finishStage, failStage, showEnding, startChapter, startTitle, dialog, startHub, openAlbum, openFinale, rollFind, ITEMS, END, albumCount, openTape, openLodge, openShop, hubDialog, get save() { return save; }, parOf, medalOf, CONES, HUBX };
 })();
 </script>

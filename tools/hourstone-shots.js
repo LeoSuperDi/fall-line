@@ -14,6 +14,8 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
   await p.evaluate(() => __hs.openTape(0)); await p.waitForTimeout(250); await shot('tape-select');
   await p.evaluate(() => __hs.openLodge()); await p.waitForTimeout(250); await p.click('#lgSpin'); await p.waitForTimeout(1700); await shot('lodge');
   await p.evaluate(() => __hs.openShop()); await p.waitForTimeout(250); await shot('shop');
+  await p.evaluate(() => { __hs.save.album = { 0: 1, 1: 3, 3: 1, 4: 1, 7: 1, 13: 2, 22: 1 }; __hs.openAlbum(); }); await p.waitForTimeout(250); await shot('album');
+  await p.evaluate(() => __hs.openFinale()); await p.waitForTimeout(250); await shot('finale');
   await p.evaluate(() => { document.getElementById('hubPanel').classList.add('hidden'); __hs.startHub(2); __hs.save.parka = 'glacier'; });
   await p.evaluate(() => __hs.startStage(0, 1, true)); await p.waitForTimeout(3600); await p.keyboard.press('Space'); await p.waitForTimeout(260); await shot('play');
   await p.evaluate(() => __hs.startStage(0, 2, true)); await p.waitForTimeout(3000); await shot('chase');
