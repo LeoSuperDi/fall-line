@@ -783,6 +783,10 @@ function drawTerrain(VW) {
     }
     g.restore();
   }
+  /* past either end of the level the snow keeps going flat */
+  for (const [x0, x1, yy] of [[cam.x - 60, 0, L.gy[0]], [(L.n - 1) * STEP, cam.x + VW + 60, L.gy[L.n - 1]]]) { if (x1 <= x0) continue;
+    const gr = g.createLinearGradient(0, cam.y + 200, 0, cam.y + 700); gr.addColorStop(0, Z.ground); gr.addColorStop(1, Z.dirt); g.fillStyle = gr; g.fillRect(x0, yy, x1 - x0 + 1, bot - yy);
+    g.beginPath(); g.moveTo(x0, yy); g.lineTo(x1 + 1, yy); g.strokeStyle = Z.top; g.lineWidth = 9; g.stroke(); g.strokeStyle = '#14162e'; g.lineWidth = 2.5; g.stroke(); }
   // ground in runs between gaps
   let i = i0;
   while (i <= i1) {
@@ -1288,7 +1292,7 @@ function hubStats() {
 function startHub(from) {
   ['title', 'fail', 'results', 'pause', 'chapterCard', 'ending', 'dlg', 'lbTop', 'hud', 'hubPanel', 'hubPrompt'].forEach(i => show(i, false));
   buildHub(); demo = false; state = 'hub'; P.hearts = 3; P.crash = 0; P.inv = 0; P.hv = 0; P.face = 1; P.walkT = 0; P.rot = 0; P.trick = 0; P.t = P.t || 0;
-  P.x = from == null ? 200 : HUBX.door(from); P.y = baseAt(P.x); cam.x = P.x - 400; cam.y = P.y - 540 * 0.62; L.near = null; L.nearTxt = '';
+  P.x = from == null ? 200 : HUBX.door(from); P.y = baseAt(P.x); cam.x = Math.max(0, P.x - 400); cam.y = P.y - 540 * 0.62; L.near = null; L.nearTxt = '';
   show('hubHud', true); show('touch', isTouch); $('tJ').textContent = 'Enter'; hubStats();
 }
 function backToHub() { state = 'hub'; show('hubHud', true); show('touch', isTouch); hubStats(); }
@@ -1427,7 +1431,7 @@ function frame(now) {
   if (state === 'dialog') typeTick(dt);
   stepFx(dt);
   const sc = cvs.height / 540, VW = cvs.width / sc;
-  const hb = L && L.hub, tx = hb ? clamp(P.x - VW * 0.5, -60, HUB_W + 60 - VW) : P.x - VW * 0.3, ty = P.y - 540 * (hb ? 0.62 : 0.45);
+  const hb = L && L.hub, tx = hb ? clamp(P.x - VW * 0.5, 0, Math.max(0, HUB_W - VW)) : P.x - VW * 0.3, ty = P.y - 540 * (hb ? 0.62 : 0.45);
   cam.x = lerp(cam.x, tx, 1 - Math.exp(-8 * dt)); cam.y = lerp(cam.y, ty, 1 - Math.exp(-5 * dt));
   render(dt);
   if (state === 'play' && (hudT += dt) > 0.1) {
