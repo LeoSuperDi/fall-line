@@ -4,7 +4,7 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 720 } }); await routeFonts(p);
   const errs = []; p.on('pageerror', e => errs.push(e.message));
   await p.goto('file://' + path.resolve(__dirname, '../hourstone/index.html')); await p.waitForTimeout(500);
-  await p.evaluate(() => { __hs.startStage(0, 0, true); __hs.L.obs.length = 0; });
+  await p.evaluate(() => { __hs.save.album = { 0: 1, 3: 1 }; __hs.startStage(0, 0, true); __hs.L.obs.length = 0; });
   let got = false;
   await p.evaluate(() => setInterval(() => { __hs.P.hearts = 9; }, 100));
   for (let tries = 0; tries < 10 && !got; tries++) {

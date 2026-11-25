@@ -221,8 +221,9 @@ body.touch #hubPrompt { bottom: 130px; }
 .note b { font: italic 400 14px/1.15 Georgia, serif; text-align: center; color: #2b2a33; }
 .note small { font: italic 400 12px Georgia, serif; color: #7a7466; }
 .note .q0 { color: #7a7466; } .note .q1 { color: #2f7a4a; } .note .q2 { color: #2f5e9c; } .note .q3 { color: #a8740a; }
-.note.no canvas { background: transparent; box-shadow: none; outline: 1.5px dashed rgba(43, 42, 51, .3); outline-offset: -4px; }
-.note.no::before { display: none; } .note.no b { color: #8a8476; }
+.note:not(.no)::after { content: "\2713"; position: absolute; top: -6px; right: -4px; width: 24px; height: 24px; border-radius: 50%; background: #2f7a4a; color: #fff; font: 700 15px/24px var(--body); text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+.note.no canvas { background: rgba(120,110,90,.08); box-shadow: none; outline: 1.5px dashed rgba(43, 42, 51, .3); outline-offset: -4px; }
+.note.no::before { display: none; } .note.no b { color: #8a8476; } .note.no { opacity: .8; }
 @media (max-width: 700px) { .notes { grid-template-columns: repeat(3, 1fr); } }
 /* time stop after a landed flip: the frame freezes and a one-row reel of finds spins across the middle */
 body.still #game { filter: grayscale(.85) brightness(.62); }
@@ -235,6 +236,11 @@ body.still #game { filter: grayscale(.85) brightness(.62); }
 #reel .tile canvas { width: 112px; height: 84px; }
 #reel .tile small { font: italic 11px/1 Georgia, serif; color: #5a5446; white-space: nowrap; overflow: hidden; max-width: 112px; }
 #reel .tile.hit { outline: 3px solid var(--amber); outline-offset: 2px; }
+#reel .tile { position: relative; }
+#reel .tile.own canvas { opacity: .45; filter: grayscale(.7); }
+#reel .tile.own::after, #reel .tile.new::after { position: absolute; top: 4px; right: 4px; padding: 2px 6px 3px; border-radius: 3px; font: 700 11px/1 var(--body); }
+#reel .tile.own::after { content: "\2713  have it"; background: #2f7a4a; color: #fff; }
+#reel .tile.new::after { content: "new"; background: var(--rec); color: #1a0a06; }
 #reel .fade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(13, 15, 19, .95), rgba(13, 15, 19, 0) 22%, rgba(13, 15, 19, 0) 78%, rgba(13, 15, 19, .95)); }
 #reel .mark { position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--rec); }
 #reel .mark::before, #reel .mark::after { content: ""; position: absolute; left: -7px; border: 8px solid transparent; }
@@ -1112,11 +1118,11 @@ function openFinale() {
 function doodle(cv, idx, found) {
   const k = cv.getContext('2d'), R = rng(idx * 97 + 13), j = a => (R() - 0.5) * a;
   k.setTransform(cv.width / 120, 0, 0, cv.height / 90, 0, 0); k.lineCap = 'round'; k.lineJoin = 'round';
-  const ink = found ? '#2b2a33' : 'rgba(43,42,51,.28)';
+  const ink = found ? '#2b2a33' : 'rgba(150,140,120,.55)';
   const path = pts => { k.beginPath(); pts.forEach(([x, y], i) => i ? k.lineTo(x, y) : k.moveTo(x, y)); };
   const L = (pts, w = 1.6) => { k.strokeStyle = ink; for (let pass = 0; pass < 2; pass++) { path(pts.map(([x, y]) => [x + j(1.4), y + j(1.4)])); k.lineWidth = pass ? w * 0.55 : w; k.stroke(); } };
   const ring = (cx, cy, rx, ry, a0 = 0, a1 = TAU) => { const n = 20, o = R() * 0.4, pts = []; for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n + (a1 - a0 >= TAU - 0.01 ? o : 0); pts.push([cx + Math.cos(a) * rx * (1 + j(0.07)), cy + Math.sin(a) * ry * (1 + j(0.07))]); } if (a1 - a0 >= TAU - 0.01) pts.push(pts[1]); return pts; };
-  const tint = (pts, col) => { if (!found) return; k.fillStyle = col; k.globalAlpha = 0.6; path(pts.map(([x, y]) => [x + 1.6, y + 1.2])); k.fill(); k.globalAlpha = 1; };
+  const tint = (pts, col) => { k.fillStyle = found ? col : '#d2c9b4'; k.globalAlpha = found ? 0.6 : 1; path(pts.map(([x, y]) => [x + 1.6, y + 1.2])); k.fill(); k.globalAlpha = 1; };
   const E = (cx, cy, rx, ry, col) => { const p = ring(cx, cy, rx, ry); if (col) tint(p, col); L(p); };
   const P = (col, ...pts) => { const p = pts.concat([pts[0]]); if (col) tint(p, col); L(p); };
   const D = (x, y, r, col) => { k.fillStyle = found ? col || ink : 'rgba(43,42,51,.25)'; k.beginPath(); k.arc(x + j(0.6), y + j(0.6), r, 0, TAU); k.fill(); };
@@ -1157,7 +1163,7 @@ function doodle(cv, idx, found) {
     () => { P('#b07a5a', [10, 40], [50, 34], [58, 44], [66, 34], [110, 40], [70, 50], [60, 52], [50, 50]); P('#b07a5a', [56, 40], [64, 26], [80, 22], [66, 32]); L([[64, 26], [56, 14]], 1.6); D(70, 26, 1.2); },
     () => { rays(60, 45, 22, 34, 14, '#5fc8e0'); P('#8fe6ff', [60, 18], [80, 45], [60, 72], [40, 45]); L([[52, 34], [60, 26]], 1); L([[50, 48], [56, 56]], 1); }
   ];
-  if (found) F[idx](); else { F[idx](); k.globalAlpha = 1; k.fillStyle = 'rgba(43,42,51,.35)'; k.font = 'italic 26px Georgia, serif'; k.textAlign = 'center'; k.fillText('?', 104, 24); }
+  F[idx](); if (!found) { k.globalAlpha = 1; k.fillStyle = 'rgba(90,84,70,.7)'; k.font = 'italic 40px Georgia, serif'; k.textAlign = 'center'; k.fillText('?', 60, 58); }
 }
 function openAlbum() {
   const rot = i => ((hash(i + 3) - 0.5) * 5).toFixed(1) + 'deg';
@@ -1181,7 +1187,7 @@ function startReel(f) {
   const pool = ITEMS.map((it, i) => i).filter(i => ITEMS[i].zone === L.ci), N = 34, T = 28, tiles = [];
   for (let n = 0; n < N; n++) tiles.push(n === T ? (f ? f.i : -1) : (Math.random() < 0.38 ? -1 : pool[Math.floor(Math.random() * pool.length)]));
   const tr = $('reelTrack'); tr.style.transition = 'none'; tr.style.transform = 'translateX(0px)';
-  tr.innerHTML = tiles.map((id, n) => `<div class="tile" style="--r:${((hash(n * 7 + 1) - 0.5) * 4).toFixed(1)}deg"><canvas width="224" height="168"></canvas><small>${id < 0 ? 'nothing' : ITEMS[id].name}</small></div>`).join('');
+  tr.innerHTML = tiles.map((id, n) => `<div class="tile${id < 0 ? '' : (n === T && f ? !f.isNew : save.album[id]) ? ' own' : ' new'}" style="--r:${((hash(n * 7 + 1) - 0.5) * 4).toFixed(1)}deg"><canvas width="224" height="168"></canvas><small>${id < 0 ? 'nothing' : ITEMS[id].name}</small></div>`).join('');
   tr.querySelectorAll('canvas').forEach((c, n) => tiles[n] < 0 ? drawBlank(c) : doodle(c, tiles[n], true));
   const tile = tr.children[0], step = tile.getBoundingClientRect().width + 12, W = tr.parentElement.clientWidth, jit = (Math.random() - 0.5) * step * 0.5;
   const end = W / 2 - (T * step + step / 2 + jit), dur = 1500;
