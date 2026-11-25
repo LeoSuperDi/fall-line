@@ -481,7 +481,7 @@ function buildLevel(ci, si) {
 function baseAt(x) { const f = x / STEP, i = clamp(Math.floor(f), 0, L.n - 2), t = clamp(f - i, 0, 1); return lerp(L.gy[i], L.gy[i + 1], t); }
 function groundAt(x) { const i = clamp(Math.floor(x / STEP), 0, L.n - 2); if (L.gap[i] || L.gap[i + 1]) return NaN; return baseAt(x); }
 function slopeAt(x) { return Math.atan2(baseAt(x + 6) - baseAt(x - 6), 12); }
-function ceilAt(x) { return baseAt(x) - 330 - 45 * Math.sin(x * 0.004) - 25 * Math.sin(x * 0.013 + 1); }
+function ceilAt(x) { return baseAt(x) - 450 - 45 * Math.sin(x * 0.004) - 25 * Math.sin(x * 0.013 + 1); } /* high enough for a full flip off any kicker */
 
 /* ================= player ================= */
 const P = { x: 0, y: 0, vx: 0, vy: 0, s: 0, ground: true, rot: 0, trick: 0, grabT: 0, crouch: 0.3, crash: 0, inv: 0, coyote: 0, jumpBuf: 0, hearts: 3, t: 0 };
