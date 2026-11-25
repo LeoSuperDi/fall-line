@@ -522,22 +522,22 @@ function airTricks() {
     registerTrick(name, flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), { flips, grab });
     P.s = Math.min(MAXB, P.s + 90 * flips + (grab ? 40 : 0)); sfx.trick();
     if (flips && !demo && L.finds && state === 'play') {
-      if (Math.random() < hitChance(flips, grab)) { const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist(); slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); }
-      else popup(P.x, P.y - 122, 'No find this time', '#9aa0aa'); /* time only stops when there's something to win */
+      if (Math.random() < hitChance(flips, grab) || (L.dry || 0) >= 2) { L.dry = 0; const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist(); slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); }
+      else { L.dry = (L.dry || 0) + 1; popup(P.x, P.y - 122, L.dry >= 2 ? 'No find. Next flip is a sure thing' : 'No find this time', '#9aa0aa'); } /* time only stops when there's something to win; two misses in a row guarantee the next one */
     }
   }
   P.trick = 0; P.grabT = 0;
 }
 function registerTrick(name, base, kind) {
   if (demo) return;
-  const rep = L.recent.filter(n => n === name).length; L.recent.push(name); if (L.recent.length > 4) L.recent.shift();
+  L.recent = L.recent.filter(r => L.time - r.t < 8); const rep = L.recent.filter(r => r.n === name).length; L.recent.push({ n: name, t: L.time }); /* only tricks from the last 8 seconds count as repeats */
   L.combo = L.comboT > 0 ? L.combo + 1 : 1; L.comboT = 2.6; L.maxCombo = Math.max(L.maxCombo, L.combo);
-  const mult = Math.min(3, 1 + 0.5 * (L.combo - 1)), pts = Math.round(base * mult / (1 + rep));
+  const mult = Math.min(3, 1 + 0.5 * (L.combo - 1)), pts = Math.round(base * mult * (rep ? (rep === 1 ? 0.75 : 0.5) : 1));
   L.score += pts; L.tricks++;
   L.boost = Math.min(1, L.boost + 0.1 + (kind.flips || 0) * 0.12 + (rep ? 0 : 0.08));
   if (kind.flips >= 2) L.st.doubles++; if (kind.grab) L.st.grabs++;
   popup(P.x, P.y - 70, name + '  +' + pts, rep ? '#c9c2a2' : '#ffcf3f');
-  if (L.combo > 1) popup(P.x, P.y - 96, 'Combo ×' + mult, '#8fe6ff'); else if (rep) popup(P.x, P.y - 96, 'Same trick again, half points', '#b0b4c0');
+  if (L.combo > 1) popup(P.x, P.y - 96, 'Combo ×' + mult, '#8fe6ff'); else if (rep) popup(P.x, P.y - 96, rep === 1 ? 'Same trick again, 75% points' : 'Same trick again, half points', '#b0b4c0');
   checkGoals(false);
 }
 /* stage goals, Alto's Adventure style: three fixed goals per stage */
