@@ -457,7 +457,8 @@ function buildLevel(ci, si) {
   const put = (dy, isGap) => { y += dy; gy.push(y); gap.push(!!isGap); };
   const X = () => gy.length * STEP;
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
-  const placeObs = (x0, x1) => { for (let x = x0 + 320; x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
+  let safeX = 0; /* no obstacles before this x: the landing zone after a kicker or a drop */
+  const placeObs = (x0, x1) => { for (let x = Math.max(x0 + 320, safeX); x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
   const placeShards = (x0, x1) => { if (x1 - x0 > 600) cand.push({ x: x0 + 150 + R() * (x1 - x0 - 450), dy: -34 }); };
   seg(800, () => STEP * 0.07); cps.push(300);
   let lastCp = 0;
@@ -470,10 +471,10 @@ function buildLevel(ci, si) {
       const rs = X(); seg(110, t => -STEP * 0.45 * (0.4 + t)); const lip = X(); kickers.push([rs, lip]);
       if (R() < 0.55 + diff * 0.3) { const w = 120 + R() * (40 + diff * 40), k = Math.round(w / STEP); for (let i = 0; i < k; i++) put(STEP * 0.35, true);
         cand.push({ x: lip + 60, dy: -100, kick: true }); }
-      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24);
+      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 900;
     }
-    else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); }
-    else if (r < 0.8) { const len = 900 + R() * 700; seg(len, (t, i) => STEP * 0.2 + Math.sin(i * STEP / 70 * TAU) * 5); placeShards(x0, X()); }
+    else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); safeX = X() + 700; }
+    else if (r < 0.8) { const len = 900 + R() * 700, gr = 0.2 + R() * 0.1; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); } /* moguls removed: a clean run instead */
     else { const len = 700 + R() * 500, gr = 0.04 + R() * 0.03; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
   }
   { const end = X(); for (let k = 0; k < 3; k++) { const pool = cand.filter(c => c.x >= end * k / 3 && c.x < end * (k + 1) / 3 && c.x > 900); let c = pool.length ? pool[Math.floor(R() * pool.length)] : { x: end * (k + 0.5) / 3, dy: -34 }; if (!c.kick) { let ix = Math.floor(c.x / STEP); while (ix < gap.length - 2 && (gap[ix] || gap[ix + 1] || gap[ix - 1])) ix++; c = { x: ix * STEP, dy: -34 }; } shards.push({ x: c.x, dy: c.dy, got: false }); }
@@ -539,7 +540,7 @@ function land(gy) {
   if (d > 2.5) { P.y = gy; crash('land'); return; } // landed on your head
   P.ground = true; P.y = gy; P.rot = a; P.landT = L.time;
   P.s = clamp(P.vx * Math.cos(a) + P.vy * Math.sin(a), MINS, MAXB);
-  if (d > 1.25) { P.s = Math.max(MINS, P.s * 0.6); popup(P.x, P.y - 70, 'Sloppy landing', '#ff9a6a'); sfx.land(); P.trick = 0; P.grabT = 0; return; } // crooked: you keep your feet but lose speed
+  if (d > 1.25) { P.s = Math.max(MINS, P.s * 0.75); P.rot = a; popup(P.x, P.y - 44, 'Wobbly landing', '#ff9a6a'); } /* crooked: you lose some speed, but the tricks still count */
   airTricks();
   burst(P.x, P.y, 10, L.Z.top); sfx.land(); P.trick = 0; P.grabT = 0;
 }
@@ -602,7 +603,7 @@ function stepPlayer(dt) {
     if (o.x < P.x - 160 || o.x > P.x + 160) continue;
     const top = obsTop(o), bot = obsBot(o);
     if (Math.abs(o.x - P.x) < o.w / 2 + 4 && cy + 13 > top && cy - 13 < bot) {
-      if (P.ground && STOMP.has(o.k) && L.time - (P.landT || -9) < 0.5) { P.ground = false; P.vy = -480; P.y = Math.min(P.y, top); popup(P.x, P.y - 60, 'Close one!', '#8fe6ff'); sfx.jump(); break; } /* landed just in front of it: hop it instead of dying */
+      if (P.ground && !o.fly && L.time - (P.landT || -9) < (STOMP.has(o.k) ? 0.5 : 0.35)) { P.ground = false; P.vy = -480; P.y = Math.min(P.y, top); popup(P.x, P.y - 60, 'Close one!', '#8fe6ff'); sfx.jump(); break; } /* landed just in front of it: hop it instead of dying */
       if (!P.ground && P.vy > 0 && STOMP.has(o.k) && P.y < top + 26) { /* coming down onto a flat-topped obstacle: bounce off it instead of crashing */
         P.y = top; P.vy = -430; P.vx = Math.max(P.vx, 380); L.score += 100; popup(P.x, P.y - 60, 'Bounce  +100', '#8fe6ff'); sfx.jump(); burst(P.x, P.y, 12, '#ffffff'); shake = 0.25; break;
       }
