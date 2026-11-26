@@ -93,6 +93,7 @@ kbd { font: 18px/1 var(--osd); padding: 1px 7px 0; border: 1px solid var(--line)
 .mi:disabled { opacity: .35; cursor: not-allowed; }
 .mi.go::before { opacity: 1; transform: none; left: -18px; }
 #title .keys { margin: 0; color: var(--paper); opacity: .85; font: 400 15px/1.9 var(--body); text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.savenote { margin: -10px 0 0; font: 400 13px/1.4 var(--body); color: var(--dim); text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
 #titleOsd { position: absolute; left: calc(var(--gx) + 14px); top: calc(var(--gy) + 14px); }
 
 /* tapes (chapters) */
@@ -310,6 +311,7 @@ body.still #game { transition: filter .3s; }
   <h1>Hourstone</h1>
   <p class="tag">Arlo Finch needs one photo of the yeti. He's about to chase it through ten thousand years.</p>
   <div class="menu"><button class="mi go" id="bPlay">New game</button><button class="mi" id="bCont">Continue</button></div>
+  <p class="savenote" id="saveNote">Progress saves in this browser.</p>
   <p class="keys"><kbd>Space</kbd> jump &nbsp; <kbd>←</kbd> brake <kbd>→</kbd> push, or flip in the air &nbsp; <kbd>↓</kbd> tuck, or grab in the air &nbsp; <kbd>Shift</kbd> boost &nbsp; <kbd>P</kbd> pause</p>
 </div></div>
 
@@ -1106,7 +1108,35 @@ let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save
 if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
 const hideHub = () => { ['hubHud', 'hubPrompt', 'hubPanel', 'reel'].forEach(i => show(i, false)); document.body.classList.remove('still'); };
-function persist() { store.set('hourstone_save', save); store.set('hourstone_run', runStats); }
+function persist() { save.savedAt = Date.now(); store.set('hourstone_save', save); store.set('hourstone_run', runStats); cloudPush(); }
+/* cloud save: progress also lives in the viewer's Claude account (private to them), so it survives new versions of the game, cleared browser data and other devices.
+   The newest copy wins: whichever of this browser's save and the account's save has the later savedAt. Old saves keep working because every load merges into freshSave(). */
+const cloud = { ref: null, busy: false, again: false, t: 0, on: false };
+function cloudNote() { const n = $('saveNote'); if (n) n.textContent = cloud.on ? 'Progress saves to your Claude account, so it carries over to new versions and other devices.' : 'Progress saves in this browser.'; }
+function cloudPush() {
+  if (!cloud.ref) return; clearTimeout(cloud.t);
+  cloud.t = setTimeout(async () => {
+    if (cloud.busy) { cloud.again = true; return; } cloud.busy = true;
+    try { await cloud.ref.set({ v: 1, savedAt: save.savedAt || Date.now(), json: JSON.stringify({ save, runStats }) }); } catch (e) { /* offline or refused: this browser's copy still has it */ }
+    cloud.busy = false; if (cloud.again) { cloud.again = false; cloudPush(); }
+  }, 1200);
+}
+(async () => {
+  try {
+    const c = window.claude; if (!c || !c.use) return;
+    const [user, db] = await Promise.all([c.use('user'), c.use('db')]); if (!user || !db) return;
+    const id = await user.id(); if (!id) return;
+    cloud.ref = db.doc('data/users/' + id + '/hourstone');
+    const snap = await cloud.ref.get(), d = snap.exists ? snap.data() : null;
+    let remote = null; try { remote = d && typeof d.json === 'string' ? JSON.parse(d.json) : null; } catch (e) { remote = null; }
+    if (remote && remote.save && (remote.save.savedAt || 0) > (save.savedAt || 0)) {
+      save = Object.assign(freshSave(), remote.save); if (remote.runStats) runStats = remote.runStats;
+      store.set('hourstone_save', save); store.set('hourstone_run', runStats);
+      if (state === 'title') $('bCont').disabled = !save.told.welcome; else if (state === 'hub') hubStats();
+    } else if (save.savedAt) cloudPush();
+    cloud.on = true; cloudNote();
+  } catch (e) { /* no account storage here: keep the browser save */ }
+})();
 const tapeOpen = ci => ci === 0 || !!save.best[(ci - 1) + '-2'];
 const stageOpen = (ci, si) => tapeOpen(ci) && (si === 0 || !!save.best[ci + '-' + (si - 1)]);
 function startTitle() {
