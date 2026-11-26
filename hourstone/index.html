@@ -626,7 +626,12 @@ function stepPlayer(dt) {
   for (const o of L.obs) {
     if (o.x < P.x - 160 || o.x > P.x + 160) continue;
     const top = obsTop(o), bot = obsBot(o);
-    if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) { crash('hit:' + o.k); break; }
+    if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) {
+      if (!P.ground && P.vy > 0 && STOMP.has(o.k) && P.y < top + 26) { /* coming down onto a flat-topped obstacle: bounce off it instead of crashing */
+        P.y = top; P.vy = -430; P.vx = Math.max(P.vx, 380); L.score += 100; popup(P.x, P.y - 60, 'Bounce  +100', '#8fe6ff'); sfx.jump(); burst(P.x, P.y, 12, '#ffffff'); shake = 0.25; break;
+      }
+      crash('hit:' + o.k); break;
+    }
   }
   // shards
   for (const sd of L.shards) { if (sd.got) continue; const sx = sd.x, sy = baseAt(sx) + sd.dy; if (Math.abs(sx - P.x) < 38 && Math.abs(sy - (P.y - 24)) < 50) { sd.got = true; L.got++; L.score += 100; sfx.shard(); burst(sx, sy, 10, '#7fe3ff'); } }
@@ -635,6 +640,7 @@ function stepPlayer(dt) {
   if (P.x > L.finish && !demo) finishStage();
   if (P.ground && P.s > 300) { if (Math.random() < 0.25 + (k.d ? 0.3 : 0)) spray(P.x - 18, P.y, L.Z.top); }
 }
+const STOMP = new Set(['log', 'rock', 'stump', 'crate', 'sled', 'mammoth', 'drone', 'star']); /* safe to land on; spikes, crystals, lava rocks, geysers and wildlife still hurt */
 function obsTop(o) { if (o.k === 'geyser') return baseAt(o.x) - (geyserUp(o) ? 84 : 0); return baseAt(o.x) - o.fly - o.h + (o.fly ? Math.sin(P.t * 3 + o.ph) * 14 : 0); }
 function obsBot(o) { if (o.k === 'geyser') return baseAt(o.x); return obsTop(o) + o.h; }
 function geyserUp(o) { return (P.t * 0.5 + o.ph) % 2 < 0.8; }
