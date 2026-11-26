@@ -605,7 +605,7 @@ function stepPlayer(dt) {
     P.rot = a + wrapA(P.rot - a) * Math.exp(-20 * dt);
     if (P.jumpBuf > 0) { jump(); return; }
     const nx = P.x + P.vx * dt, ng = groundAt(nx);
-    if (isNaN(ng) || ng - (P.y + P.vy * dt) > 9) { P.ground = false; P.coyote = 0.12; P.trick = 0; P.grabT = 0; P.x = nx; P.y += P.vy * dt; }
+    if (isNaN(ng) || ng - (P.y + P.vy * dt) > 9 || Math.atan2(baseAt(nx + 6) - baseAt(nx), 6) > 0.9) { /* off the edge of a cliff: always airborne */ P.ground = false; P.coyote = 0.12; P.trick = 0; P.grabT = 0; P.x = nx; P.y += P.vy * dt; }
     else { P.x = nx; P.y = ng; }
   } else {
     if (P.jumpBuf > 0 && P.coyote > 0) { P.vy = Math.min(P.vy, 0); jump(); }
@@ -618,7 +618,7 @@ function stepPlayer(dt) {
     P.crouch = lerp(P.crouch, k.d ? 1.2 : 0.55, 1 - Math.exp(-10 * dt));
     if (Z.ceiling) { const c = ceilAt(P.x) + 48 + stalDepth(P.x); if (P.y < c) { P.y = c; if (P.vy < 0) P.vy *= -0.2; } }
     const gy = groundAt(P.x);
-    if (!isNaN(gy) && P.y >= gy) land(gy);
+    if (!isNaN(gy) && P.y >= gy) { if (slopeAt(P.x) < 0.9) land(gy); } /* a cliff face is too steep to land on: keep falling to the snow below */
     else if (P.y > baseAt(P.x) + 420) { P.hearts--; L.crashes++; sfx.crash(); shake = 1; if (P.hearts <= 0) { failStage('Battery dead', 'Arlo needs a breather. Try the stage again from the top.'); return; } respawn(false); popup(P.x, P.y - 80, 'Fell in!', '#ff5d3a'); }
   }
   // obstacles
