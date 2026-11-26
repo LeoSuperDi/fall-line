@@ -474,7 +474,7 @@ function buildLevel(ci, si) {
       const big = !Z.ceiling && R() < 0.33 + diff * 0.2, rs = X(); seg(big ? 150 : 110, t => -STEP * (big ? 0.6 : 0.45) * (0.4 + t)); const lip = X(); kickers.push([rs, lip, big]); /* big kickers send you high enough for 4 or 5 flips */
       if (R() < 0.55 + diff * 0.3) { const w = 120 + R() * (40 + diff * 40), k = Math.round(w / STEP); for (let i = 0; i < k; i++) put(STEP * 0.35, true);
         cand.push({ x: lip + 60, dy: -100, kick: true }); }
-      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 900;
+      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 1900;
     }
     else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); safeX = X() + 1400; }
     else if (r < 0.8) { const len = 900 + R() * 700, gr = 0.2 + R() * 0.1; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); } /* moguls removed: a clean run instead */
@@ -576,7 +576,9 @@ function stepPlayer(dt) {
     s -= s * s * (k.d ? 0.00017 : 0.00042) * dt;
     if (k.r) s += 430 * dt;
     if (k.l) s -= 760 * dt;
-    for (const [a0, a1, big] of L.kickers) if (P.x > a0 && P.x < a1 + 4) { s = Math.max(s, big ? 820 : 590); break; }
+    for (const [a0, a1, big] of L.kickers) if (P.x > a0 && P.x < a1 + 4) { s = Math.max(s, big ? 820 : 620); break; }
+    for (const [a0, a1, big] of L.kickers) if (P.x > a1 - 16 && P.x <= a1 + 4 && !demo) { /* the lip throws you up: big air whether or not you jump */
+      P.ground = false; P.coyote = 0.12; P.trick = 0; P.grabT = 0; P.vx = Math.max(P.s, 650) * 0.95; P.vy = -(Z.ceiling ? 700 : big ? 1250 : 920) - (P.jumpBuf > 0 ? 200 : 0); P.jumpBuf = 0; P.x = a1 + 1; sfx.jump(); burst(P.x, P.y, 14, Z.top); return; }
     const boosting = k.b && L.boost > 0.02 && !demo; P.boosting = boosting;
     if (boosting) { s += 650 * dt; L.boost = Math.max(0, L.boost - 0.38 * dt); L.st.boostT += dt; if (Math.random() < 0.7) spray(P.x - 22, P.y - 12, '#8fe6ff'); }
     s = clamp(s, k.l ? 200 : MINS, boosting ? MAXB : Math.max(MAXS, Math.min(P.s, MAXB) - 500 * dt)); /* boost lifts the top speed, and it eases back down after */
@@ -592,8 +594,8 @@ function stepPlayer(dt) {
     P.vy += G * (k.r !== k.l && !Z.ceiling ? 0.7 : 1) * dt; /* no extra float under a cave roof */ P.vx *= Math.exp(-0.05 * dt); /* a little extra hang time while you hold a flip */
     P.x += P.vx * dt; P.y += P.vy * dt;
     const spin = (k.r ? 1 : 0) - (k.l ? 1 : 0);
-    if (spin) { P.spinV = Math.min(20, (P.spinV || 14) + 5 * dt); P.rot += spin * P.spinV * dt; P.trick += spin * P.spinV * dt; } /* starts at half a second per flip and winds up the longer you hold it */
-    else { P.spinV = 14; const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-6 * dt); } /* let go and the skis level out quickly for the landing */
+    if (spin) { P.spinV = Math.min(14, (P.spinV || 10) + 3 * dt); P.rot += spin * P.spinV * dt; P.trick += spin * P.spinV * dt; } /* starts at half a second per flip and winds up the longer you hold it */
+    else { P.spinV = 10; const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-6 * dt); } /* let go and the skis level out quickly for the landing */
     if (k.d) P.grabT += dt;
     P.crouch = lerp(P.crouch, k.d ? 1.2 : 0.55, 1 - Math.exp(-10 * dt));
     if (Z.ceiling) { const c = ceilAt(P.x) + 48 + stalDepth(P.x); if (P.y < c) { P.y = c; if (P.vy < 0) P.vy = 0; } } /* brushing the roof just stops you rising; it never knocks you back */
