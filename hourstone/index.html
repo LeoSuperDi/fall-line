@@ -522,8 +522,9 @@ function airTricks() {
     registerTrick(name, flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), { flips, grab });
     P.s = Math.min(MAXB, P.s + 90 * flips + (grab ? 40 : 0)); sfx.trick();
     if (flips && !demo && L.finds && state === 'play') {
-      if (Math.random() < hitChance(flips, grab) || (L.dry || 0) >= 2) { L.dry = 0; const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist(); slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); }
-      else { L.dry = (L.dry || 0) + 1; popup(P.x, P.y - 122, L.dry >= 2 ? 'No find. Next flip is a sure thing' : 'No find this time', '#9aa0aa'); } /* time only stops when there's something to win; two misses in a row guarantee the next one */
+      const hit = Math.random() < hitChance(flips, grab) || (L.dry || 0) >= 2, f = hit ? rollFind(RW[Math.min(3, flips)], L.ci) : null; /* two misses in a row guarantee the next one */
+      if (f) { L.dry = 0; L.finds.push(f); persist(); } else L.dry = (L.dry || 0) + 1;
+      slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); /* every landed flip spins the reel */
     }
   }
   P.trick = 0; P.grabT = 0;
@@ -1338,7 +1339,7 @@ function startReel(f, odds, flips) {
       for (let i = 0; i < n; i++) { const c = document.createElement('i'), a = Math.random() * TAU, d = 80 + Math.random() * (r >= 3 ? 260 : 150); c.className = 'conf'; c.style.cssText = `--cc:${[col, '#fff', '#ffcf3f', col][i % 4]};--dx:calc(-50% + ${Math.cos(a) * d}px);--dy:calc(-50% + ${Math.sin(a) * d * 0.6}px);--rot:${(Math.random() * 720 - 360) | 0}deg`; wrap.appendChild(c); setTimeout(() => c.remove(), 1100); }
       if (r >= 3) { const bu = $('reelBurst'); bu.style.setProperty('--bc', r === 4 ? 'rgba(255,122,217,.35)' : 'rgba(255,207,63,.35)'); bu.classList.add('on'); const fl = $('flash'); fl.style.setProperty('--fc', r === 4 ? '#ffb3ec' : '#fff3c4'); fl.classList.remove('go'); void fl.offsetWidth; fl.classList.add('go'); shake = 0.6; [523, 659, 784, 1047, 1319, 1568].forEach((q, i) => tone(q, 0.25, 'triangle', 0.05, 0, AU.ac && AU.ac.currentTime + i * 0.07)); }
       else (r >= 2 ? sfx.trick : sfx.shard)();
-    } else { res.textContent = 'Nothing this time. Land another flip.'; tone(300, 0.2, 'triangle', 0.04, 200); }
+    } else { res.textContent = (L.dry >= 2 ? 'Nothing this time. Your next flip is a sure find.' : 'Nothing this time. Land another flip.'); tone(300, 0.2, 'triangle', 0.04, 200); }
     reelT = setTimeout(endReel, f ? (r >= 3 ? 2200 : 1200) : 700);
   }, dur + 80);
 }
