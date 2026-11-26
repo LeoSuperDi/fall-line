@@ -473,7 +473,7 @@ function buildLevel(ci, si) {
         cand.push({ x: lip + 60, dy: -100, kick: true }); }
       put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 900;
     }
-    else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); safeX = X() + 700; }
+    else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); safeX = X() + 1400; }
     else if (r < 0.8) { const len = 900 + R() * 700, gr = 0.2 + R() * 0.1; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); } /* moguls removed: a clean run instead */
     else { const len = 700 + R() * 500, gr = 0.04 + R() * 0.03; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
   }
@@ -603,7 +603,7 @@ function stepPlayer(dt) {
     if (o.x < P.x - 160 || o.x > P.x + 160) continue;
     const top = obsTop(o), bot = obsBot(o);
     if (Math.abs(o.x - P.x) < o.w / 2 + 4 && cy + 13 > top && cy - 13 < bot) {
-      if (P.ground && !o.fly && L.time - (P.landT || -9) < (STOMP.has(o.k) ? 0.5 : 0.35)) { P.ground = false; P.vy = -480; P.y = Math.min(P.y, top); popup(P.x, P.y - 60, 'Close one!', '#8fe6ff'); sfx.jump(); break; } /* landed just in front of it: hop it instead of dying */
+      if (!o.fly && L.time - (P.landT || -9) < (STOMP.has(o.k) ? 0.5 : 0.35)) { P.ground = false; P.vy = -480; P.y = Math.min(P.y, top); popup(P.x, P.y - 60, 'Close one!', '#8fe6ff'); sfx.jump(); break; } /* landed just in front of it: hop it instead of dying */
       if (!P.ground && P.vy > 0 && STOMP.has(o.k) && P.y < top + 26) { /* coming down onto a flat-topped obstacle: bounce off it instead of crashing */
         P.y = top; P.vy = -430; P.vx = Math.max(P.vx, 380); L.score += 100; popup(P.x, P.y - 60, 'Bounce  +100', '#8fe6ff'); sfx.jump(); burst(P.x, P.y, 12, '#ffffff'); shake = 0.25; break;
       }
