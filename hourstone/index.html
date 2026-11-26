@@ -511,7 +511,7 @@ function crash(why) {
 function jump() { P.ground = false; P.vy = P.vy - JUMPV; P.coyote = 0; P.jumpBuf = 0; P.trick = 0; P.grabT = 0; sfx.jump(); burst(P.x, P.y, 8, L.Z.top); }
 /* tricks: one place that names, scores and rewards them. Repeating a trick halves it, chaining tricks builds a combo, and every trick fills the boost meter */
 function airTricks() {
-  const flips = Math.floor((Math.abs(P.trick) + 0.9) / TAU), grab = P.grabT > 0.25;
+  const flips = Math.floor((Math.abs(P.trick) + 1.4) / TAU) /* a flip counts from about 4.9 of its 6.3 radians */, grab = P.grabT > 0.25;
   if (flips || grab) {
     const name = (flips ? (flips > 1 ? flips + 'x ' : '') + (P.trick > 0 ? 'Front flip' : 'Back flip') : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
     registerTrick(name, flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), { flips, grab });
@@ -536,10 +536,10 @@ function registerTrick(name, base, kind) {
 }
 function land(gy) {
   const a = slopeAt(P.x), d = Math.abs(wrapA(P.rot - a));
-  if (d > 2.1) { P.y = gy; crash('land'); return; } // landed on your head
+  if (d > 2.5) { P.y = gy; crash('land'); return; } // landed on your head
   P.ground = true; P.y = gy; P.rot = a; P.landT = L.time;
   P.s = clamp(P.vx * Math.cos(a) + P.vy * Math.sin(a), MINS, MAXB);
-  if (d > 0.95) { P.s = Math.max(MINS, P.s * 0.6); popup(P.x, P.y - 70, 'Sloppy landing', '#ff9a6a'); sfx.land(); P.trick = 0; P.grabT = 0; return; } // crooked: you keep your feet but lose speed
+  if (d > 1.25) { P.s = Math.max(MINS, P.s * 0.6); popup(P.x, P.y - 70, 'Sloppy landing', '#ff9a6a'); sfx.land(); P.trick = 0; P.grabT = 0; return; } // crooked: you keep your feet but lose speed
   airTricks();
   burst(P.x, P.y, 10, L.Z.top); sfx.land(); P.trick = 0; P.grabT = 0;
 }
@@ -584,11 +584,11 @@ function stepPlayer(dt) {
     else { P.x = nx; P.y = ng; }
   } else {
     if (P.jumpBuf > 0 && P.coyote > 0) { P.vy = Math.min(P.vy, 0); jump(); }
-    P.vy += G * dt; P.vx *= Math.exp(-0.05 * dt);
+    P.vy += G * (k.r !== k.l ? 0.7 : 1) * dt; P.vx *= Math.exp(-0.05 * dt); /* a little extra hang time while you hold a flip */
     P.x += P.vx * dt; P.y += P.vy * dt;
     const spin = (k.r ? 1 : 0) - (k.l ? 1 : 0);
-    if (spin) { P.rot += spin * 7.2 * dt; P.trick += spin * 7.2 * dt; }
-    else { const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-3 * dt); }
+    if (spin) { P.rot += spin * 11 * dt; P.trick += spin * 11 * dt; } /* about half a second per flip */
+    else { const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-6 * dt); } /* let go and the skis level out quickly for the landing */
     if (k.d) P.grabT += dt;
     P.crouch = lerp(P.crouch, k.d ? 1.2 : 0.55, 1 - Math.exp(-10 * dt));
     if (Z.ceiling) { const c = ceilAt(P.x) + 48 + stalDepth(P.x); if (P.y < c) { P.y = c; if (P.vy < 0) P.vy *= -0.2; } }
