@@ -1107,7 +1107,7 @@ const PARK = {
   pine: { n: 'Pine green', c: '#2f7a55', s: '#e8d9a0', a: '#1d4a35', p: 80 }, violet: { n: 'Dusk violet', c: '#8a5bd6', s: '#ffb7e6', a: '#4f2f94', p: 100 },
   gold: { n: 'Gold shell', c: '#e9b73a', s: '#fff3c4', a: '#8a6414', p: 200 }, fur: { n: 'Yeti fur', c: '#eef3f8', s: '#9fdcff', a: '#7f98b0', p: 0, cones: 12 }
 };
-const GAME_SPEED = 0.8, PACE = 850 * GAME_SPEED, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
+const GAME_SPEED = 0.9, PACE = 850 * GAME_SPEED, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
 const parOf = S => TIERS.map(k => Math.round(S.len / PACE * k)); /* gold, silver, bronze in whole seconds */
 const medalOf = (S, t) => { const p = parOf(S); return t <= p[0] ? 3 : t <= p[1] ? 2 : t <= p[2] ? 1 : 0; };
 function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'], album: {}, endings: [] }; }
