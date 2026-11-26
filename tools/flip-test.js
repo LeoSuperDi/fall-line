@@ -12,7 +12,8 @@ const { chromium } = require('playwright'), path = require('path'), routeFonts =
     const t0 = await p.evaluate(() => __hs.L.tricks);
     await p.keyboard.press('Space'); await p.waitForTimeout(40); await p.keyboard.down('ArrowRight');
     let air = 0; for (let k = 0; k < 200; k++) { await p.waitForTimeout(10); const st = await p.evaluate(() => [__hs.P.ground, __hs.P.vy, __hs.P.trick]); if (st[0]) break; air += 10;
-      if (st[1] > 0 && (st[2] % 6.283) > 4.9 && (await p.evaluate(() => { const P = __hs.P; return P.y; })) ) { /* release near the end of a rotation when falling and low */ const nearGround = await p.evaluate(() => { const L = __hs.L, P = __hs.P; return L.gy[Math.floor(P.x / 10)] - P.y < 90; }); if (nearGround) { await p.keyboard.up('ArrowRight'); } } }
+      if (st[1] > 0) { const g = await p.evaluate(() => { const L = __hs.L, P = __hs.P; return L.gy[Math.floor(P.x / 10)] - P.y; }); const rem = st[2] % 6.283; if (g < 260 && (rem > 4.6 || rem < 0.5)) await p.keyboard.up('ArrowRight'); } /* let go when a rotation is nearly done and the snow is coming up */
+    }
     await p.keyboard.up('ArrowRight');
     await p.waitForFunction(() => __hs.state === 'play', null, { timeout: 8000 }).catch(() => {});
     const r = await p.evaluate(() => ({ why: (__hs.L.whys || []).slice(-1)[0], crashes: __hs.L.crashes, tricks: __hs.L.tricks, recent: (__hs.L.recent.slice(-1)[0] || {}).n }));

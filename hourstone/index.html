@@ -474,7 +474,7 @@ function buildLevel(ci, si) {
       const big = !Z.ceiling && R() < 0.33 + diff * 0.2, rs = X(); seg(big ? 150 : 110, t => -STEP * (big ? 0.6 : 0.45) * (0.4 + t)); const lip = X(); kickers.push([rs, lip, big]); /* big kickers send you high enough for 4 or 5 flips */
       if (R() < 0.55 + diff * 0.3) { const w = 120 + R() * (40 + diff * 40), k = Math.round(w / STEP); for (let i = 0; i < k; i++) put(STEP * 0.35, true);
         cand.push({ x: lip + 60, dy: -100, kick: true }); }
-      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 1900;
+      put(60 + R() * 50, false); seg(500, () => STEP * 0.42); seg(380, () => STEP * 0.24); safeX = X() + 2400;
     }
     else if (r < 0.66) { seg(220, () => STEP * 0.14); put(80 + R() * 70, false); seg(460, () => STEP * 0.45); seg(300, () => STEP * 0.2); safeX = X() + 1400; }
     else if (r < 0.8) { const len = 900 + R() * 700, gr = 0.2 + R() * 0.1; seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); } /* moguls removed: a clean run instead */
@@ -515,14 +515,14 @@ function crash(why) {
 function jump() { P.ground = false; P.vy = P.vy - JUMPV; P.coyote = 0; P.jumpBuf = 0; P.trick = 0; P.grabT = 0; sfx.jump(); burst(P.x, P.y, 8, L.Z.top); }
 /* tricks: one place that names, scores and rewards them. Repeating a trick halves it, chaining tricks builds a combo, and every trick fills the boost meter */
 function airTricks() {
-  const flips = Math.floor((Math.abs(P.trick) + 1.4) / TAU) /* a flip counts from about 4.9 of its 6.3 radians */, grab = P.grabT > 0.25;
+  const flips = Math.min(4, Math.floor((Math.abs(P.trick) + 1.7) / TAU)) /* a flip counts from about 4.9 of its 6.3 radians */, grab = P.grabT > 0.25;
   if (flips || grab) {
-    const name = (flips ? (flips > 1 ? (['', '', 'Double ', 'Triple ', 'Quadruple ', 'Quintuple '][flips] || flips + 'x ') : '') + (flips > 1 ? (P.trick > 0 ? 'front flip' : 'back flip') : (P.trick > 0 ? 'Front flip' : 'Back flip')) : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
+    const name = (flips ? (flips > 1 ? (['', '', 'Double ', 'Triple ', 'Quadruple '][flips]) : '') + (flips > 1 ? (P.trick > 0 ? 'front flip' : 'back flip') : (P.trick > 0 ? 'Front flip' : 'Back flip')) : '') + (flips && grab ? ' + ' : '') + (grab ? 'Grab' : '');
     registerTrick(name, Math.round(flips * 500 * (1 + 0.35 * (flips - 1))) + (grab ? Math.round(P.grabT * 300) : 0), { flips, grab });
-    if (flips >= 4) { popup(P.x, P.y - 150, flips >= 5 ? 'Unreal!' : 'Huge!', '#ff7ad9'); shake = 0.5; [523, 784, 1047, 1568].forEach((q, i) => tone(q, 0.2, 'triangle', 0.05, 0, AU.ac && AU.ac.currentTime + i * 0.06)); }
+    if (flips >= 4) { popup(P.x, P.y - 150, 'Huge!', '#ff7ad9'); shake = 0.5; [523, 784, 1047, 1568].forEach((q, i) => tone(q, 0.2, 'triangle', 0.05, 0, AU.ac && AU.ac.currentTime + i * 0.06)); }
     P.s = Math.min(MAXB, P.s + 90 * flips + (grab ? 40 : 0)); sfx.trick();
     if (flips && !demo && L.finds && state === 'play') {
-      const f = rollFind(RW[Math.min(5, flips)], L.ci); L.finds.push(f); persist();
+      const f = rollFind(RW[Math.min(4, flips)], L.ci); L.finds.push(f); persist();
       slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); /* every landed flip spins the reel */
     }
   }
@@ -578,7 +578,7 @@ function stepPlayer(dt) {
     if (k.l) s -= 760 * dt;
     for (const [a0, a1, big] of L.kickers) if (P.x > a0 && P.x < a1 + 4) { s = Math.max(s, big ? 820 : 620); break; }
     for (const [a0, a1, big] of L.kickers) if (P.x > a1 - 16 && P.x <= a1 + 4 && !demo) { /* the lip throws you up: big air whether or not you jump */
-      P.ground = false; P.coyote = 0.12; P.trick = 0; P.grabT = 0; P.vx = Math.max(P.s, 650) * 0.95; P.vy = -(Z.ceiling ? 700 : big ? 1250 : 920) - (P.jumpBuf > 0 ? 200 : 0); P.jumpBuf = 0; P.x = a1 + 1; sfx.jump(); burst(P.x, P.y, 14, Z.top); return; }
+      P.ground = false; P.coyote = 0.12; P.trick = 0; P.grabT = 0; P.vx = Math.max(P.s, 650) * 0.95; P.vy = -(Z.ceiling ? 700 : big ? 1450 : 960) - (P.jumpBuf > 0 ? 200 : 0); P.jumpBuf = 0; P.x = a1 + 1; sfx.jump(); burst(P.x, P.y, 14, Z.top); return; }
     const boosting = k.b && L.boost > 0.02 && !demo; P.boosting = boosting;
     if (boosting) { s += 650 * dt; L.boost = Math.max(0, L.boost - 0.38 * dt); L.st.boostT += dt; if (Math.random() < 0.7) spray(P.x - 22, P.y - 12, '#8fe6ff'); }
     s = clamp(s, k.l ? 200 : MINS, boosting ? MAXB : Math.max(MAXS, Math.min(P.s, MAXB) - 500 * dt)); /* boost lifts the top speed, and it eases back down after */
@@ -594,8 +594,8 @@ function stepPlayer(dt) {
     P.vy += G * (k.r !== k.l && !Z.ceiling ? 0.7 : 1) * dt; /* no extra float under a cave roof */ P.vx *= Math.exp(-0.05 * dt); /* a little extra hang time while you hold a flip */
     P.x += P.vx * dt; P.y += P.vy * dt;
     const spin = (k.r ? 1 : 0) - (k.l ? 1 : 0);
-    if (spin) { P.spinV = Math.min(14, (P.spinV || 10) + 3 * dt); P.rot += spin * P.spinV * dt; P.trick += spin * P.spinV * dt; } /* starts at half a second per flip and winds up the longer you hold it */
-    else { P.spinV = 10; const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-6 * dt); } /* let go and the skis level out quickly for the landing */
+    if (spin) { P.spinV = 10; P.rot += spin * P.spinV * dt; P.trick += spin * P.spinV * dt; } /* starts at half a second per flip and winds up the longer you hold it */
+    else { const tgt = clamp(Math.atan2(P.vy, P.vx) * 0.55, -0.7, 0.7); P.rot = tgt + wrapA(P.rot - tgt) * Math.exp(-6 * dt); } /* let go and the skis level out quickly for the landing */
     if (k.d) P.grabT += dt;
     P.crouch = lerp(P.crouch, k.d ? 1.2 : 0.55, 1 - Math.exp(-10 * dt));
     if (Z.ceiling) { const c = ceilAt(P.x) + 48 + stalDepth(P.x); if (P.y < c) { P.y = c; if (P.vy < 0) P.vy = 0; } } /* brushing the roof just stops you rising; it never knocks you back */
@@ -1107,7 +1107,7 @@ const PARK = {
   pine: { n: 'Pine green', c: '#2f7a55', s: '#e8d9a0', a: '#1d4a35', p: 80 }, violet: { n: 'Dusk violet', c: '#8a5bd6', s: '#ffb7e6', a: '#4f2f94', p: 100 },
   gold: { n: 'Gold shell', c: '#e9b73a', s: '#fff3c4', a: '#8a6414', p: 200 }, fur: { n: 'Yeti fur', c: '#eef3f8', s: '#9fdcff', a: '#7f98b0', p: 0, cones: 12 }
 };
-const PACE = 850, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
+const GAME_SPEED = 0.8, PACE = 850 * GAME_SPEED, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
 const parOf = S => TIERS.map(k => Math.round(S.len / PACE * k)); /* gold, silver, bronze in whole seconds */
 const medalOf = (S, t) => { const p = parOf(S); return t <= p[0] ? 3 : t <= p[1] ? 2 : t <= p[2] ? 1 : 0; };
 function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'], album: {}, endings: [] }; }
@@ -1198,7 +1198,7 @@ function nextAfterResults() {
 const RARITY = ['Common', 'Uncommon', 'Rare', 'Legendary', 'Mythic'], DUPE = [5, 10, 25, 100, 250], RW = [[60, 28, 10, 1.6, 0.4], [55, 30, 12, 2.5, 0.5], [48, 32, 16, 3.2, 0.8], [38, 34, 22, 4.8, 1.2], [26, 32, 28, 10, 4], [15, 26, 34, 17, 8]];
 const RCOL = ['#c4c6bc', '#7fe3a0', '#8fbcff', '#ffcf3f', '#ff7ad9'];
 const hitChance = () => 1; /* every landed flip wins a find */
-function findOdds(flips, grab) { const h = hitChance(flips, grab), w = RW[Math.min(5, flips)], sum = w.reduce((a, b) => a + b, 0); return { miss: 1 - h, r: w.map(x => h * x / sum) }; }
+function findOdds(flips, grab) { const h = hitChance(flips, grab), w = RW[Math.min(4, flips)], sum = w.reduce((a, b) => a + b, 0); return { miss: 1 - h, r: w.map(x => h * x / sum) }; }
 const pct = p => { p *= 100; return (p >= 10 ? Math.round(p) : p >= 1 ? p.toFixed(1) : p.toFixed(2)) + '%'; };
 const itemOdds = i => { const it = ITEMS[i], o = findOdds(1, false), same = ITEMS.filter(x => x.zone === it.zone && x.r === it.r).length; return o.r[it.r] / same; };
 const ITEMS = [
@@ -1316,7 +1316,7 @@ function openAlbum() {
   const zones = CH.map((C, z) => `<section><h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of ${ITEMS.filter(it => it.zone === z).length}</small></h3><div class="notes">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i]
     ? `<div class="note" style="--r:${rot(i)}"><canvas width="240" height="180" data-i="${i}" data-f="1"></canvas><b>${it.name}</b><small class="q${it.r}">${RARITY[it.r].toLowerCase()}${save.album[i] > 1 ? ', \u00d7' + save.album[i] : ''}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`
     : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`).join('')}</div></section>`).join('');
-  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p><table class="odt"><tr><th></th>${RARITY.map(r => `<th>${r.toLowerCase()}</th>`).join('')}</tr>${[1, 2, 3, 4, 5].map(n => { const o = findOdds(n, false); return `<tr><th>${['One flip', 'Double flip', 'Triple flip', 'Quadruple flip', 'Quintuple flip'][n - 1]}</th>${o.r.map(p => `<td>${pct(p)}</td>`).join('')}</tr>`; }).join('')}</table><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
+  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p><table class="odt"><tr><th></th>${RARITY.map(r => `<th>${r.toLowerCase()}</th>`).join('')}</tr>${[1, 2, 3, 4].map(n => { const o = findOdds(n, false); return `<tr><th>${['One flip', 'Double flip', 'Triple flip', 'Quadruple flip'][n - 1]}</th>${o.r.map(p => `<td>${pct(p)}</td>`).join('')}</tr>`; }).join('')}</table><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
   $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
 }
 
@@ -1514,13 +1514,13 @@ function frame(now) {
   let dt = Math.min(0.05, (now - last) / 1000); last = now;
   music();
   if (state === 'play' || state === 'title') {
-    acc += dt; let n = 0;
+    acc += dt * GAME_SPEED; let n = 0; /* the whole game runs a bit slower than real time */
     while (acc >= 1 / 120 && n < 8) { stepPlayer(1 / 120); stepWorld(1 / 120); acc -= 1 / 120; n++; if (state !== 'play' && state !== 'title') break; }
     if (state === 'play') L.time += dt;
     if (state === 'title' && P.x > L.finish - 400) respawn(true);
   }
   if (state === 'hub') stepHub(dt);
-  if (state === 'slow') { slowT -= dt; const sdt = dt * Math.max(0.04, slowT / 0.4); stepPlayer(sdt); if (state === 'slow') stepWorld(sdt); if (state === 'slow' && slowT <= 0) { const pr = pendingReel; pendingReel = null; startReel(pr.f, pr.odds, pr.flips); } }
+  if (state === 'slow') { slowT -= dt; const sdt = dt * GAME_SPEED * Math.max(0.04, slowT / 0.4); stepPlayer(sdt); if (state === 'slow') stepWorld(sdt); if (state === 'slow' && slowT <= 0) { const pr = pendingReel; pendingReel = null; startReel(pr.f, pr.odds, pr.flips); } }
   if (state === 'dialog') typeTick(dt);
   stepFx(dt);
   const sc = cvs.height / 540, VW = cvs.width / sc;
