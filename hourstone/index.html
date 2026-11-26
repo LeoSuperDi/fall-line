@@ -282,23 +282,19 @@ body.still #game { transition: filter .3s; }
   #dlg { grid-template-columns: 1fr; padding-bottom: max(30px, env(safe-area-inset-bottom, 0px)); } #dlg canvas { display: none; }
   .mi { font-size: 38px; }
 }
-/* depth: stage goals, boost meter, combo */
-#goalsH { display: grid; gap: 3px; margin-top: 4px; font: 400 14px/1.25 var(--body); text-shadow: 0 1px 6px rgba(0, 0, 0, .55); }
-#goalsH span::before { content: ""; display: inline-block; width: 9px; height: 9px; margin-right: 7px; border: 1.5px solid var(--paper); border-radius: 2px; vertical-align: -1px; }
-#goalsH span.ok { opacity: .65; text-decoration: line-through; } #goalsH span.ok::before { background: #7fe3a0; border-color: #7fe3a0; }
+/* depth: boost meter, combo */
 .bm { display: inline-block; width: 66px; height: 10px; padding: 1px; border: 2px solid var(--paper); border-radius: 3px; box-sizing: border-box; }
 .bm i { display: block; height: 100%; width: 0; background: var(--glow); }
 .bm.full i { background: #fff; box-shadow: 0 0 8px var(--glow); }
 #comboN { position: absolute; right: calc(var(--gx) + 14px); top: calc(var(--gy) + 126px); font: 26px/1 var(--osd); color: var(--glow); text-shadow: 0 1px 8px rgba(0, 0, 0, .5); pointer-events: none; }
-#pGoals:empty { display: none; }
-@media (max-width: 700px) { #goalsH { font-size: 12px; } #comboN { top: calc(var(--gy) + 104px); } }
+@media (max-width: 700px) { #comboN { top: calc(var(--gy) + 104px); } }
 </style>
 
 <canvas id="game"></canvas>
 <div id="vf"><i></i><i></i><i></i><i></i></div>
 
 <div id="hud" class="hidden">
-  <div id="hudL"><div class="osd rec" id="timeN">00:00:00</div><div id="hudEra">Tape 1</div><div id="hudStage">Ranger Road</div><div id="parN"></div><div id="goalsH"></div></div>
+  <div id="hudL"><div class="osd rec" id="timeN">00:00:00</div><div id="hudEra">Tape 1</div><div id="hudStage">Ranger Road</div><div id="parN"></div></div>
   <div id="chase" class="hidden"><small id="chaseLbl">Yeti ahead</small><div id="chaseBar"><div id="chaseFill"></div></div></div>
   <div id="hudR"><div id="stat"><span class="bm" id="boostM" title="Boost: hold Shift"><i id="boostF"></i></span><span class="batt" id="hearts"><i></i><i></i><i></i></span><span id="shardN">0 / 0</span></div><button class="tb2" id="bMute" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bPause" aria-label="Pause">PAUSE</button></div>
   <div id="score">0<small>points</small></div>
@@ -349,7 +345,6 @@ body.still #game { transition: filter .3s; }
 <div id="pause" class="ov dim hidden"><div class="panel">
   <h2>Paused</h2>
   <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Chain tricks for a combo, and hold <kbd>Shift</kbd> to spend boost.</p>
-  <div class="stats" id="pGoals"></div>
   <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Back to basecamp</button></div>
 </div></div>
 
@@ -485,7 +480,7 @@ function buildLevel(ci, si) {
     for (const sh of shards) { const o = obs.find(o => !o.fly && !o.vx && Math.abs(o.x - sh.x) < o.w / 2 + 44); if (o) sh.dy = Math.min(sh.dy, -((o.k === 'geyser' ? 84 : o.h) + 64)); } } /* never inside an obstacle: hang it above, where the jump over it passes */
   const finish = X() + 300; seg(1600, () => STEP * 0.05);
   for (let x = 200; x < X(); x += 90 + R() * 260) deco.push({ x, s: 0.7 + R() * 0.7, v: R() });
-  L = { finds: [], recent: [], combo: 0, comboT: 0, maxCombo: 0, boost: 0, st: { doubles: 0, grabs: 0, boostT: 0, close: 0 }, goals: goalsFor(ci, si), goalDone: [false, false, false], ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
+  L = { finds: [], recent: [], combo: 0, comboT: 0, maxCombo: 0, boost: 0, st: { doubles: 0, grabs: 0, boostT: 0, close: 0 }, ci, si, C, Z, S, gy, gap, obs, shards, kickers, cps, deco, finish, n: gy.length, cp: cps[0], time: 0, score: 0, got: 0, tricks: 0, crashes: 0, lostT: 0 };
   if (S.kind === 'chase' || S.kind === 'escape') L.yeti = { x: 900, y: 0, s: 400, ph: 0, air: 0, vy: 0, friendly: S.kind === 'escape' };
   if (S.kind === 'escape') L.lava = { x: -900, s: 430 };
   L.chaseBase = 560 + ci * 18;
@@ -522,8 +517,7 @@ function airTricks() {
     registerTrick(name, flips * 500 + (grab ? Math.round(P.grabT * 300) : 0), { flips, grab });
     P.s = Math.min(MAXB, P.s + 90 * flips + (grab ? 40 : 0)); sfx.trick();
     if (flips && !demo && L.finds && state === 'play') {
-      const hit = Math.random() < hitChance(flips, grab) || (L.dry || 0) >= 2, f = hit ? rollFind(RW[Math.min(3, flips)], L.ci) : null; /* two misses in a row guarantee the next one */
-      if (f) { L.dry = 0; L.finds.push(f); persist(); } else L.dry = (L.dry || 0) + 1;
+      const f = rollFind(RW[Math.min(3, flips)], L.ci); L.finds.push(f); persist();
       slowT = 0.4; pendingReel = { f, odds: findOdds(flips, grab), flips }; state = 'slow'; document.body.classList.add('still'); tone(900, 0.4, 'sine', 0.05, 200); /* every landed flip spins the reel */
     }
   }
@@ -539,30 +533,11 @@ function registerTrick(name, base, kind) {
   if (kind.flips >= 2) L.st.doubles++; if (kind.grab) L.st.grabs++;
   popup(P.x, P.y - 70, name + '  +' + pts, rep ? '#c9c2a2' : '#ffcf3f');
   if (L.combo > 1) popup(P.x, P.y - 96, 'Combo ×' + mult, '#8fe6ff'); else if (rep) popup(P.x, P.y - 96, rep === 1 ? 'Same trick again, 75% points' : 'Same trick again, half points', '#b0b4c0');
-  checkGoals(false);
-}
-/* stage goals, Alto's Adventure style: three fixed goals per stage */
-const GOALT = {
-  shards: ['Collect all 3 shards', L => L.got >= L.shards.length], clean: ['Finish without crashing', L => L.crashes === 0, true],
-  silver: ['Finish at silver pace or faster', L => medalOf(L.S, L.time) >= 2, true], photo: ['Keep the yeti in camera range for 4 seconds', L => L.st.close >= 4],
-  double: ['Land a double flip', L => L.st.doubles > 0], combo3: ['Chain a 3-trick combo', L => L.maxCombo >= 3],
-  grabs3: ['Land 3 grabs', L => L.st.grabs >= 3], tricks8: ['Land 8 tricks', L => L.tricks >= 8], boost3: ['Boost for 3 seconds', L => L.st.boostT >= 3]
-};
-function goalsFor(ci, si) {
-  const R = rng(900 + ci * 31 + si * 17), kind = CH[ci].stages[si].kind;
-  const first = kind === 'chase' ? 'photo' : kind === 'escape' ? 'clean' : ['shards', 'clean', 'silver'][Math.floor(R() * 3)];
-  const pool = ['double', 'combo3', 'grabs3', 'tricks8', 'boost3'], a = pool.splice(Math.floor(R() * pool.length), 1)[0];
-  return [first, a, pool[Math.floor(R() * pool.length)]];
-}
-function checkGoals(final) {
-  if (!L || !L.goals || demo) return;
-  L.goals.forEach((k, i) => { const g = GOALT[k]; if (!L.goalDone[i] && (final || !g[2]) && g[1](L)) { L.goalDone[i] = true; if (!final) { popup(P.x, P.y - 140, 'Goal done: ' + g[0], '#7fe3a0'); sfx.cp(); } } });
-  const el = $('goalsH'); if (el) el.innerHTML = L.goals.map((k, i) => `<span class="${L.goalDone[i] ? 'ok' : ''}">${GOALT[k][0]}</span>`).join('');
 }
 function land(gy) {
   const a = slopeAt(P.x), d = Math.abs(wrapA(P.rot - a));
   if (d > 2.1) { P.y = gy; crash('land'); return; } // landed on your head
-  P.ground = true; P.y = gy; P.rot = a;
+  P.ground = true; P.y = gy; P.rot = a; P.landT = L.time;
   P.s = clamp(P.vx * Math.cos(a) + P.vy * Math.sin(a), MINS, MAXB);
   if (d > 0.95) { P.s = Math.max(MINS, P.s * 0.6); popup(P.x, P.y - 70, 'Sloppy landing', '#ff9a6a'); sfx.land(); P.trick = 0; P.grabT = 0; return; } // crooked: you keep your feet but lose speed
   airTricks();
@@ -626,7 +601,8 @@ function stepPlayer(dt) {
   for (const o of L.obs) {
     if (o.x < P.x - 160 || o.x > P.x + 160) continue;
     const top = obsTop(o), bot = obsBot(o);
-    if (Math.abs(o.x - P.x) < o.w / 2 + 12 && cy + 13 > top && cy - 13 < bot) {
+    if (Math.abs(o.x - P.x) < o.w / 2 + 4 && cy + 13 > top && cy - 13 < bot) {
+      if (P.ground && STOMP.has(o.k) && L.time - (P.landT || -9) < 0.5) { P.ground = false; P.vy = -480; P.y = Math.min(P.y, top); popup(P.x, P.y - 60, 'Close one!', '#8fe6ff'); sfx.jump(); break; } /* landed just in front of it: hop it instead of dying */
       if (!P.ground && P.vy > 0 && STOMP.has(o.k) && P.y < top + 26) { /* coming down onto a flat-topped obstacle: bounce off it instead of crashing */
         P.y = top; P.vy = -430; P.vx = Math.max(P.vx, 380); L.score += 100; popup(P.x, P.y - 60, 'Bounce  +100', '#8fe6ff'); sfx.jump(); burst(P.x, P.y, 12, '#ffffff'); shake = 0.25; break;
       }
@@ -653,7 +629,6 @@ function stepWorld(dt) {
     Yt.s = lerp(Yt.s, tgt, 1 - Math.exp(-(d < 300 ? 8 : 2) * dt)); Yt.x += Yt.s * dt; if (Yt.x < P.x + (Yt.friendly ? 70 : 170) && P.crash <= 0) { Yt.x = P.x + (Yt.friendly ? 70 : 170); Yt.s = Math.max(Yt.s, P.s); } /* you can't overtake him */ Yt.ph += dt * (Yt.s / 60);
     const gy = groundAt(Yt.x);
     if (isNaN(gy)) { Yt.air += dt; Yt.y = baseAt(Yt.x) - 120 * Math.sin(clamp(Yt.air * 2.6, 0, Math.PI)); } else { Yt.air = 0; Yt.y = gy; }
-    if (!Yt.friendly && !demo && d > 0 && d < 380) L.st.close += dt;
     if (!Yt.friendly && P.crash <= 0 && !demo) { if (d > 1300) L.lostT += dt; else L.lostT = Math.max(0, L.lostT - dt * 2); if (L.lostT > 2.5) failStage('The yeti got away', 'He was too fast this time. Keep your speed up: tuck, push, and don\'t crash.'); }
   }
   if (L.lava && !demo) { L.lava.s = Math.min(640, L.lava.s + 5 * dt); L.lava.x += L.lava.s * dt; if (L.lava.x > P.x - 30 && P.crash <= 0) { crash('lava'); popup(P.x, P.y - 80, 'Too hot!', '#ff5d3a'); } }
@@ -1125,7 +1100,7 @@ const PARK = {
 const PACE = 850, TIERS = [1.2, 1.5, 2.0], MEDAL = ['No medal', 'Bronze', 'Silver', 'Gold'], MBONUS = [0, 15, 35, 75];
 const parOf = S => TIERS.map(k => Math.round(S.len / PACE * k)); /* gold, silver, bronze in whole seconds */
 const medalOf = (S, t) => { const p = parOf(S); return t <= p[0] ? 3 : t <= p[1] ? 2 : t <= p[2] ? 1 : 0; };
-function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'], album: {}, endings: [], goals: {} }; }
+function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told: {}, parka: 'orange', owned: ['orange'], album: {}, endings: [] }; }
 let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save', {})), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
 if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
@@ -1150,7 +1125,7 @@ function startStage(ci, si, skipBefore) {
     ['title', 'fail', 'results', 'pause', 'chapterCard', 'ending'].forEach(i => show(i, false)); hideHub();
     demo = false; buildLevel(ci, si); P.hearts = 3; respawn(true); camSnap(); state = 'play';
     show('hud', true); show('touch', isTouch); show('chase', !!L.yeti); $('tJ').textContent = 'Jump';
-    checkGoals(false); $('hudEra').textContent = 'Tape ' + (ci + 1) + ', ' + CH[ci].era; $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'LAVA' : 'YETI'; hudT = 1;
+    $('hudEra').textContent = 'Tape ' + (ci + 1) + ', ' + CH[ci].era; $('hudStage').textContent = st.name; $('chaseLbl').textContent = L.lava ? 'LAVA' : 'YETI'; hudT = 1;
   };
   if (!skipBefore && st.before && !save.told[bk]) { save.told[bk] = 1; persist(); hideHub(); buildLevel(ci, si); respawn(true); camSnap(); dialog(st.before, go); } else go();
 }
@@ -1164,15 +1139,12 @@ function finishStage() {
   const nb = { score: prev ? prev.score : 0, rank: prev ? prev.rank : rank, time: newBest ? L.time : prev.time, medal: top };
   if (!prev || L.score > prev.score) { nb.score = L.score; nb.rank = rank; }
   save.best[key] = nb; save.bank += gain;
-  checkGoals(true); save.goals = save.goals || {};
-  const pg = save.goals[key] || [0, 0, 0], ng = pg.map((v, i) => v || L.goalDone[i] ? 1 : 0), newGoals = ng.filter((v, i) => v && !pg[i]).length, allNow = ng.every(Boolean) && !pg.every(Boolean);
-  save.goals[key] = ng; save.bank += newGoals * 20;
-  const find = rollFind(RW[med], L.ci), bonus = allNow ? rollFind([0, 0, 70, 25, 5], L.ci) : null, allF = L.finds.concat(find, bonus ? [bonus] : []), newF = allF.filter(f => f.isNew);
+  const find = rollFind(RW[med], L.ci), allF = L.finds.concat(find), newF = allF.filter(f => f.isNew);
   const last = L.si === CH[L.ci].stages.length - 1; persist();
   $('resTitle').textContent = L.S.name; $('rank').textContent = rank; $('resCap').textContent = 'Frame grab, ' + fmt(L.time) + '. Tape ' + (L.ci + 1) + ', ' + L.C.era + '.';
-  $('resNote').textContent = (allNow ? 'All three goals done: bonus find, ' + bonus.it.name + '. ' : '') + (newF.length ? 'New in the album: ' + newF.map(f => f.it.name + ' (' + RARITY[f.it.r].toLowerCase() + ')').join(', ') + '. ' : 'No new album photos this time. ') + (med > pm ? MEDAL[med] + ' medal earned. ' : newBest && prev && prev.time ? 'New best time. ' : '') + (med < 3 ? MEDAL[med + 1] + ' needs ' + fmt(par[2 - med]) + ' or less.' : med > pm ? '' : 'Gold again. Nothing left to beat but your own time.');
+  $('resNote').textContent = (newF.length ? 'New in the album: ' + newF.map(f => f.it.name + ' (' + RARITY[f.it.r].toLowerCase() + ')').join(', ') + '. ' : 'No new album photos this time. ') + (med > pm ? MEDAL[med] + ' medal earned. ' : newBest && prev && prev.time ? 'New best time. ' : '') + (med < 3 ? MEDAL[med + 1] + ' needs ' + fmt(par[2 - med]) + ' or less.' : med > pm ? '' : 'Gold again. Nothing left to beat but your own time.');
   { const t = document.createElement('canvas'); t.width = 640; t.height = Math.round(640 * cvs.height / cvs.width); t.getContext('2d').drawImage(cvs, 0, 0, t.width, t.height); $('resPhoto').src = t.toDataURL('image/jpeg', 0.82); }
-  $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Goals</span><span>${L.goalDone.filter(Boolean).length} of 3${newGoals ? ', +' + newGoals * 20 + ' shards' : ''}</span><span>Tricks landed</span><span>${L.tricks}${L.maxCombo > 1 ? ', best combo ' + L.maxCombo : ''}</span><span>Crashes</span><span>${L.crashes}</span><span>Banked</span><span>+${gain + newGoals * 20} shards</span><span>Field finds</span><span>${allF.length}${allF.length > 1 ? ', ' + (allF.length - 1) + ' from flips' : ''}</span>`;
+  $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}${L.maxCombo > 1 ? ', best combo ' + L.maxCombo : ''}</span><span>Crashes</span><span>${L.crashes}</span><span>Banked</span><span>+${gain} shards</span><span>Field finds</span><span>${allF.length}${allF.length > 1 ? ', ' + (allF.length - 1) + ' from flips' : ''}</span>`;
   $('resNext').textContent = last ? 'Back to basecamp' : 'Next stage'; show('resHub', !last);
   show('hud', false); show('touch', false); show('results', true); $('resNext').focus();
 }
@@ -1187,7 +1159,7 @@ function nextAfterResults() {
 /* ================= field finds (the luck collectible) and endings ================= */
 const RARITY = ['Common', 'Uncommon', 'Rare', 'Legendary', 'Mythic'], DUPE = [5, 10, 25, 100, 250], RW = [[60, 28, 10, 1.6, 0.4], [55, 30, 12, 2.5, 0.5], [48, 32, 16, 3.2, 0.8], [38, 34, 22, 4.8, 1.2]];
 const RCOL = ['#c4c6bc', '#7fe3a0', '#8fbcff', '#ffcf3f', '#ff7ad9'];
-const hitChance = (flips, grab) => Math.min(0.8, 0.15 + 0.2 * flips + (grab ? 0.08 : 0));
+const hitChance = () => 1; /* every landed flip wins a find */
 function findOdds(flips, grab) { const h = hitChance(flips, grab), w = RW[Math.min(3, flips)], sum = w.reduce((a, b) => a + b, 0); return { miss: 1 - h, r: w.map(x => h * x / sum) }; }
 const pct = p => { p *= 100; return (p >= 10 ? Math.round(p) : p >= 1 ? p.toFixed(1) : p.toFixed(2)) + '%'; };
 const itemOdds = i => { const it = ITEMS[i], o = findOdds(1, false), same = ITEMS.filter(x => x.zone === it.zone && x.r === it.r).length; return o.r[it.r] / same; };
@@ -1306,7 +1278,7 @@ function openAlbum() {
   const zones = CH.map((C, z) => `<section><h3>${C.title}<small>${ITEMS.filter((it, i) => it.zone === z && save.album[i]).length} of ${ITEMS.filter(it => it.zone === z).length}</small></h3><div class="notes">${ITEMS.map((it, i) => ({ it, i })).filter(o => o.it.zone === z).map(({ it, i }) => save.album[i]
     ? `<div class="note" style="--r:${rot(i)}"><canvas width="240" height="180" data-i="${i}" data-f="1"></canvas><b>${it.name}</b><small class="q${it.r}">${RARITY[it.r].toLowerCase()}${save.album[i] > 1 ? ', \u00d7' + save.album[i] : ''}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`
     : `<div class="note no"><canvas width="240" height="180" data-i="${i}"></canvas><b>Not spotted yet</b><small>${RARITY[it.r].toLowerCase()}</small><small class="pc">${pct(itemOdds(i))} a flip</small></div>`).join('')}</div></section>`).join('');
-  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p><table class="odt"><tr><th></th><th>nothing</th>${RARITY.map(r => `<th>${r.toLowerCase()}</th>`).join('')}</tr>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<tr><th>${['One flip', 'Double flip', 'Triple flip'][n - 1]}</th><td>${pct(o.miss)}</td>${o.r.map(p => `<td>${pct(p)}</td>`).join('')}</tr>`; }).join('')}</table><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
+  panel(`<div class="top"><h2>Arlo’s sketchbook</h2><span class="cnt">${albumCount()} of ${ITEMS.length} drawn</span></div><p>Everything I’ve spotted while chasing him. Landing flips helps: the bigger the flip, the rarer the find. Spares turn into shards.</p><table class="odt"><tr><th></th>${RARITY.map(r => `<th>${r.toLowerCase()}</th>`).join('')}</tr>${[1, 2, 3].map(n => { const o = findOdds(n, false); return `<tr><th>${['One flip', 'Double flip', 'Triple flip'][n - 1]}</th>${o.r.map(p => `<td>${pct(p)}</td>`).join('')}</tr>`; }).join('')}</table><div class="book">${zones}</div><div class="row"><button class="btn" id="hpClose">Close the book</button></div>`, 'paper');
   $('hpBox').querySelectorAll('canvas[data-i]').forEach(c => doodle(c, +c.dataset.i, !!c.dataset.f));
 }
 
@@ -1323,7 +1295,7 @@ function startReel(f, odds, flips) {
   state = 'reel'; document.body.classList.add('still'); const rl = $('reel'); rl.classList.remove('out'); show('reel', true);
   $('reelRes').innerHTML = '&nbsp;'; $('reelRes').classList.remove('show'); $('reelBurst').className = 'burst';
   const pool = ITEMS.map((it, i) => i).filter(i => ITEMS[i].zone === L.ci), N = 38, T = 31, tiles = [];
-  const pickTile = () => { if (Math.random() < 0.34) return -1; const r = Math.random(); const want = r < 0.5 ? 0 : r < 0.75 ? 1 : r < 0.9 ? 2 : r < 0.97 ? 3 : 4; const c = pool.filter(i => ITEMS[i].r === want); return c[Math.floor(Math.random() * c.length)]; };
+  const pickTile = () => { const r = Math.random(); const want = r < 0.5 ? 0 : r < 0.75 ? 1 : r < 0.9 ? 2 : r < 0.97 ? 3 : 4; const c = pool.filter(i => ITEMS[i].r === want); return c[Math.floor(Math.random() * c.length)]; };
   for (let n = 0; n < N; n++) tiles.push(n === T ? (f ? f.i : -1) : pickTile());
   if (f && f.it.r < 3) { const tease = pool.filter(i => ITEMS[i].r >= 3); tiles[T + 1] = tease[Math.floor(Math.random() * tease.length)]; } /* the near miss: something shiny sits right next to the stop */
   const tr = $('reelTrack'); tr.style.transition = 'none'; tr.style.transform = 'translateX(0px)';
@@ -1403,7 +1375,7 @@ function hubAct() {
   else if (t.kind === 'shop') { if (save.told.dawa) openShop(); else { save.told.dawa = 1; persist(); hubDialog(DAWA_INTRO, openShop); } }
 }
 const WELCOME = [[J, "Arlo, you made it to Basecamp. Radio check: can you hear me?"], [A, "Loud and clear. Day 212. Still no yeti."], [J, "Then start at the first door. Every stage has a gold, silver and bronze time, so go back and beat them whenever you like."], [T, "Left and right to walk, up at a door to go in. There are pinecones lying around camp, so look around."]];
-const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."], [J, "Every trick charges your boost. Hold Shift to burn it. Mixing up your tricks charges it faster."], [J, "Each stage has three goals. Do all three and you get a guaranteed rare find."]];
+const JTIPS = [[J, "Gold times need nearly top speed. Tuck on the flats and take every kicker."], [J, "Chase stages count for medals too. Don't brake. The yeti isn't going to slow down for you."], [J, "Dawa will trade you a yeti-fur parka for twelve pinecones. I've found two. Don't tell him."], [J, "Medals pay bonus shards, once per medal. Faster is always worth it."], [J, "Land flips! Every flip is a lucky roll for your album. Doubles and triples find the rare stuff."], [J, "Every trick charges your boost. Hold Shift to burn it. Mixing up your tricks charges it faster."]];
 const DAWA_INTRO = [['dawa', "Parkas by the door. Pay in shards, or bring me twelve pinecones for the fur one."], [A, "Twelve? Is that a lot?"], ['dawa', "Depends how well you look."]];
 
 /* panels */
@@ -1413,7 +1385,7 @@ function openTape(ci) {
   const C = CH[ci];
   const rows = C.stages.map((S, si) => {
     const ok = stageOpen(ci, si), b = save.best[ci + '-' + si], par = parOf(S), m = b ? b.medal || 0 : 0;
-    return `<button class="srow" data-s="${si}" ${ok ? '' : 'disabled'}><span class="sn">${si + 1}</span><span><b>${S.name}</b><small>${ok ? 'Gold under ' + fmt(par[0]) + ', goals ' + ((save.goals || {})[ci + '-' + si] || []).filter(Boolean).length + ' of 3' : 'Clear the stage before this one'}</small></span><span class="mdl m${m}">${b ? MEDAL[m] : 'Not cleared'}<small>${b && b.time ? fmtT(b.time) : ''}</small></span></button>`;
+    return `<button class="srow" data-s="${si}" ${ok ? '' : 'disabled'}><span class="sn">${si + 1}</span><span><b>${S.name}</b><small>${ok ? 'Gold under ' + fmt(par[0]) : 'Clear the stage before this one'}</small></span><span class="mdl m${m}">${b ? MEDAL[m] : 'Not cleared'}<small>${b && b.time ? fmtT(b.time) : ''}</small></span></button>`;
   }).join('');
   panel(`<div class="top"><h2>${C.title}</h2><span class="bank">${save.bank}</span></div><p>${C.era}. Faster times earn medals and bonus shards.</p><div>${rows}${ci === CH.length - 1 && save.best[ci + '-2'] ? `<button class="srow" id="finRow"><span class="sn">F</span><span><b>The last frame</b><small>Choose how the story ends</small></span><span class="mdl">${save.endings.length} of ${ENDORDER.length} endings</span></button>` : ''}</div><div class="row"><button class="btn" id="hpClose">Back to camp</button></div>`);
   $('hpBox').querySelectorAll('.srow[data-s]').forEach(b => b.onclick = () => launch(ci, +b.dataset.s)); if ($('finRow')) $('finRow').onclick = openFinale;
@@ -1480,7 +1452,7 @@ const hold = (id, key) => { const b = $(id); const on = e => { e.preventDefault(
 hold('tL', 'l'); hold('tR', 'r'); hold('tD', 'd'); hold('tB', 'b');
 $('tJ').addEventListener('pointerdown', e => { e.preventDefault(); audioInit(); if (state === 'play') P.jumpBuf = 0.14; else if (state === 'dialog') advance(); else if (state === 'hub') hubAct(); });
 document.body.classList.toggle('touch', isTouch);
-function pause(on) { if (on && state === 'play') { state = 'paused'; $('pGoals').innerHTML = L.goals ? L.goals.map((k, i) => `<span>${GOALT[k][0]}</span><span>${L.goalDone[i] ? 'Done' : GOALT[k][2] ? 'At the finish' : 'Not yet'}</span>`).join('') : ''; show('pause', true); $('pResume').focus(); } else if (!on && state === 'paused') { state = 'play'; show('pause', false); } }
+function pause(on) { if (on && state === 'play') { state = 'paused'; show('pause', true); $('pResume').focus(); } else if (!on && state === 'paused') { state = 'play'; show('pause', false); } }
 $('bPause').onclick = () => pause(true); $('pResume').onclick = () => pause(false);
 $('pRestart').onclick = () => { show('pause', false); startStage(L.ci, L.si, true); };
 $('pQuit').onclick = () => startHub(L.ci >= 0 ? L.ci : undefined);
@@ -1519,7 +1491,7 @@ function frame(now) {
   render(dt);
   if (state === 'play' && (hudT += dt) > 0.1) {
     hudT = 0; $('hearts').innerHTML = [0, 1, 2].map(k => '<i class="' + (k < P.hearts ? 'on' : '') + '"></i>').join(''); $('hearts').classList.toggle('low', P.hearts === 1); $('shardN').textContent = L.got + ' / ' + L.shards.length; $('timeN').textContent = fmtTC(L.time);
-    $('score').firstChild.nodeValue = L.score; $('boostF').style.width = (L.boost * 100).toFixed(0) + '%'; $('boostM').classList.toggle('full', L.boost > 0.98); $('comboN').textContent = L.combo > 1 ? 'Combo \u00d7' + Math.min(3, 1 + 0.5 * (L.combo - 1)) : ''; checkGoals(false);
+    $('score').firstChild.nodeValue = L.score; $('boostF').style.width = (L.boost * 100).toFixed(0) + '%'; $('boostM').classList.toggle('full', L.boost > 0.98); $('comboN').textContent = L.combo > 1 ? 'Combo \u00d7' + Math.min(3, 1 + 0.5 * (L.combo - 1)) : '';
     { const pr = parOf(L.S), k = L.time <= pr[0] ? 0 : L.time <= pr[1] ? 1 : L.time <= pr[2] ? 2 : 3; $('parN').textContent = k < 3 ? ['Gold ', 'Silver ', 'Bronze '][k] + fmt(pr[k]) : 'Past bronze time'; $('parN').classList.toggle('late', k === 3); }
     { let pc = -1; if (L.yeti && !L.lava) pc = clamp(100 - (L.yeti.x - P.x - 200) / 10, 4, 100); if (L.lava) pc = clamp((P.x - L.lava.x) / 12, 3, 100); if (pc >= 0) { $('chaseFill').style.width = pc + '%'; $('chase').classList.toggle('low', pc < 25); } }
   }

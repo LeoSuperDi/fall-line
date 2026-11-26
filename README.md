@@ -1,6 +1,6 @@
 # Hourstone (2D) and Frostpeak Frontier (3D)
 
-Basecamp: stages are launched from a walkable side-scrolling hub (tape doors, Juni's radio tent, Dawa's parka shop, twelve hidden pinecones). Every stage has gold, silver and bronze par times (`PACE`/`TIERS` in index.html), three shards, and saves its best time and medal. Each stage has three fixed goals (see `GOALT`/`goalsFor`), tricks chain into combos and fill a boost meter (hold Shift), repeating a trick halves its points. Landing a flip that wins a find stops time and spins a reel of field finds for Arlo's sketchbook (36 finds, common to mythic), and four endings depend on the finale choice, pinecones and the sketchbook.
+Basecamp: stages are launched from a walkable side-scrolling hub (tape doors, Juni's radio tent, Dawa's parka shop, twelve hidden pinecones). Every stage has gold, silver and bronze par times (`PACE`/`TIERS` in index.html), three shards, and saves its best time and medal. Tricks chain into combos and fill a boost meter (hold Shift), repeating a trick halves its points. Every landed flip stops time and spins a reel of field finds for Arlo's sketchbook (36 finds, common to mythic), and four endings depend on the finale choice, pinecones and the sketchbook.
 
 `hourstone/index.html` is the current game: a side-scrolling arcade ski adventure in one file. Arlo Finch chases a
 yeti through six eras (forest, caves, a 1924 expedition, the Ice Age glacier, the Snowglobe at the end of time, and a
