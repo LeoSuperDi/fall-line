@@ -183,7 +183,7 @@ body.touch #hubPrompt { bottom: 130px; }
 .prow i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--ink); }
 .prow b { font: 800 22px/1 var(--display); } .prow small { color: var(--dim); font-size: 14px; }
 .prow em { font-style: normal; font: 700 15px var(--body); }
-#dlg[data-who=bet] #dlgName { color: var(--amber); } #dlg[data-who=dawa] #dlgName { color: #ff8a6a; }
+#dlg[data-who=noah] #dlgName { color: #e0b070; } #dlg[data-who=bet] #dlgName { color: var(--amber); } #dlg[data-who=dawa] #dlgName { color: #ff8a6a; }
 
 .rar { font-weight: 700; } .r0 { color: #c4c6bc; } .r1 { color: #7fe3a0; } .r2 { color: #8fbcff; } .r3 { color: #ffcf3f; }
 .album { display: grid; gap: 14px; max-height: 56vh; overflow: auto; padding-right: 4px; }
@@ -379,9 +379,9 @@ const ZONES = {
   camp: { sky: ['#78b4e6', '#ffe3c0'], far: '#9fb4d6', far2: '#c4cfe4', mid: '#2e6a52', ground: '#eef3f8', top: '#ffffff', dirt: '#b8cbe2', pit: '#1b3a4c', weather: 'snow', g: 1, fric: 1, obs: [], gap: 'creek', deco: 'pine', key: 0 },
   forest: { sky: ['#5fb4f2', '#d9f2ff'], far: '#8fb6dd', far2: '#b6d2ee', mid: '#2e6a52', ground: '#e8f1fb', top: '#ffffff', dirt: '#b8cbe2', pit: '#1b3a4c', weather: 'snow', g: 1, fric: 1, obs: ['log', 'rock', 'stump'], gap: 'creek', deco: 'pine', key: 0 },
   cave: { sky: ['#140f26', '#3b2950'], far: '#271d3c', far2: '#33264d', mid: '#45335f', ground: '#6e5a80', top: '#a28cc0', dirt: '#4e3f63', pit: '#07050f', weather: 'dust', g: 1, fric: 1, ceiling: true, obs: ['stalagmite', 'bat', 'crystal'], gap: 'chasm', deco: 'torch', key: 1 },
-  expedition: { sky: ['#7f93b3', '#dfe6ef'], far: '#a7b2c3', far2: '#c4ccd6', mid: '#7d889a', ground: '#eef3f8', top: '#ffffff', dirt: '#b9c6d6', pit: '#24496e', weather: 'blizzard', g: 1, fric: 1, obs: ['crate', 'sled', 'rock'], gap: 'crevasse', deco: 'flag', key: 2 },
+  flood: { sky: ['#4a5d79', '#a9bccb'], far: '#6f8299', far2: '#8a9cb0', mid: '#3e5a4c', ground: '#e4ecf1', top: '#ffffff', dirt: '#9fb0bf', pit: '#2b5878', weather: 'rain', g: 1, fric: 1, obs: ['log', 'crate', 'rock'], gap: 'flood', deco: 'deadtree', key: 2 },
   glacier: { sky: ['#3f9fe6', '#c6f0ff'], far: '#9ed8f4', far2: '#c4ebfb', mid: '#5fb3e0', ground: '#c7ecfb', top: '#f4fdff', dirt: '#86cbea', pit: '#0f3a63', weather: 'sparkle', g: 1, fric: 0.5, obs: ['mammoth', 'icespike', 'rock'], gap: 'crevasse', deco: 'ice', key: 3 },
-  globe: { sky: ['#251660', '#f07ab9'], far: '#523a9c', far2: '#7a55c8', mid: '#9b7ae6', ground: '#f3e8ff', top: '#ffffff', dirt: '#cbb3f3', pit: '#0e0828', weather: 'upsnow', g: 0.58, fric: 0.8, obs: ['drone', 'star'], gap: 'void', deco: 'lamp', key: 4 },
+  dino: { sky: ['#ff8a4c', '#ffd9a0'], far: '#c9805a', far2: '#e0a27a', mid: '#3f6b3a', ground: '#ece6da', top: '#fffaf2', dirt: '#b9a88c', pit: '#140f0a', weather: 'ash', g: 1, fric: 1, obs: ['rock', 'stump', 'meteor'], gap: 'tar', deco: 'fern', key: 4 },
   volcano: { sky: ['#2a0b10', '#f2652a'], far: '#5a1d1d', far2: '#7c2a22', mid: '#2b1515', ground: '#3d2c2b', top: '#7a5248', dirt: '#2a1c1c', pit: '#ff5a1a', weather: 'ash', g: 1, fric: 1, obs: ['lavarock', 'ptero', 'geyser'], gap: 'lava', deco: 'deadtree', key: 5 }
 };
 
@@ -400,23 +400,23 @@ const CH = [
       { kind: 'run', len: 44000, name: 'Painted Halls', before: [[N, "The walls are covered in paintings. People, deer, fire. And a tall white figure in the middle of them all."], [A, "They painted him dancing with them. They weren't scared of him."]] },
       { kind: 'chase', len: 36000, name: 'Chase: Through the Echo', before: [[N, "A roar rolls through the tunnels. Bats burst from the ceiling."], [A, "There you are!"]] }],
     outro: [[N, "The yeti gathers the shards Arlo carried and holds them to his chest. The broken stone glows a little brighter."], [Y, "Hrrm."], [A, "Was that a thank you? Or a 'stop following me'?"], [N, "The yeti steps into another tear in the air. Through it: wind, snow, and voices."]] },
-  { zone: 'expedition', era: 'A hundred years ago', title: 'The Finch Expedition',
-    intro: [[N, "Canvas tents snap in the blizzard. A flag on the nearest one reads FINCH EXPEDITION, 1924."], [A, "Finch? That's my name."], [J, "Arlo! You're clear for a second! I found Dad's old box in the attic."], [J, "Great-grandma Edda went looking for the yeti too. She came back and never talked about it. Ever."], [A, "I think I'm standing in her camp."], [N, "On a crate lies a leather journal. Arlo tucks it into his coat."]],
-    stages: [{ kind: 'run', len: 40000, name: 'Base Camp' },
-      { kind: 'run', len: 44000, name: 'Crevasse Field', before: [[E, "Day 29. The porters say the mountain has a keeper. I mean to photograph it and prove them wrong."], [A, "Ha. Same, Edda. Same."]] },
-      { kind: 'chase', len: 36000, name: 'Chase: Into the Whiteout', before: [[E, "Day 31. Pemba fell into a crevasse today. The creature pulled him out. I had my camera in my hands."], [E, "I did not take the picture."], [A, "...What? Why not?"]] }],
-    outro: [[N, "The last page of the journal is almost blank. Two lines, written carefully."], [E, "Some things are better kept than proven. It did not need my photograph. It needed to be left in peace."], [A, "Easy for you to say, Edda. You didn't have 41 subscribers."], [N, "But Arlo keeps the journal inside his coat, close to his chest."]] },
+  { zone: 'flood', era: 'The great flood', title: "Noah's Ark",
+    intro: [[N, "Rain. Rain like the sky forgot how to stop. The hills are islands now, and the water keeps climbing."], [A, "Okay. This is new. Is that a... giant wooden boat?"], [N, "A huge ark sits on the last high ridge. A line of animals climbs its ramp, two by two."], [J, "Arlo! I can hear you again! Why is there thunder?"], [A, "Long story. Very wet story."], [T, "Ride the swells: the big rollers throw you into the air. Don't fall in the water."]],
+    stages: [{ kind: 'run', len: 40000, name: 'Rising Water' },
+      { kind: 'run', len: 44000, name: 'Two by Two', before: [['noah', "You there, on the strange boards! The water rises. Help me bring the last ones in."], [A, "The last animals?"], ['noah', "And the big white one. He has carried more creatures up this hill than I have."]] },
+      { kind: 'chase', len: 36000, name: 'Chase: The Last Ramp', before: [[N, "The yeti lopes along the ridge with a lamb under each arm, heading for the ark."], [A, "He's not running away from me. He's helping."]] }],
+    outro: [[N, "The yeti sets the lambs down on the ramp and steps back out into the rain."], ['noah', "He never comes aboard. He only brings the others."], [A, "Can I take a picture? Just one?"], ['noah', "Some things are better kept than shown, son. He does not need to be seen. He needs to be left to do his work."], [A, "...Everyone keeps telling me that."], [N, "Thunder splits the sky open. Through the crack: blue ice, and mammoths."]] },
   { zone: 'glacier', era: '20,000 years ago', title: 'The Great Ice',
     intro: [[N, "Blue ice from one end of the world to the other. Somewhere ahead, mammoths are trumpeting."], [A, "Mammoths. Actual mammoths. Nobody is going to believe ANY of this."], [A, "He's slowing down. He hurt his leg on that last jump. This could be it. The shot."], [T, "Ice is slippery and fast. Tuck with ↓ for speed. Jump the mammoths, don't argue with them."]],
     stages: [{ kind: 'run', len: 42000, name: 'Mammoth Crossing' },
       { kind: 'run', len: 44000, name: 'Shatter Shelf', before: [[J, "Arlo, what happens when you get the photo? Seriously. What happens to him?"], [A, "People come to see him. Scientists. TV. Everybody."], [J, "Everybody. In his house."], [A, "..."]] },
       { kind: 'chase', len: 36000, name: 'Chase: The Ice Breaks', before: [[N, "The glacier groans. Cracks race across the ice ahead of them."]] }],
     outro: [[N, "The ice shelf gives way under Arlo's skis."], [N, "A huge white arm catches him by the backpack and hauls him back. The yeti grunts and limps away."], [A, "You caught me. You could have just left."], [N, "The yeti stands in clear light, completely still. The perfect photo. Arlo raises the camera."], [N, "He holds it there for a long time."], [A, "...Nah."], [N, "He lowers it. The yeti tilts his head, then drops a glowing shard at Arlo's feet."]] },
-  { zone: 'globe', era: 'The end of time', title: 'The Snowglobe',
-    intro: [[N, "Snow falls upward here. The sky is a curved sheet of glass, and beyond it there is nothing at all."], [Y, "You can hear me now. Here, time is thin. Words get through."], [A, "You TALK?"], [Y, "My name is Oru. I keep the Hourstone. It holds the seasons in their places. Your little light broke it."], [A, "I'm sorry. I really am. I just wanted people to believe my dad."], [T, "Gravity is low here. Big air, big flips."]],
-    stages: [{ kind: 'run', len: 42000, name: 'Upside Snow' },
-      { kind: 'run', len: 44000, name: 'Island Hop', before: [[Y, "Your father saw me. Thirty winters ago. He had a camera too."], [A, "He said it was too dark to get a picture."], [Y, "It was a bright day. He chose. Like Edda chose. Like you chose on the ice."]] },
-      { kind: 'chase', len: 36000, name: 'Chase: The Last Clock', before: [[Y, "The last piece fell where time began. In the fire. Keep up, little Finch."]] }],
+  { zone: 'dino', era: '66 million years ago', title: 'The Last Day of the Dinosaurs',
+    intro: [[N, "Ferns taller than houses. Something enormous bellows in the distance. And in the sky, a second sun is growing."], [Y, "You can hear me now. Here, at the edge of an ending, time is thin. Words get through."], [A, "You TALK?"], [Y, "My name is Oru. I keep the Hourstone. It holds the seasons in their places. Your little light broke it."], [A, "I'm sorry. I really am. I just wanted people to believe my dad."], [T, "Meteors are falling. Watch for the red glow on the ground and get clear of it."]],
+    stages: [{ kind: 'run', len: 42000, name: 'Fern Valley' },
+      { kind: 'run', len: 44000, name: 'Tar Pits', before: [[Y, "Your father saw me. Thirty winters ago. He had a camera too."], [A, "He said it was too dark to get a picture."], [Y, "It was a bright day. He chose. Like the shipbuilder told you. Like you chose on the ice."]] },
+      { kind: 'chase', len: 36000, name: 'Chase: The Sky Falls', before: [[N, "The meteor fills half the sky. Every dinosaur in the valley is running the same way."], [Y, "The last piece fell where time began. In the fire. Keep up, little Finch."]] }],
     outro: [[A, "He told me stories instead. Every night. A white giant in the woods who looked after everything."], [A, "I thought he made them up because he had no proof."], [Y, "He gave you the stories. That was the proof."], [A, "Okay. Let's go fix your stone. Together this time."]] },
   { zone: 'volcano', era: 'Before the first winter', title: 'Ember Peak',
     intro: [[N, "Fire. Ash. Huge winged shapes overhead. The mountain is waking up."], [Y, "The last shard is in the crater. Then we run. The mountain will not wait for us."], [J, "...Arlo... whatever you're doing... be careful. I want my brother back."], [A, "Working on it, Juni."]],
@@ -425,7 +425,7 @@ const CH = [
       { kind: 'escape', len: 40000, name: 'Escape: Run With Oru', before: [[N, "Arlo looks at the camera once. Then he presses it into the Hourstone."], [N, "The stone blazes white. Behind them, the volcano erupts."], [Y, "NOW WE RUN!"], [T, "Outrun the lava. Don't stop."]] }],
     outro: [[N, "The Hourstone sings. The tears in the sky stitch shut, era by era, winter by winter."], [Y, "Thank you, Arlo Finch. Go home. Tell good stories."], [N, "Snow. Pine trees. The frozen pond. Today."], [J, "ARLO! You've been gone ten minutes and you look like you got hit by a volcano. Did you get it?"], [A, "No. I got something better."], [A, "Day 213 of looking for the yeti. Still no photo. Subscribers: 41. Hi, Mom."], [A, "I've got a story for you, though. It starts in a forest..."], [N, "Outside the cabin, a line of enormous footprints leads into the trees. By the door, someone has left a neat little pile of pinecones."]] }
 ];
-const WHO = { arlo: ['Arlo', ''], juni: ['Juni, on the radio', ''], yeti: ['The yeti', ''], edda: ["Edda Finch's journal", 'journal'], bet: ['Bet, Lucky Lodge', ''], dawa: ['Dawa, outfitter', ''], narrator: ['', 'narr'], tip: ['How to play', 'tip'] };
+const WHO = { arlo: ['Arlo', ''], juni: ['Juni, on the radio', ''], yeti: ['The yeti', ''], edda: ["Edda Finch's journal", 'journal'], noah: ['Noah', ''], bet: ['Bet, Lucky Lodge', ''], dawa: ['Dawa, outfitter', ''], narrator: ['', 'narr'], tip: ['How to play', 'tip'] };
 
 /* ================= level building ================= */
 const STEP = 10;
@@ -448,6 +448,7 @@ function makeObs(k, x, R) {
     case 'lavarock': o.w = 44; o.h = 32; break;
     case 'ptero': o.w = 62; o.h = 22; o.fly = 96; o.vx = -110; break;
     case 'geyser': o.w = 30; o.h = 0; break;
+    case 'meteor': o.w = 44; o.h = 0; break;
   }
   return o;
 }
@@ -461,6 +462,15 @@ function buildLevel(ci, si) {
   const X = () => gy.length * STEP;
   const seg = (len, f) => { const k = Math.max(1, Math.round(len / STEP)); for (let i = 0; i < k; i++) put(f(i / k, i), false); };
   let safeX = 0; /* no obstacles before this x: the landing zone after a kicker or a drop */
+  const moguls = () => { const x0 = X(), len = 900 + R() * 600; seg(len, (t, i) => STEP * 0.2 + Math.sin(i * STEP / 230 * TAU) * 2.4); placeShards(x0, X()); }; /* gentle rollers that give little hops */
+  const FEAT = {
+    forest: { p: 0.16, make: moguls },
+    cave: { p: 0.14, make: () => { for (let k = 0; k < 3; k++) { seg(280, () => STEP * 0.12); put(34 + R() * 14, false); } seg(400, () => STEP * 0.16); safeX = X() + 600; } }, /* a staircase of little ledges */
+    flood: { p: 0.24, make: () => { const x0 = X(), len = 1300 + R() * 700; seg(len, (t, i) => STEP * 0.16 + Math.sin(i * STEP / 560 * TAU) * 4.6); placeShards(x0, X()); } }, /* big swells to ride */
+    glacier: { p: 0.16, make: () => R() < 0.5 ? moguls() : (seg(900, () => STEP * 0.55), seg(500, () => STEP * 0.12)) }, /* moguls, or a steep ice chute */
+    dino: { p: 0.18, make: () => { const x0 = X(); seg(1500, () => STEP * 0.18); for (let x = Math.max(x0 + 350, safeX); x < X() - 300; x += 380 + R() * 120) obs.push(makeObs('meteor', x, R)); } }, /* a meteor shower */
+    volcano: { p: 0.1, make: moguls }
+  };
   const placeObs = (x0, x1) => { for (let x = Math.max(x0 + 320, safeX); x < x1 - 260; x += 640 + R() * 640) /* far enough apart that one jump never lands on the next obstacle */ if (R() < 0.42 + diff * 0.35) obs.push(makeObs(Z.obs[Math.floor(R() * Z.obs.length)], x, R)); };
   const placeShards = (x0, x1) => { if (x1 - x0 > 600) cand.push({ x: x0 + 150 + R() * (x1 - x0 - 450), dy: -34 }); };
   seg(800, () => STEP * 0.07); cps.push(300);
@@ -468,6 +478,7 @@ function buildLevel(ci, si) {
   while (X() < S.len) {
     const x0 = X(), r = R();
     if (X() - lastCp > 5200) { cps.push(X() + 60); lastCp = X(); seg(300, () => STEP * 0.12); continue; }
+    const feat = FEAT[C.zone]; if (feat && R() < feat.p) { feat.make(); continue; }
     if (r < 0.32) { const len = 900 + R() * 1300, gr = 0.16 + R() * (0.16 + diff * 0.12); seg(len, () => STEP * gr); placeObs(x0, X()); placeShards(x0, X()); }
     else if (r < 0.56) {
       seg(280, () => STEP * 0.22);
@@ -625,8 +636,10 @@ function stepPlayer(dt) {
   if (P.ground && P.s > 300) { if (Math.random() < 0.25 + (k.d ? 0.3 : 0)) spray(P.x - 18, P.y, L.Z.top); }
 }
 const STOMP = new Set(['log', 'rock', 'stump', 'crate', 'sled', 'mammoth', 'drone', 'star']); /* safe to land on; spikes, crystals, lava rocks, geysers and wildlife still hurt */
-function obsTop(o) { if (o.k === 'geyser') return baseAt(o.x) - (geyserUp(o) ? 84 : 0); return baseAt(o.x) - o.fly - o.h + (o.fly ? Math.sin(P.t * 3 + o.ph) * 14 : 0); }
-function obsBot(o) { if (o.k === 'geyser') return baseAt(o.x); return obsTop(o) + o.h; }
+function obsTop(o) { if (o.k === 'geyser') return baseAt(o.x) - (geyserUp(o) ? 84 : 0); if (o.k === 'meteor') return baseAt(o.x) - (meteorHit(o) ? 90 : 0); return baseAt(o.x) - o.fly - o.h + (o.fly ? Math.sin(P.t * 3 + o.ph) * 14 : 0); }
+function obsBot(o) { if (o.k === 'geyser' || o.k === 'meteor') return baseAt(o.x); return obsTop(o) + o.h; }
+function meteorPhase(o) { return (P.t * 0.42 + o.ph) % 2.4; } /* 0 to 1.6 smoulder, 1.6 to 2.0 falling, 2.0 to 2.4 impact */
+function meteorHit(o) { return meteorPhase(o) >= 2.0; }
 function geyserUp(o) { return (P.t * 0.5 + o.ph) % 2 < 0.8; }
 function stepWorld(dt) {
   for (const o of L.obs) if (o.vx && Math.abs(o.x - P.x) < 1400) o.x += o.vx * dt;
@@ -767,7 +780,7 @@ function drawObs(o) {
   const by = baseAt(o.x), Z = L.Z, ink = '#14162e';
   g.save(); g.strokeStyle = ink; g.lineWidth = 2.5; g.lineJoin = 'round';
   const top = obsTop(o);
-  if (!o.fly && o.k !== 'geyser') { const a = slopeAt(o.x) * (['stalagmite', 'icespike', 'crystal'].includes(o.k) ? 0.5 : 1); g.translate(o.x, by); g.rotate(a); g.translate(-o.x, -by); } /* sits on the slope instead of standing straight up */
+  if (!o.fly && o.k !== 'geyser' && o.k !== 'meteor') { const a = slopeAt(o.x) * (['stalagmite', 'icespike', 'crystal'].includes(o.k) ? 0.5 : 1); g.translate(o.x, by); g.rotate(a); g.translate(-o.x, -by); } /* sits on the slope instead of standing straight up */
   switch (o.k) {
     case 'log': g.fillStyle = '#7a4a2b'; rr(o.x - 32, by - 22, 64, 22, 10); g.fill(); g.stroke(); g.fillStyle = '#d9a06a'; g.beginPath(); g.ellipse(o.x + 28, by - 11, 6, 10, 0, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#fff'; g.fillRect(o.x - 28, by - 24, 50, 4); break;
     case 'rock': case 'lavarock': g.fillStyle = o.k === 'rock' ? (Z.key === 3 ? '#7c9bb4' : '#8a8f9e') : '#2a2022'; g.beginPath(); g.moveTo(o.x - 22, by); g.lineTo(o.x - 16, by - 22); g.lineTo(o.x - 2, by - 30); g.lineTo(o.x + 16, by - 24); g.lineTo(o.x + 22, by); g.closePath(); g.fill(); g.stroke();
@@ -786,6 +799,13 @@ function drawObs(o) {
     case 'drone': { const cy = top + 17; g.fillStyle = '#ffd1ef'; g.beginPath(); g.arc(o.x, cy, 15, 0, TAU); g.fill(); g.stroke(); g.strokeStyle = '#7fe3ff'; g.lineWidth = 3; g.beginPath(); g.ellipse(o.x, cy, 24, 6, Math.sin(P.t * 2 + o.ph) * 0.4, 0, TAU); g.stroke(); g.fillStyle = '#14162e'; g.beginPath(); g.arc(o.x + 5, cy - 2, 3, 0, TAU); g.fill(); break; }
     case 'star': { g.save(); g.translate(o.x, by - 18); g.rotate(P.t * 2 + o.ph); g.fillStyle = '#bfeeff'; g.beginPath(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 8 : 19, a = i / 10 * TAU; g.lineTo(Math.cos(a) * r, Math.sin(a) * r); } g.closePath(); g.fill(); g.stroke(); g.restore(); break; }
     case 'ptero': { const f = Math.sin(P.t * 7 + o.ph); g.fillStyle = '#6b3b2e'; g.beginPath(); g.moveTo(o.x - 30, top + 6 + f * 10); g.lineTo(o.x, top + 12); g.lineTo(o.x + 30, top + 6 + f * 10); g.lineTo(o.x + 6, top + 16); g.lineTo(o.x - 6, top + 16); g.closePath(); g.fill(); g.stroke(); g.beginPath(); g.moveTo(o.x - 4, top + 12); g.lineTo(o.x - 22, top + 8); g.lineTo(o.x - 4, top + 16); g.fill(); g.stroke(); break; }
+    case 'meteor': { const ph = meteorPhase(o);
+      g.fillStyle = '#2a1c18'; g.beginPath(); g.ellipse(o.x, by, 24, 6, 0, 0, TAU); g.fill();
+      if (ph >= 1.6 && ph < 2.0) { const f = (ph - 1.6) / 0.4, mx = o.x + (1 - f) * 260, my = by - (1 - f) * 620; g.fillStyle = 'rgba(255,60,30,' + (0.25 + f * 0.5) + ')'; g.beginPath(); g.ellipse(o.x, by, 22 + f * 10, 7, 0, 0, TAU); g.fill();
+        g.strokeStyle = 'rgba(255,200,120,.6)'; g.lineWidth = 10; g.beginPath(); g.moveTo(mx, my); g.lineTo(mx + 90, my - 200); g.stroke(); g.fillStyle = '#ffcf3f'; g.strokeStyle = ink; g.lineWidth = 2.5; g.beginPath(); g.arc(mx, my, 13, 0, TAU); g.fill(); g.stroke(); g.fillStyle = '#ff6a2a'; g.beginPath(); g.arc(mx + 3, my - 3, 6, 0, TAU); g.fill(); }
+      else if (ph >= 2.0) { const f = (ph - 2.0) / 0.4, gr = g.createLinearGradient(0, by - 90, 0, by); gr.addColorStop(0, 'rgba(255,207,63,0)'); gr.addColorStop(0.3, '#ffcf3f'); gr.addColorStop(1, '#ff5a1a'); g.fillStyle = gr; g.beginPath(); g.ellipse(o.x, by - 40, 26 * (1 - f * 0.4), 52, 0, 0, TAU); g.fill(); }
+      else { g.fillStyle = '#ff7a2a'; g.beginPath(); g.arc(o.x + Math.sin(P.t * 7 + o.ph) * 5, by - 6, 2.5, 0, TAU); g.fill(); if (ph > 1.2) { g.fillStyle = 'rgba(255,60,30,' + ((ph - 1.2) / 0.4 * 0.3) + ')'; g.beginPath(); g.ellipse(o.x, by, 22, 6, 0, 0, TAU); g.fill(); } }
+      break; }
     case 'geyser': { const up = geyserUp(o); g.fillStyle = '#2a1c1c'; g.beginPath(); g.ellipse(o.x, by, 18, 6, 0, 0, TAU); g.fill(); g.stroke();
       if (up) { const gr = g.createLinearGradient(0, by - 84, 0, by); gr.addColorStop(0, 'rgba(255,207,63,0)'); gr.addColorStop(0.3, '#ffcf3f'); gr.addColorStop(1, '#ff5a1a'); g.fillStyle = gr; g.fillRect(o.x - 11, by - 84, 22, 84); }
       else { g.fillStyle = '#ff7a2a'; g.beginPath(); g.arc(o.x + Math.sin(P.t * 9) * 4, by - 8, 3, 0, TAU); g.fill(); } break; }
@@ -817,12 +837,12 @@ function drawBackground(VW) {
     else if (Z.key === 1) { g.beginPath(); g.moveTo(sx - 40, 0); g.lineTo(sx, 90 + h * 120); g.lineTo(sx + 40, 0); g.fill(); g.save(); g.fillStyle = '#2f2342'; g.beginPath(); g.moveTo(sx + 60, 540); g.lineTo(sx + 90, 380 - h * 60); g.lineTo(sx + 120, 540); g.fill(); g.restore();
       if (hash(i + 3) > 0.6) { g.save(); g.strokeStyle = '#c9683a'; g.fillStyle = '#c9683a'; g.lineWidth = 3; const cx = sx + 30, cy = 300; g.beginPath(); g.arc(cx, cy, 9, 0, TAU); g.stroke(); g.beginPath(); g.moveTo(cx, cy + 9); g.lineTo(cx, cy + 36); g.moveTo(cx - 14, cy + 18); g.lineTo(cx + 14, cy + 18); g.moveTo(cx, cy + 36); g.lineTo(cx - 10, cy + 54); g.moveTo(cx, cy + 36); g.lineTo(cx + 10, cy + 54); g.stroke();
         for (const dx of [-40, 40]) { g.beginPath(); g.arc(cx + dx, cy + 18, 5, 0, TAU); g.fill(); g.beginPath(); g.moveTo(cx + dx, cy + 23); g.lineTo(cx + dx, cy + 42); g.stroke(); } g.restore(); g.fillStyle = Z.mid; } }
-    else if (Z.key === 2) { if (h > 0.55) { g.beginPath(); g.moveTo(sx - 26, 440); g.lineTo(sx, 400); g.lineTo(sx + 26, 440); g.fill(); g.fillRect(sx - 1, 380, 2, 24); g.fillStyle = ['#c0392b', '#2f6fb0', '#e1b43a', '#2e8b57'][i & 3]; g.fillRect(sx + 1, 380, 12, 8); g.fillStyle = Z.mid; } }
+    else if (Z.key === 2) { g.beginPath(); g.ellipse(sx, 470, 90 + h * 60, 50 + h * 40, 0, Math.PI, 0); g.fill(); if (i % 9 === 0) { g.fillStyle = '#5a4030'; g.beginPath(); g.moveTo(sx - 90, 380); g.lineTo(sx + 90, 380); g.lineTo(sx + 70, 410); g.lineTo(sx - 70, 410); g.closePath(); g.fill(); g.fillRect(sx - 40, 352, 80, 28); g.beginPath(); g.moveTo(sx - 50, 352); g.lineTo(sx, 330); g.lineTo(sx + 50, 352); g.fill(); g.fillStyle = Z.mid; } } /* drowned hills, and now and then the ark on the skyline */
     else if (Z.key === 3) { g.beginPath(); g.moveTo(sx - 50, 540); g.lineTo(sx - 30, 330 - h * 90); g.lineTo(sx + 10, 300 - h * 120); g.lineTo(sx + 40, 360 - h * 60); g.lineTo(sx + 60, 540); g.fill(); }
-    else if (Z.key === 4) { const cy = 200 + h * 160 + Math.sin(t * 0.6 + i) * 10; g.beginPath(); g.ellipse(sx, cy, 50 + h * 30, 16, 0, 0, TAU); g.fill(); g.fillStyle = '#fff'; g.beginPath(); g.ellipse(sx, cy - 8, 46 + h * 28, 8, 0, Math.PI, 0); g.fill(); g.fillStyle = Z.mid; g.beginPath(); g.moveTo(sx - 30, cy + 8); g.lineTo(sx, cy + 50 + h * 30); g.lineTo(sx + 30, cy + 8); g.fill(); }
+    else if (Z.key === 4) { if (h > 0.45) { const bx = sx, by2 = 470 - h * 20; g.beginPath(); g.ellipse(bx, by2, 46, 20, 0, 0, TAU); g.fill(); g.lineWidth = 12; g.strokeStyle = Z.mid; g.beginPath(); g.moveTo(bx + 30, by2 - 6); g.quadraticCurveTo(bx + 60, by2 - 60, bx + 70 + Math.sin(t + i) * 4, by2 - 90); g.moveTo(bx - 40, by2); g.quadraticCurveTo(bx - 70, by2 - 4, bx - 90, by2 + 10); g.stroke(); g.fillRect(bx - 28, by2 + 10, 10, 34); g.fillRect(bx + 16, by2 + 10, 10, 34); } } /* long-necked dinosaurs grazing on the horizon */
     else if (Z.key === 5) { if (h > 0.6) { g.beginPath(); g.moveTo(sx - 4, 470); g.lineTo(sx - 2, 380); g.lineTo(sx + 2, 380); g.lineTo(sx + 4, 470); g.fill(); g.beginPath(); g.moveTo(sx, 410); g.lineTo(sx + 22, 392); g.moveTo(sx, 430); g.lineTo(sx - 18, 414); g.strokeStyle = Z.mid; g.lineWidth = 3; g.stroke(); } }
   }
-  if (Z.key === 4) { g.strokeStyle = 'rgba(255,255,255,.18)'; g.lineWidth = 6; g.beginPath(); g.arc(VW / 2, 1500, 1440, Math.PI * 1.15, Math.PI * 1.85); g.stroke(); }
+  if (Z.key === 4) { const mx = VW * 0.78, my = 110, gr = g.createRadialGradient(mx, my, 6, mx, my, 90); gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(0.3, 'rgba(255,190,90,.9)'); gr.addColorStop(1, 'rgba(255,120,40,0)'); g.fillStyle = gr; g.beginPath(); g.arc(mx, my, 90, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,220,160,.35)'; g.lineWidth = 18; g.beginPath(); g.moveTo(mx + 20, my - 20); g.lineTo(mx + 220, my - 140); g.stroke(); } /* the meteor, growing in the sky */
 }
 function drawTerrain(VW) {
   const Z = L.Z, i0 = Math.max(0, Math.floor(cam.x / STEP) - 2), i1 = Math.min(L.n - 1, Math.ceil((cam.x + VW) / STEP) + 2), bot = cam.y + 700;
@@ -831,16 +851,19 @@ function drawTerrain(VW) {
     let e = i; while (e + 1 < L.n && L.gap[e + 1]) e++;
     const xl = i * STEP, xr = (e + 1) * STEP, yl = L.gy[Math.max(0, i - 1)], yr = L.gy[Math.min(L.n - 1, e + 1)], top = Math.min(yl, yr), deep = Math.max(yl, yr), t = P.t;
     if (Z.gap === 'lava') { const gr = g.createLinearGradient(0, deep + 40, 0, deep + 200); gr.addColorStop(0, '#ffcf3f'); gr.addColorStop(1, '#c0280f'); g.fillStyle = gr; g.beginPath(); g.moveTo(xl, yl); for (let x = xl; x <= xr; x += 10) g.lineTo(x, deep + 60 + Math.sin(t * 3 + x * 0.05) * 4); g.lineTo(xr, yr); g.lineTo(xr, bot); g.lineTo(xl, bot); g.closePath(); g.fill(); continue; }
-    const cols = { creek: ['#9fd3ec', '#3f86b0', '#245a7e'], crevasse: Z.key === 2 ? ['#cfd8e4', '#8796ab', '#4e5a6e'] : ['#d6f2ff', '#6fb8e6', '#2c6aa0'], chasm: ['#6a5590', '#3e2f5e', '#2a2044'], void: ['#8a6ad8', '#4a2f96', '#2a1a66'] }[Z.gap] || ['#9fd3ec', '#3f86b0', '#245a7e'];
+    const cols = { creek: ['#9fd3ec', '#3f86b0', '#245a7e'], crevasse: ['#d6f2ff', '#6fb8e6', '#2c6aa0'], chasm: ['#6a5590', '#3e2f5e', '#2a2044'], flood: ['#7fa9c4', '#3a6c90', '#1f4766'], tar: ['#4a3a2a', '#2a2018', '#120d08'], void: ['#8a6ad8', '#4a2f96', '#2a1a66'] }[Z.gap] || ['#9fd3ec', '#3f86b0', '#245a7e'];
     const gr = g.createLinearGradient(0, deep, 0, deep + 300); gr.addColorStop(0, cols[0]); gr.addColorStop(0.45, cols[1]); gr.addColorStop(1, cols[2]);
     g.fillStyle = gr; g.fillRect(xl - STEP, deep - 2, xr - xl + STEP * 2, bot - deep); /* tucks under both walls so no background shows through */ /* the inside of the gap, from the lower rim down */
     g.save(); g.beginPath(); g.rect(xl, top - 10, xr - xl, bot - top); g.clip();
-    if (Z.gap === 'creek') {
-      const wy = deep + 90; g.fillStyle = '#4c9ccc'; g.fillRect(xl, wy, xr - xl, bot - wy); g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 2;
+    if (Z.gap === 'creek' || Z.gap === 'flood') {
+      const wy = deep + (Z.gap === 'flood' ? 50 + Math.sin(t * 1.5 + i) * 8 : 90); g.fillStyle = Z.gap === 'flood' ? '#3f7aa3' : '#4c9ccc'; g.fillRect(xl, wy, xr - xl, bot - wy); g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 2;
       for (let k = 0; k < 4; k++) { const ry = wy + 6 + k * 14, off = (t * 30 + k * 40) % 60; g.beginPath(); for (let x = xl + off - 60; x < xr; x += 60) { g.moveTo(x, ry); g.lineTo(x + 22, ry); } g.stroke(); }
       g.fillStyle = '#f2f8ff'; for (let x = xl + 20; x < xr - 20; x += 70) { g.beginPath(); g.ellipse(x + Math.sin(t + x) * 6, wy + 2, 16, 4, 0, 0, TAU); g.fill(); }
     } else if (Z.gap === 'crevasse') {
-      g.strokeStyle = Z.key === 2 ? 'rgba(255,255,255,.25)' : 'rgba(255,255,255,.35)'; g.lineWidth = 3; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(xl + 10 + k * 8, deep + 40 + k * 50); g.lineTo(xl + 30 + k * 10, deep + 80 + k * 50); g.stroke(); }
+      g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 3; for (let k = 0; k < 3; k++) { g.beginPath(); g.moveTo(xl + 10 + k * 8, deep + 40 + k * 50); g.lineTo(xl + 30 + k * 10, deep + 80 + k * 50); g.stroke(); }
+    } else if (Z.gap === 'tar') {
+      g.fillStyle = '#1a120c'; g.fillRect(xl, deep + 60, xr - xl, bot - deep); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(xl, deep + 60, xr - xl, 3);
+      for (let k = 0; k < 4; k++) { const ph = (t * 0.6 + hash(i + k)) % 1, bx = xl + 14 + hash(i * 5 + k) * (xr - xl - 28); g.strokeStyle = 'rgba(255,255,255,' + (0.4 * (1 - ph)) + ')'; g.lineWidth = 2; g.beginPath(); g.arc(bx, deep + 60, 3 + ph * 8, Math.PI, 0); g.stroke(); }
     } else if (Z.gap === 'chasm') {
       for (let k = 0; k < 5; k++) { const cx = xl + 10 + hash(i + k) * (xr - xl - 20), cy = deep + 60 + hash(i * 3 + k) * 160, gl = 0.6 + 0.4 * Math.sin(t * 2 + k); g.fillStyle = `rgba(255,155,224,${0.25 * gl})`; g.beginPath(); g.arc(cx, cy, 14, 0, TAU); g.fill(); g.fillStyle = '#ff9be0'; g.beginPath(); g.moveTo(cx - 4, cy + 6); g.lineTo(cx, cy - 8); g.lineTo(cx + 4, cy + 6); g.fill(); }
       g.fillStyle = 'rgba(200,180,240,.18)'; g.fillRect(xl, deep + 150 + Math.sin(t) * 6, xr - xl, 30);
@@ -885,6 +908,7 @@ function drawDeco(VW) {
     else if (Z.deco === 'torch') { if (d.v > 0.6) { g.fillStyle = '#5a3a22'; g.fillRect(-3, -40, 6, 40); const f = 0.8 + Math.sin(P.t * 12 + d.x) * 0.2; g.fillStyle = '#ffcf3f'; g.beginPath(); g.ellipse(0, -48, 7 * f, 12 * f, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,180,60,.18)'; g.beginPath(); g.arc(0, -46, 50, 0, TAU); g.fill(); } else if (d.v > 0.3) { g.fillStyle = '#d9cfe8'; g.fillRect(-2, -12, 4, 12); g.fillStyle = '#5fd6c0'; g.beginPath(); g.ellipse(0, -13, 9, 5, 0, Math.PI, 0); g.fill(); g.fillStyle = 'rgba(95,214,192,.18)'; g.beginPath(); g.arc(0, -12, 16, 0, TAU); g.fill(); } } /* harmless glowing mushrooms, so only real hazards are spiky */
     else if (Z.deco === 'flag') { if (d.v > 0.5) { g.fillStyle = '#5a3a22'; g.fillRect(-2, -60, 4, 60); g.fillStyle = ['#c0392b', '#2f6fb0', '#e1b43a'][Math.floor(d.v * 30) % 3]; g.beginPath(); g.moveTo(2, -60); g.lineTo(28 + Math.sin(P.t * 8 + d.x) * 4, -54); g.lineTo(2, -46); g.fill(); g.stroke(); } else { g.fillStyle = '#d9cfb8'; g.beginPath(); g.moveTo(-30, 0); g.lineTo(0, -34); g.lineTo(30, 0); g.closePath(); g.fill(); g.stroke(); } }
     else if (Z.deco === 'ice') { g.fillStyle = '#e6f8ff'; g.beginPath(); g.moveTo(-14, 0); g.lineTo(-6, -50 - d.v * 30); g.lineTo(4, -30); g.lineTo(14, 0); g.closePath(); g.fill(); g.stroke(); }
+    else if (Z.deco === 'fern') { g.strokeStyle = '#2f6a34'; g.lineWidth = 3 / s; for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(0, 0); g.quadraticCurveTo(k * 10, -30, k * 22, -38 - (2 - Math.abs(k)) * 10); g.stroke(); for (let q = 1; q < 5; q++) { const fx = k * 22 * q / 5, fy = (-38 - (2 - Math.abs(k)) * 10) * q / 5; g.beginPath(); g.moveTo(fx, fy); g.lineTo(fx - 6, fy + 4); g.moveTo(fx, fy); g.lineTo(fx + 6, fy + 4); g.stroke(); } } }
     else if (Z.deco === 'lamp') { g.fillStyle = '#3a2a6a'; g.fillRect(-2, -54, 4, 54); g.fillStyle = '#ffd1ef'; g.beginPath(); g.arc(0, -58, 7, 0, TAU); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,209,239,.2)'; g.beginPath(); g.arc(0, -58, 30, 0, TAU); g.fill(); }
     else if (Z.deco === 'deadtree') { g.strokeStyle = '#1a1010'; g.lineWidth = 5 / s; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, -50); g.moveTo(0, -30); g.lineTo(16, -46); g.moveTo(0, -38); g.lineTo(-14, -52); g.stroke(); }
     g.restore();
@@ -935,11 +959,13 @@ function drawWeather(VW, dt) {
   const Z = L.Z, w = Z.weather;
   for (const p of weather) {
     if (w === 'snow') { p.y += 40 * p.s * dt; p.x -= 30 * dt; } else if (w === 'blizzard') { p.y += 90 * p.s * dt; p.x -= 420 * p.s * dt; } else if (w === 'upsnow') { p.y -= 35 * p.s * dt; p.x += Math.sin(P.t + p.s * 9) * 10 * dt; }
+    else if (w === 'rain') { p.y += 520 * p.s * dt; p.x -= 120 * dt; }
     else if (w === 'ash') { p.y += 30 * p.s * dt; p.x -= 50 * dt; } else if (w === 'dust') { p.y += Math.sin(P.t + p.s * 9) * 6 * dt; p.x -= 8 * dt; } else { p.y += 8 * dt; }
     const sx = ((p.x - cam.x * 0.6 * p.s) % VW + VW) % VW, sy = ((p.y) % 540 + 540) % 540;
     if (w === 'sparkle') { const a = Math.max(0, Math.sin(P.t * 3 + p.s * 20)); g.fillStyle = `rgba(255,255,255,${a})`; g.fillRect(sx, sy, 2, 2); }
     else if (w === 'ash') { g.fillStyle = p.s > 1.2 ? '#ff9a3a' : 'rgba(80,60,60,.8)'; g.fillRect(sx, sy, 2.5, 2.5); }
     else if (w === 'dust') { g.fillStyle = 'rgba(255,220,160,.35)'; g.fillRect(sx, sy, 2, 2); }
+    else if (w === 'rain') { g.strokeStyle = 'rgba(220,235,255,.55)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(sx, sy); g.lineTo(sx - 5, sy + 16); g.stroke(); }
     else { g.fillStyle = 'rgba(255,255,255,.85)'; g.beginPath(); g.arc(sx, sy, 1.5 + p.s, 0, TAU); g.fill(); }
   }
 }
@@ -1029,24 +1055,23 @@ function drawHub(VW) {
       g.fillStyle = '#6e5a80'; for (const [rx, ry, r] of [[-50, -70, 14], [44, -90, 11], [52, -30, 13], [-30, -108, 9]]) { g.beginPath(); g.arc(x + rx, y + ry, r, 0, TAU); g.fill(); }
       portal(arch(48, 76));
       for (const dx of [-60, 60]) { const fl = 0.8 + Math.sin(t * 12 + dx) * 0.2; g.fillStyle = '#5a3a22'; g.fillRect(x + dx - 3, y - 50, 6, 50); g.fillStyle = '#ffcf3f'; g.beginPath(); g.ellipse(x + dx, y - 58, 6 * fl, 11 * fl, 0, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,180,60,.1)'; g.beginPath(); g.arc(x + dx, y - 56, 20, 0, TAU); g.fill(); }
-    } else if (C.zone === 'expedition') {
-      g.fillStyle = '#d9cfb4'; g.beginPath(); g.moveTo(x - 86, y); g.lineTo(x - 4, y - 120); g.lineTo(x + 86, y); g.closePath(); g.fill(); g.stroke();
-      g.strokeStyle = 'rgba(20,22,46,.3)'; g.lineWidth = 2; g.beginPath(); g.moveTo(x - 4, y - 120); g.lineTo(x - 40, y); g.moveTo(x - 4, y - 120); g.lineTo(x + 40, y); g.stroke();
-      portal(() => { g.moveTo(x - 26, y); g.lineTo(x - 2, y - 72); g.lineTo(x + 24, y); g.closePath(); });
-      g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); g.moveTo(x + 66, y); g.lineTo(x + 66, y - 150); g.stroke();
-      ['#c0392b', '#2f6fb0', '#e1b43a'].forEach((col, k) => { g.fillStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 66, y - 148 + k * 16); g.lineTo(x + 92 + Math.sin(t * 6 + k) * 4, y - 142 + k * 16); g.lineTo(x + 66, y - 136 + k * 16); g.fill(); g.stroke(); });
-      g.fillStyle = '#8a6a44'; g.lineWidth = 2.5; g.fillRect(x - 84, y - 22, 26, 22); g.strokeRect(x - 84, y - 22, 26, 22); g.fillRect(x - 78, y - 40, 20, 18); g.strokeRect(x - 78, y - 40, 20, 18);
+    } else if (C.zone === 'flood') {
+      g.fillStyle = '#7a5434'; g.beginPath(); g.moveTo(x - 92, y - 46); g.lineTo(x + 92, y - 46); g.quadraticCurveTo(x + 80, y + 2, x + 50, y + 2); g.lineTo(x - 50, y + 2); g.quadraticCurveTo(x - 80, y + 2, x - 92, y - 46); g.closePath(); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(20,22,46,.35)'; g.lineWidth = 2; for (let k = 1; k < 3; k++) { g.beginPath(); g.moveTo(x - 86 + k * 4, y - 46 + k * 15); g.lineTo(x + 86 - k * 4, y - 46 + k * 15); g.stroke(); }
+      g.strokeStyle = ink; g.lineWidth = 3; g.fillStyle = '#9a7048'; g.fillRect(x - 50, y - 110, 100, 64); g.strokeRect(x - 50, y - 110, 100, 64);
+      g.fillStyle = '#5a3a22'; g.beginPath(); g.moveTo(x - 62, y - 108); g.lineTo(x, y - 140); g.lineTo(x + 62, y - 108); g.closePath(); g.fill(); g.stroke();
+      portal(arch(30, 50).bind(null)); g.save(); g.translate(0, -48); g.restore();
+    } else if (C.zone === 'dino') {
+      g.fillStyle = '#f3ead6'; g.beginPath(); g.ellipse(x, y - 60, 66, 84, 0, 0, TAU); g.fill(); g.stroke();
+      g.strokeStyle = '#c9b48a'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(x - 60, y - 96); g.lineTo(x - 40, y - 84); g.lineTo(x - 24, y - 100); g.lineTo(x - 6, y - 86); g.stroke();
+      g.fillStyle = '#c9b48a'; for (const [dx, dy, r] of [[-30, -120, 8], [26, -40, 10], [36, -100, 6]]) { g.beginPath(); g.arc(x + dx, y + dy, r, 0, TAU); g.fill(); }
+      g.strokeStyle = ink; portal(arch(40, 64));
+      g.strokeStyle = '#2f6a34'; g.lineWidth = 3; for (const dx of [-80, 78]) for (let k = -2; k <= 2; k++) { g.beginPath(); g.moveTo(x + dx, y); g.quadraticCurveTo(x + dx + k * 8, y - 24, x + dx + k * 16, y - 34 - (2 - Math.abs(k)) * 8); g.stroke(); }
     } else if (C.zone === 'glacier') {
       g.fillStyle = '#e6f8ff'; g.beginPath(); g.arc(x, y, 80, Math.PI, 0); g.closePath(); g.fill(); g.stroke();
       g.strokeStyle = '#9fcfe6'; g.lineWidth = 2; for (const r of [28, 52]) { g.beginPath(); g.arc(x, y, 80, Math.PI + Math.asin(r / 80) * 0, 0); } for (let k = 1; k < 4; k++) { const hy = y - k * 20, hw = Math.sqrt(80 * 80 - (k * 20) * (k * 20)); g.beginPath(); g.moveTo(x - hw, hy); g.lineTo(x + hw, hy); g.stroke(); for (let j = -3; j <= 3; j++) { const sx = x + j * 22 + (k % 2) * 11; if (Math.abs(sx - x) < hw - 4) { g.beginPath(); g.moveTo(sx, hy); g.lineTo(sx, hy + 20); g.stroke(); } } }
       g.fillStyle = '#cfeefc'; g.strokeStyle = ink; g.lineWidth = 3; g.beginPath(); arch(60, 64)(); g.fill(); g.stroke();
       portal(arch(38, 52));
-    } else if (C.zone === 'globe') {
-      g.fillStyle = '#3a2a6a'; g.fillRect(x - 74, y - 16, 148, 18); g.strokeRect(x - 74, y - 16, 148, 18);
-      g.fillStyle = 'rgba(210,190,255,.35)'; g.beginPath(); g.arc(x, y - 16, 70, Math.PI, 0); g.closePath(); g.fill();
-      for (let k = 0; k < 14; k++) { const px = x - 55 + hash(k) * 110, py = y - 20 - ((t * 18 + hash(k + 9) * 70) % 70); if (Math.hypot(px - x, py - y + 16) < 64) { g.fillStyle = '#fff'; g.fillRect(px, py, 2.5, 2.5); } }
-      g.save(); g.beginPath(); g.arc(x, y - 16, 70, Math.PI, 0); g.strokeStyle = '#d8ccff'; g.lineWidth = 4; g.stroke(); g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 3; g.beginPath(); g.arc(x, y - 16, 58, Math.PI * 1.15, Math.PI * 1.4); g.stroke(); g.restore();
-      portal(() => { g.save(); g.restore(); const yy = y - 16; g.moveTo(x - 18, yy); g.lineTo(x - 18, yy - 40); g.arc(x, yy - 40, 18, Math.PI, 0); g.lineTo(x + 18, yy); g.closePath(); });
     } else {
       for (let k = 0; k < 5; k++) { const ex = x - 50 + hash(k) * 100, ey = y - 120 - ((t * 30 + hash(k + 3) * 80) % 80); g.fillStyle = 'rgba(255,150,60,' + (1 - ((t * 30 + hash(k + 3) * 80) % 80) / 80) + ')'; g.fillRect(ex, ey, 3, 3); }
       g.fillStyle = '#241a1d'; g.beginPath(); g.moveTo(x - 72, y + 2); g.lineTo(x - 72, y - 84); g.lineTo(x - 50, y - 112); g.lineTo(x - 22, y - 96); g.lineTo(x + 4, y - 128); g.lineTo(x + 30, y - 100); g.lineTo(x + 56, y - 116); g.lineTo(x + 72, y - 84); g.lineTo(x + 72, y + 2); g.closePath(); g.fill(); g.stroke();
@@ -1072,13 +1097,14 @@ function drawHub(VW) {
 const fg = $('face').getContext('2d');
 function drawFace(who) {
   fg.setTransform(1, 0, 0, 1, 0, 0); fg.clearRect(0, 0, 192, 192);
-  const bgc = { arlo: '#2c3180', juni: '#3a2a6a', yeti: '#2a5a8a', edda: '#c9b48a', bet: '#5a2a2a', dawa: '#2a5a4a' }[who] || '#2c3180';
+  const bgc = { arlo: '#2c3180', juni: '#3a2a6a', yeti: '#2a5a8a', edda: '#c9b48a', noah: '#3d4a6a', bet: '#5a2a2a', dawa: '#2a5a4a' }[who] || '#2c3180';
   fg.fillStyle = bgc; fg.fillRect(0, 0, 192, 192);
   if (who === 'arlo') { swap(() => { drawArlo(0, 0, 0, 0.1, false, P.t, false, 1); }, 92, 222, 2.7); }
   else if (who === 'yeti') { swap(() => drawYeti(0, 0, 0, false, 1, true), 54, 330, 2.35); }
   else if (who === 'juni') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#6a3fb0'; k.beginPath(); k.ellipse(96, 190, 60, 50, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 100, 42, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#1e1a2a'; k.beginPath(); k.arc(96, 88, 44, Math.PI * 1.05, Math.PI * 1.95); k.fill(); k.beginPath(); k.arc(130, 62, 16, 0, TAU); k.fill(); k.fillStyle = '#14162e'; k.beginPath(); k.arc(82, 102, 5, 0, TAU); k.arc(112, 102, 5, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.arc(97, 118, 10, 0.2, Math.PI - 0.2); k.stroke(); k.strokeStyle = '#7fe3ff'; k.lineWidth = 7; k.beginPath(); k.arc(96, 98, 50, Math.PI * 1.1, Math.PI * 1.9); k.stroke(); k.fillStyle = '#7fe3ff'; k.fillRect(40, 92, 14, 26); k.fillRect(138, 92, 14, 26);
     for (let i = 0; i < 6; i++) { k.fillStyle = 'rgba(255,255,255,.12)'; k.fillRect(0, (P.t * 90 + i * 37) % 192, 192, 3); } }
   else if (who === 'edda') { const k = fg; k.strokeStyle = '#3b2a14'; k.lineWidth = 6; k.fillStyle = '#8a6a44'; k.beginPath(); k.arc(96, 104, 62, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#e9cfa6'; k.beginPath(); k.arc(96, 108, 38, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#5a4630'; k.fillRect(60, 70, 72, 16); k.fillStyle = '#c9b48a'; k.beginPath(); k.arc(76, 78, 11, 0, TAU); k.arc(116, 78, 11, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#3b2a14'; k.beginPath(); k.arc(84, 112, 4, 0, TAU); k.arc(108, 112, 4, 0, TAU); k.fill(); k.lineWidth = 4; k.beginPath(); k.moveTo(86, 128); k.lineTo(106, 128); k.stroke(); }
+  else if (who === 'noah') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#8a6a44'; k.beginPath(); k.ellipse(96, 196, 66, 50, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#6b4a2e'; k.beginPath(); k.arc(96, 98, 54, Math.PI, 0); k.lineTo(150, 150); k.lineTo(42, 150); k.closePath(); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 104, 38, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#f2f0ea'; k.beginPath(); k.moveTo(58, 112); k.quadraticCurveTo(96, 210, 134, 112); k.quadraticCurveTo(96, 130, 58, 112); k.fill(); k.stroke(); k.fillStyle = '#14162e'; k.fillRect(78, 96, 7, 7); k.fillRect(108, 96, 7, 7); k.strokeStyle = '#f2f0ea'; k.lineWidth = 5; k.beginPath(); k.moveTo(72, 88); k.lineTo(88, 86); k.moveTo(104, 86); k.lineTo(120, 88); k.stroke(); }
   else if (who === 'bet') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#245a3c'; k.beginPath(); k.ellipse(96, 192, 62, 46, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#a8734f'; k.beginPath(); k.arc(96, 104, 44, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#2f7a55'; k.beginPath(); k.moveTo(44, 84); k.quadraticCurveTo(96, 40, 148, 84); k.lineTo(170, 90); k.lineTo(44, 90); k.closePath(); k.fill(); k.stroke(); k.fillStyle = '#14162e'; k.fillRect(72, 104, 8, 8); k.fillRect(112, 104, 8, 8); k.strokeStyle = '#2b1a10'; k.lineWidth = 7; k.beginPath(); k.moveTo(74, 130); k.quadraticCurveTo(96, 120, 118, 130); k.stroke(); }
   else if (who === 'dawa') { const k = fg; k.strokeStyle = '#14162e'; k.lineWidth = 6; k.fillStyle = '#c0392b'; k.beginPath(); k.ellipse(96, 192, 62, 46, 0, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#c98e6b'; k.beginPath(); k.arc(96, 106, 44, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#e6c23a'; k.beginPath(); k.arc(96, 80, 46, Math.PI, 0); k.fill(); k.stroke(); k.fillStyle = '#fff7e8'; k.beginPath(); k.arc(96, 28, 12, 0, TAU); k.fill(); k.stroke(); k.fillStyle = '#7fe3ff'; k.fillRect(60, 84, 72, 14); k.strokeRect(60, 84, 72, 14); k.fillStyle = '#14162e'; k.fillRect(74, 112, 7, 7); k.fillRect(111, 112, 7, 7); k.beginPath(); k.arc(96, 134, 11, 0.1, Math.PI - 0.1); k.stroke(); }
   function swap(fn, x, y, s) { const og = g; gSwap(fg); fg.save(); fg.translate(x, y); fg.scale(s, s); fn(); fg.restore(); gSwap(og); }
@@ -1225,11 +1251,11 @@ const itemOdds = i => { const it = ITEMS[i], o = findOdds(1, false), same = ITEM
 const ITEMS = [
   [0, 'Red fox', 0, 'paw'], [0, 'Snowy owl', 0, 'wing'], [0, 'Elk', 1, 'paw'], [0, 'Lynx', 2, 'paw'], [0, 'The white stag', 3, 'star'],
   [1, 'Cave bats', 0, 'wing'], [1, 'Painted handprint', 0, 'gear'], [1, 'Cave bear', 1, 'paw'], [1, 'Cave lion', 2, 'paw'], [1, 'Glowing crystal', 3, 'gem'],
-  [2, 'Brass compass', 0, 'gear'], [2, 'Pemba’s mitten', 0, 'gear'], [2, 'Biscuit the sled dog', 1, 'paw'], [2, 'Edda’s camera', 2, 'gear'], [2, 'The lost glass plate', 3, 'star'],
+  [2, 'Olive branch', 0, 'gear'], [2, 'White dove', 0, 'wing'], [2, 'Two zebras', 1, 'paw'], [2, 'The ark’s lantern', 2, 'gear'], [2, 'Giraffes, two by two', 3, 'paw'],
   [3, 'Arctic hare', 0, 'paw'], [3, 'Snow petrel', 0, 'wing'], [3, 'Woolly rhino', 1, 'paw'], [3, 'Mammoth calf', 2, 'paw'], [3, 'Sabre-tooth cat', 3, 'paw'],
-  [4, 'Upside-down snowflake', 0, 'star'], [4, 'Clock gear', 0, 'gear'], [4, 'Glass fish', 1, 'gem'], [4, 'Moon moth', 2, 'wing'], [4, 'The star whale', 3, 'star'],
+  [4, 'Fern fossil', 0, 'star'], [4, 'Dinosaur egg', 0, 'gem'], [4, 'Raptor', 1, 'paw'], [4, 'Triceratops', 2, 'paw'], [4, 'Tyrannosaurus', 3, 'paw'],
   [5, 'Fire salamander', 0, 'paw'], [5, 'Ember moth', 0, 'wing'], [5, 'Obsidian flake', 1, 'gem'], [5, 'Pterosaur', 2, 'wing'], [5, 'Oru\u2019s first shard', 3, 'gem'],
-  [0, 'Ghost of the north woods', 4, 'star'], [1, 'The first painting of Oru', 4, 'star'], [2, 'Edda\u2019s last photograph', 4, 'star'], [3, 'A footprint in the ice', 4, 'star'], [4, 'Hourglass of falling snow', 4, 'star'], [5, 'The first snowflake', 4, 'star']
+  [0, 'Ghost of the north woods', 4, 'star'], [1, 'The first painting of Oru', 4, 'star'], [2, 'The first rainbow', 4, 'star'], [3, 'A footprint in the ice', 4, 'star'], [4, 'A piece of the meteor', 4, 'gem'], [5, 'The first snowflake', 4, 'star']
 ].map(([zone, name, r, gl]) => ({ zone, name, r, gl }));
 const GLYPH = {
   paw: '<ellipse cx="24" cy="32" rx="10" ry="8"/><circle cx="12" cy="22" r="4.5"/><circle cx="20" cy="14" r="4.5"/><circle cx="29" cy="14" r="4.5"/><circle cx="37" cy="22" r="4.5"/>',
@@ -1303,21 +1329,21 @@ function doodle(cv, idx, found) {
     () => { ground(); beast(54, 50, 30, 17, 90, 42, 12, '#6b4a3a', [34, 46, 62, 74]); D(84, 32, 3.2, '#6b4a3a'); D(94, 31, 3.2, '#6b4a3a'); D(101, 44, 1.8); },
     () => { ground(); beast(54, 54, 24, 10, 82, 44, 10, '#d9a85a'); L([[30, 52], [20, 44], [16, 50]], 1.4); D(16, 50, 2.6, '#6b4a2a'); L(ring(82, 44, 13, 12, Math.PI * 0.5, Math.PI * 1.7), 1.2); },
     () => { rays(60, 46, 26, 36, 10, '#5fc8e0'); P('#8fe6ff', [50, 76], [54, 34], [60, 26], [64, 34], [66, 76]); P('#b79cff', [36, 76], [40, 48], [44, 44], [48, 52], [48, 76]); P('#8fe6ff', [70, 76], [74, 52], [80, 46], [82, 54], [80, 76]); L([[30, 77], [90, 77]], 1.6); },
-    () => { E(60, 45, 26, 26, '#d8b25a'); E(60, 45, 20, 20); P('#d8483a', [60, 27], [63, 45], [57, 45]); P(null, [60, 63], [63, 45], [57, 45]); D(60, 45, 2); L([[60, 15], [60, 19]], 1.4); },
-    () => { const m = [[42, 76], [40, 44], [44, 26], [56, 20], [68, 26], [70, 40], [78, 34], [86, 40], [76, 54], [74, 76]]; tint(m, '#c0392b'); L(m.concat([m[0]]), 1.6); L([[40, 70], [76, 70]], 1.4); L([[41, 64], [75, 64]], 1.4); },
-    () => { ground(); beast(54, 54, 22, 10, 80, 42, 9, '#d9b07a'); ears(80, 36); L([[32, 52], [26, 42], [32, 40]], 2); L([[44, 46], [44, 62]], 2.4); L([[62, 46], [62, 62]], 2.4); },
-    () => { L([[60, 54], [44, 80]], 1.6); L([[60, 54], [76, 80]], 1.6); L([[60, 54], [60, 80]], 1.6); P('#7a5a3a', [42, 24], [70, 24], [70, 54], [42, 54]); P('#5a4a3a', [70, 30], [86, 26], [86, 52], [70, 48]); E(90, 39, 6, 9, '#a8c8d8'); L([[48, 24], [48, 18], [58, 18], [58, 24]], 1.4); },
-    () => { P('#b8c8d0', [22, 20], [96, 14], [100, 70], [26, 76]); if (found) { k.globalAlpha = 0.35; E(62, 46, 12, 17, '#2b2a33'); E(64, 26, 7, 7, '#2b2a33'); k.globalAlpha = 1; } else E(62, 46, 12, 17); L([[32, 24], [44, 36]], 1); L([[36, 22], [52, 38]], 1); },
+    () => { L([[30, 70], [92, 22]], 2); for (let k = 0; k < 6; k++) { const x = 40 + k * 9, y = 62 - k * 7.5; P('#7a9a4a', [x, y], [x - 12, y - 10], [x - 2, y - 4]); P('#7a9a4a', [x, y], [x + 4, y + 12], [x + 2, y + 2]); } },
+    () => { E(58, 46, 22, 13, '#f8f8f4'); L([[48, 42], [28, 24], [44, 30]], 1.8); L([[64, 40], [86, 20], [80, 34]], 1.8); E(80, 40, 7, 6, '#f8f8f4'); D(82, 39, 1.2); P('#e7a83a', [86, 40], [92, 42], [86, 43]); L([[90, 46], [100, 52], [106, 50]], 1.2); P('#7a9a4a', [100, 52], [106, 48], [104, 54]); },
+    () => { ground(); for (const dx of [0, 30]) { beast(40 + dx, 52 - dx * 0.2, 18, 9, 60 + dx, 42 - dx * 0.2, 7, '#f4f4ee'); for (let k = 0; k < 4; k++) L([[30 + dx + k * 7, 46 - dx * 0.2], [31 + dx + k * 7, 58 - dx * 0.2]], 2); } },
+    () => { L([[60, 8], [60, 18]], 1.6); P('#9a7048', [46, 18], [74, 18], [70, 26], [50, 26]); P('#ffd88a', [48, 26], [72, 26], [74, 64], [46, 64]); L([[60, 26], [60, 64]], 1); E(60, 46, 6, 9, '#ff9a3a'); P('#9a7048', [42, 64], [78, 64], [74, 72], [46, 72]); },
+    () => { ground(); for (const dx of [0, 40]) { legs([24 + dx, 34 + dx], 54, 76); E(30 + dx, 52, 14, 9, '#e8c070'); L([[38 + dx, 48], [46 + dx, 16]], 4); E(48 + dx, 14, 6, 4, '#e8c070'); for (let k = 0; k < 3; k++) D(26 + dx + k * 6, 52, 1.6, '#8a5a2a'); } },
     () => { ground(); E(56, 60, 18, 13, '#f2f0e6'); E(74, 50, 8, 7, '#f2f0e6'); L([[72, 44], [66, 22]], 2); L([[77, 44], [76, 21]], 2); D(77, 49, 1.3); D(40, 62, 4, '#f2f0e6'); legs([48, 66], 70, 76); },
     () => { L([[14, 70], [40, 64], [80, 68], [108, 62]], 1); E(60, 42, 14, 7, '#f2f0e6'); L([[56, 40], [36, 22], [20, 26]], 1.8); L([[64, 40], [84, 24], [100, 30]], 1.8); E(74, 38, 5, 4, '#f2f0e6'); D(76, 37, 1.1); P('#2b2a33', [79, 38], [84, 39], [79, 40]); },
     () => { ground(); beast(52, 50, 28, 15, 88, 54, 11, '#7a5a3a'); P('#e8dcc0', [96, 48], [104, 34], [100, 50]); P('#e8dcc0', [90, 46], [94, 38], [94, 47]); for (let i = 0; i < 8; i++) L([[30 + i * 6, 38], [28 + i * 6, 34]], 1); },
     () => { ground(); beast(52, 50, 24, 17, 78, 42, 12, '#8a5a36', [36, 46, 60, 68]); L([[86, 46], [90, 60], [86, 70], [82, 68]], 3); L([[84, 52], [92, 56]], 1.6); D(80, 38, 1.4); for (let i = 0; i < 6; i++) L([[32 + i * 7, 36], [31 + i * 7, 31]], 1); },
     () => { ground(); beast(52, 54, 24, 10, 82, 46, 10, '#d4a050'); L([[84, 52], [83, 62]], 1.8); L([[88, 52], [88, 61]], 1.8); for (let i = 0; i < 4; i++) L([[42 + i * 7, 46], [44 + i * 7, 54]], 1.2); L([[30, 52], [20, 48]], 1.6); },
-    () => { for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI; L([[60 - Math.cos(a) * 24, 46 - Math.sin(a) * 24], [60 + Math.cos(a) * 24, 46 + Math.sin(a) * 24]], 2); } D(60, 46, 3, '#8fe6ff'); L([[96, 76], [96, 22]], 1.4); L([[90, 30], [96, 20], [102, 30]], 1.4); },
-    () => { const t = []; for (let i = 0; i <= 24; i++) { const a = i / 24 * TAU, r = i % 2 ? 28 : 22; t.push([60 + Math.cos(a) * r, 45 + Math.sin(a) * r]); } tint(t, '#c9a84a'); L(t, 1.6); E(60, 45, 9, 9); L([[60, 45], [60, 34]], 1.4); L([[60, 45], [67, 49]], 1.4); },
-    () => { const b = ring(56, 45, 26, 14); tint(b, '#9fdcff'); L(b); P('#9fdcff', [30, 45], [14, 34], [16, 56]); D(72, 42, 2); L([[50, 34], [56, 45], [50, 56]], 1); L([[62, 33], [68, 45], [62, 57]], 1); D(94, 30, 2, '#9fdcff'); D(100, 22, 1.5, '#9fdcff'); },
-    () => { E(42, 34, 18, 14, '#c8ecc0'); E(78, 34, 18, 14, '#c8ecc0'); E(46, 58, 12, 10, '#c8ecc0'); E(74, 58, 12, 10, '#c8ecc0'); L([[60, 26], [60, 66]], 3); L([[60, 26], [52, 12]], 1); L([[60, 26], [68, 12]], 1); D(42, 34, 3, '#e8e0a0'); D(78, 34, 3, '#e8e0a0'); },
-    () => { const w = ring(54, 46, 34, 17); tint(w, '#3a4a8a'); L(w); P('#3a4a8a', [20, 44], [6, 30], [10, 46], [6, 60]); D(78, 42, 1.8); for (let i = 0; i < 9; i++) D(32 + R() * 46, 36 + R() * 18, 1.2, '#f3e9a0'); L([[60, 30], [58, 20], [62, 14]], 1); L([[64, 30], [66, 22]], 1); },
+    () => { P('#d8cfb8', [18, 70], [24, 20], [96, 16], [102, 68]); L([[60, 64], [60, 24]], 1.6); for (let k = 0; k < 5; k++) { L([[60, 60 - k * 8], [40 - k * 2, 52 - k * 9]], 1.2); L([[60, 60 - k * 8], [80 + k * 2, 52 - k * 9]], 1.2); } },
+    () => { L([[20, 76], [100, 76]], 1); const e = ring(60, 44, 20, 28); tint(e, '#f2ead6'); L(e); L([[44, 40], [52, 34], [58, 42], [66, 36], [74, 42]], 1.4); D(52, 58, 2, '#c9b48a'); D(66, 26, 2.5, '#c9b48a'); },
+    () => { ground(); E(54, 48, 18, 9, '#8a9a5a'); L([[70, 44], [82, 32]], 3); E(86, 30, 9, 6, '#8a9a5a'); D(88, 28, 1.3); L([[38, 48], [16, 52]], 3); L([[48, 56], [44, 76]], 2.2); L([[60, 56], [64, 76]], 2.2); L([[66, 44], [72, 52]], 1.6); P(null, [46, 76], [40, 78], [48, 78]); },
+    () => { ground(); beast(52, 50, 26, 14, 82, 50, 12, '#8aa06a', [36, 46, 60, 70]); P('#d8c8a0', [72, 40], [84, 26], [92, 42]); P('#efe6cf', [90, 52], [104, 44], [96, 54]); P('#efe6cf', [84, 42], [94, 30], [92, 44]); },
+    () => { ground(); E(48, 46, 22, 14, '#6a8a4a'); E(78, 28, 15, 11, '#6a8a4a'); P('#ffffff', [72, 34], [74, 38], [76, 34]); P('#ffffff', [80, 35], [82, 39], [84, 35]); D(82, 24, 1.6); L([[26, 44], [8, 56]], 4); L([[40, 58], [36, 76]], 3); L([[56, 58], [60, 76]], 3); L([[62, 52], [68, 58]], 1.6); },
     () => { ground(); const b = ring(58, 56, 32, 7); tint(b, '#2b2a33'); L(b); E(92, 54, 7, 5, '#2b2a33'); for (let i = 0; i < 5; i++) D(36 + i * 11, 54 + j(3), 2.6, '#f3c62a'); legs([40, 48, 68, 76], 60, 68); L([[26, 56], [12, 60]], 1.6); },
     () => { E(40, 38, 20, 14, '#f08a3a'); E(80, 38, 20, 14, '#f08a3a'); E(46, 60, 11, 9, '#e8603a'); E(74, 60, 11, 9, '#e8603a'); L([[60, 28], [60, 68]], 3); D(40, 38, 4, '#6a2a1a'); D(80, 38, 4, '#6a2a1a'); L([[60, 28], [54, 14]], 1); L([[60, 28], [66, 14]], 1); },
     () => { P('#3a3440', [26, 66], [40, 24], [70, 16], [94, 40], [84, 72], [50, 78]); L([[46, 30], [62, 24]], 1); L([[44, 38], [50, 34]], 1); },
@@ -1325,9 +1351,9 @@ function doodle(cv, idx, found) {
     () => { rays(60, 45, 22, 34, 14, '#5fc8e0'); P('#8fe6ff', [60, 18], [80, 45], [60, 72], [40, 45]); L([[52, 34], [60, 26]], 1); L([[50, 48], [56, 56]], 1); },
     () => { rays(60, 40, 30, 42, 16, '#c86ad8'); ground(); [[22, 76, 14, 40], [100, 76, 13, 34]].forEach(([x, y, w, h]) => P('#2f6a4a', [x - w, y], [x, y - h], [x + w, y])); E(60, 50, 19, 25, '#ffffff'); E(60, 24, 12, 11, '#ffffff'); D(55, 23, 1.8); D(65, 23, 1.8); L([[43, 42], [32, 62]], 3); L([[77, 42], [88, 62]], 3); },
     () => { k.fillStyle = found ? 'rgba(150,120,90,.2)' : 'transparent'; k.fillRect(8, 8, 104, 74); E(60, 44, 12, 16, '#b5482a'); E(60, 22, 8, 8, '#b5482a'); L([[50, 38], [34, 24]], 3); L([[70, 38], [86, 24]], 3); L([[54, 58], [50, 74]], 3); L([[66, 58], [70, 74]], 3); [[22, 70], [98, 68], [28, 30], [94, 32]].forEach(([x, y]) => { L([[x, y - 6], [x, y + 4]], 1.4); L([[x - 4, y - 2], [x + 4, y - 2]], 1.4); D(x, y - 8, 2, '#b5482a'); }); },
-    () => { P('#efe6cf', [18, 12], [102, 10], [104, 80], [20, 82]); P('#8a8070', [26, 18], [96, 17], [97, 64], [27, 66]); E(62, 46, 10, 14, '#2b2a33'); E(62, 28, 6, 6, '#2b2a33'); L([[36, 74], [52, 73]], 1); L([[60, 74], [76, 73]], 1); },
+    () => { for (const [r, col] of [[44, '#e0504a'], [38, '#f0a030'], [32, '#f0e040'], [26, '#5ac05a'], [20, '#4a80e0']]) { k.strokeStyle = found ? col : 'rgba(43,42,51,.3)'; k.lineWidth = 5; k.beginPath(); k.arc(60, 82, r, Math.PI, 0); k.stroke(); } E(26, 80, 12, 6, '#f2f6fa'); E(94, 80, 12, 6, '#f2f6fa'); },
     () => { L([[14, 82], [106, 82]], 1); const f = ring(60, 54, 17, 25); tint(f, '#bfe8fb'); L(f); [[45, 24, 5], [55, 18, 5.5], [66, 17, 5.5], [76, 21, 5], [83, 30, 4.5]].forEach(([x, y, r]) => E(x, y, r, r, '#bfe8fb')); L([[22, 72], [28, 62]], 1); L([[94, 74], [100, 64]], 1); },
-    () => { L([[38, 10], [82, 10]], 2.4); L([[38, 82], [82, 82]], 2.4); const h = [[42, 12], [78, 12], [62, 46], [78, 80], [42, 80], [58, 46], [42, 12]]; tint(h, '#e6dcff'); L(h, 1.6); for (let i = 0; i < 10; i++) D(48 + R() * 24, 64 + R() * 14, 1.4, '#7fc8f0'); for (let i = 0; i < 4; i++) D(60, 26 + i * 6, 1.2, '#7fc8f0'); },
+    () => { rays(60, 46, 26, 38, 14, '#ff7a3a'); P('#3a2a28', [40, 60], [44, 34], [62, 26], [80, 38], [76, 62], [56, 68]); L([[50, 40], [58, 46], [54, 56]], 1.4); D(66, 40, 3, '#ffb060'); D(58, 58, 2, '#ffb060'); },
     () => { tint(ring(60, 46, 36, 34), '#ffb08a'); rays(60, 46, 30, 42, 18, '#ff7a3a'); for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI; L([[60 - Math.cos(a) * 22, 46 - Math.sin(a) * 22], [60 + Math.cos(a) * 22, 46 + Math.sin(a) * 22]], 2.4); } D(60, 46, 3.5, '#8fe6ff'); }
   ];
   F[idx](); if (!found) { k.globalAlpha = 1; k.fillStyle = 'rgba(90,84,70,.7)'; k.font = 'italic 40px Georgia, serif'; k.textAlign = 'center'; k.fillText('?', 60, 58); }
