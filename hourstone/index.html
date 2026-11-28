@@ -1223,14 +1223,19 @@ const SONGS = [ // root notes of a four-chord loop for each era, and the scale t
   { ch: [52, 57, 55, 50], sc: [0, 2, 4, 7, 11], bpm: 150 }, { ch: [53, 57, 62, 60], sc: [0, 4, 7, 11, 14], bpm: 104 }, { ch: [45, 45, 41, 43], sc: [0, 1, 3, 7, 8], bpm: 164 }
 ];
 const mf = n => 440 * Math.pow(2, (n - 69) / 12);
+function noiseAt(t, d, vol, hp) { if (!AU.ac) return; const n = Math.floor(AU.ac.sampleRate * d), buf = AU.ac.createBuffer(1, n, AU.ac.sampleRate), x = buf.getChannelData(0); for (let i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * (1 - i / n); const src = AU.ac.createBufferSource(), f = AU.ac.createBiquadFilter(), gn = AU.ac.createGain(); src.buffer = buf; f.type = 'highpass'; f.frequency.value = hp; gn.gain.value = vol; src.connect(f); f.connect(gn); gn.connect(AU.m); src.start(t); }
 function music() {
   if (!AU.ac || AU.muted || !L) return;
-  const S = SONGS[L.Z.key], spb = 60 / S.bpm / 2;
+  const kind = L.S && L.S.kind, chase = state === 'play' && (kind === 'chase' || kind === 'escape'), S = SONGS[L.Z.key], spb = 60 / (S.bpm * (chase ? 1.15 : 1)) / 2;
   AU.next = Math.max(AU.next, AU.ac.currentTime + 0.05); /* skip notes missed while muted or hidden instead of playing them all at once */
   while (AU.next < AU.ac.currentTime + 0.2) {
     const st = AU.step++, bar = Math.floor(st / 8) % 4, root = S.ch[bar], t = AU.next;
     if (st % 2 === 0) tone(mf(root - 12), spb * 1.6, 'triangle', 0.07, 0, t);
     if (state === 'play' || state === 'title' || state === 'hub') { const r = rng(st * 7 + bar)(); if (r < 0.6) tone(mf(root + 12 + S.sc[Math.floor(r * 10) % S.sc.length]), spb * 0.9, 'square', 0.025, 0, t); }
+    if (state === 'play') { /* drums: a driving kick and snare in chases, light hi-hats on regular runs */
+      if (chase) { if (st % 4 === 0) tone(60, 0.14, 'sine', 0.14, 38, t); if (st % 8 === 4) noiseAt(t, 0.12, 0.08, 1200); if (st % 2 === 1) noiseAt(t, 0.03, 0.03, 7000); }
+      else if (st % 2 === 1) noiseAt(t, 0.025, 0.02, 7500);
+    }
     AU.next += spb;
   }
 }
