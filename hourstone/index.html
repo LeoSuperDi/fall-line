@@ -294,6 +294,15 @@ body.still #game { transition: filter .3s; }
 .bm.full i { background: #fff; box-shadow: 0 0 8px var(--glow); }
 #comboN { position: absolute; right: calc(var(--gx) + 14px); top: calc(var(--gy) + 126px); font: 26px/1 var(--osd); color: var(--glow); text-shadow: 0 1px 8px rgba(0, 0, 0, .5); pointer-events: none; }
 @media (max-width: 700px) { #comboN { top: calc(var(--gy) + 104px); } }
+/* trick callout in the middle of the screen, and first-time hints */
+#callout { position: fixed; left: 50%; top: 24%; transform: translateX(-50%); pointer-events: none; text-align: center; opacity: 0; }
+#callout b { display: block; font: 900 clamp(34px, 5.5vw, 64px)/1 var(--display); color: #fff; text-shadow: 0 3px 0 #14162e, 0 6px 18px rgba(0, 0, 0, .35); }
+#callout small { display: block; margin-top: 6px; font: 26px/1 var(--osd); color: #ffcf3f; text-shadow: 0 2px 0 #14162e; }
+#callout.go { animation: callout 1.3s cubic-bezier(.2, 1.4, .4, 1) both; }
+#callout.big b { color: #ffcf3f; } #callout.big small { color: #fff; }
+@keyframes callout { 0% { opacity: 0; transform: translateX(-50%) scale(.5); } 15% { opacity: 1; transform: translateX(-50%) scale(1.08); } 25% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-18px); } }
+#hint { position: fixed; left: 50%; bottom: calc(max(26px, env(safe-area-inset-bottom, 0px)) + 120px); transform: translateX(-50%); padding: 12px 18px; border-radius: 4px; background: rgba(13, 15, 19, .82); border: 1px solid var(--line); font: 400 19px var(--body); pointer-events: none; white-space: nowrap; animation: fup .3s both; }
+@media (prefers-reduced-motion: reduce) { #callout.go { animation-duration: 1ms; opacity: 1; } }
 </style>
 
 <canvas id="game"></canvas>
@@ -325,6 +334,8 @@ body.still #game { transition: filter .3s; }
   <div id="hhR"><span class="md" id="hhMed">0 of 18</span><span class="cn" id="hhCone">0 of 12</span><span class="sh" id="hhBank">0</span><button class="tb2" id="bAlbum" aria-label="Open the sketchbook">SKETCHBOOK</button><button class="tb2" id="bMute2" aria-label="Sound on or off">SOUND</button><button class="tb2" id="bHubMenu" aria-label="Back to the title screen">MENU</button></div>
 </div>
 <div id="hubPrompt" class="hidden"></div>
+<div id="callout" aria-live="polite"></div>
+<div id="hint" class="hidden"></div>
 <div id="hubPanel" class="ov dim hidden"><div class="panel wide" id="hpBox"></div></div>
 
 <div id="chapterCard" class="ov hidden"><div id="ccNum">TAPE 1</div><div id="ccEra">Today</div><div id="ccTitle">The North Woods</div></div>
@@ -548,6 +559,20 @@ function airTricks() {
   }
   P.trick = 0; P.grabT = 0;
 }
+/* first-time hints: shown in the moment, once each */
+const HINTS = [
+  ['jump', () => P.ground && L.obs.some(o => !o.fly && o.x - P.x > 0 && o.x - P.x < 520), () => (isTouch ? 'Tap Jump' : 'Press Space') + ' to hop over it'],
+  ['kicker', () => P.ground && L.kickers.some(([a0]) => a0 - P.x > 0 && a0 - P.x < 600), () => 'Kicker ahead. It throws you high, so ' + (isTouch ? 'hold Push' : 'hold →') + ' in the air to flip'],
+  ['land', () => !P.ground && Math.abs(P.trick) > 4.4, () => 'Let go to level out, then land'],
+  ['boost', () => L.boost > 0.5, () => 'Boost is charged: ' + (isTouch ? 'hold Boost' : 'hold Shift') + ' to go faster'],
+  ['tuck', () => P.ground && L.time > 8 && !save.told.h_tuck_seen, () => (isTouch ? 'Hold Tuck' : 'Hold ↓') + ' on the flats to go faster']
+];
+let hintOn = null, hintT = 0;
+function hintTick() {
+  if (demo || !L || L.hub) return; if (hintOn) { hintT -= 0.1; if (hintT <= 0) { show('hint', false); hintOn = null; } return; }
+  for (const [id, when, text] of HINTS) if (!save.told['h_' + id] && when()) { save.told['h_' + id] = 1; persist(); hintOn = id; hintT = 3.2; $('hint').textContent = text(); show('hint', true); break; }
+}
+function callout(big, small, gold) { const c = $('callout'); if (!c) return; c.innerHTML = '<b></b><small></small>'; c.firstChild.textContent = big; c.lastChild.textContent = small; c.classList.toggle('big', !!gold); c.classList.remove('go'); void c.offsetWidth; c.classList.add('go'); }
 function registerTrick(name, base, kind) {
   if (demo) return;
   L.recent = L.recent.filter(r => L.time - r.t < 8); const rep = L.recent.filter(r => r.n === name).length; L.recent.push({ n: name, t: L.time }); /* only tricks from the last 8 seconds count as repeats */
@@ -556,7 +581,7 @@ function registerTrick(name, base, kind) {
   L.score += pts; L.tricks++;
   L.boost = Math.min(1, L.boost + 0.1 + (kind.flips || 0) * 0.12 + (rep ? 0 : 0.08));
   if (kind.flips >= 2) L.st.doubles++; if (kind.grab) L.st.grabs++;
-  popup(P.x, P.y - 70, name + '  +' + pts, rep ? '#c9c2a2' : '#ffcf3f');
+  popup(P.x, P.y - 70, name + '  +' + pts, rep ? '#c9c2a2' : '#ffcf3f'); callout(name, '+' + pts + (L.combo > 1 ? '  combo \u00d7' + mult : ''), (kind.flips || 0) >= 3);
   if (L.combo > 1) popup(P.x, P.y - 96, 'Combo ×' + mult, '#8fe6ff'); else if (rep) popup(P.x, P.y - 96, rep === 1 ? 'Same trick again, 75% points' : 'Same trick again, half points', '#b0b4c0');
 }
 function land(gy) {
@@ -1022,6 +1047,7 @@ function render(dt) {
   g.globalAlpha = 1;
   g.restore();
   drawWeather(VW, dt);
+  if (state === 'play' && L && !L.hub && (P.s > 820 || P.boosting)) { const a = clamp((P.s - 820) / 300, 0, 1) * 0.5 + (P.boosting ? 0.25 : 0); g.strokeStyle = `rgba(255,255,255,${a})`; g.lineWidth = 2; for (let k = 0; k < 14; k++) { const yy = hash(k * 3.7) * 540, len = 60 + hash(k) * 140, xx = VW - ((P.t * 1400 * (0.6 + hash(k + 2)) + hash(k + 9) * VW) % (VW + len)); g.beginPath(); g.moveTo(xx, yy); g.lineTo(xx + len, yy); g.stroke(); } } /* speed lines */
   if (Z.sepia) { g.globalCompositeOperation = 'multiply'; g.fillStyle = '#e8d2ad'; g.fillRect(0, 0, VW, 540); g.globalCompositeOperation = 'source-over'; }
   const vg = g.createRadialGradient(VW / 2, 270, 200, VW / 2, 270, VW * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, Z.key === 1 ? 'rgba(5,3,12,.6)' : 'rgba(10,12,40,.25)'); g.fillStyle = vg; g.fillRect(0, 0, VW, 540);
 }
@@ -1193,7 +1219,7 @@ function freshSave() { return { ci: 0, si: 0, best: {}, bank: 0, cones: [], told
 let state = 'title', save = Object.assign(freshSave(), store.get('hourstone_save', {})), runStats = store.get('hourstone_run', { time: 0, shards: 0, crashes: 0 });
 if (!Object.keys(save.told).length && (save.ci > 0 || save.si > 0)) { save.told.welcome = 1; for (let c = 0; c <= save.ci && c < CH.length; c++) { save.told['i' + c] = 1; if (c < save.ci) save.told['o' + c] = 1; for (let s = 0; s < 3; s++) if (c < save.ci || s <= save.si) save.told['b' + c + '-' + s] = 1; } }
 const show = (id, on) => $(id).classList.toggle('hidden', !on);
-const hideHub = () => { ['hubHud', 'hubPrompt', 'hubPanel', 'reel'].forEach(i => show(i, false)); document.body.classList.remove('still'); };
+const hideHub = () => { ['hubHud', 'hubPrompt', 'hubPanel', 'reel', 'hint'].forEach(i => show(i, false)); document.body.classList.remove('still'); };
 function persist() { save.savedAt = Date.now(); store.set('hourstone_save', save); store.set('hourstone_run', runStats); cloudPush(); }
 /* cloud save: progress also lives in the viewer's Claude account (private to them), so it survives new versions of the game, cleared browser data and other devices.
    The newest copy wins: whichever of this browser's save and the account's save has the later savedAt. Old saves keep working because every load merges into freshSave(). */
@@ -1263,7 +1289,7 @@ function finishStage() {
   { const t = document.createElement('canvas'); t.width = 640; t.height = Math.round(640 * cvs.height / cvs.width); t.getContext('2d').drawImage(cvs, 0, 0, t.width, t.height); $('resPhoto').src = t.toDataURL('image/jpeg', 0.82); }
   $('resStats').innerHTML = `<span>Time</span><span>${fmtT(L.time)}</span><span>Medal</span><span class="mrow m${med}">${MEDAL[med]}</span><span>Shards</span><span>${L.got} of ${tot}</span><span>Tricks landed</span><span>${L.tricks}${L.maxCombo > 1 ? ', best combo ' + L.maxCombo : ''}</span><span>Crashes</span><span>${L.crashes}</span><span>Shards earned</span><span>+${gain} shards</span><span>Sketchbook finds</span><span>${allF.length}${allF.length > 1 ? ', ' + (allF.length - 1) + ' from flips' : ''}</span>`;
   $('resNext').textContent = last ? 'Back to basecamp' : 'Next stage'; show('resHub', !last);
-  show('hud', false); show('touch', false); show('results', true); $('resNext').focus();
+  show('hud', false); show('touch', false); show('hint', false); hintOn = null; show('results', true); $('resNext').focus();
 }
 function nextAfterResults() {
   show('results', false);
@@ -1527,7 +1553,7 @@ function openShop() {
     save.parka = id; persist(); openShop();
   });
 }
-function failStage(title, text) { if (state !== 'play') return; state = 'fail'; $('failTitle').textContent = title; $('failText').textContent = text; show('hud', false); show('touch', false); show('fail', true); $('failRetry').focus(); }
+function failStage(title, text) { if (state !== 'play') return; state = 'fail'; $('failTitle').textContent = title; $('failText').textContent = text; show('hud', false); show('touch', false); show('hint', false); hintOn = null; show('fail', true); $('failRetry').focus(); }
 function fmtTC(t) { const p = n => (n < 10 ? '0' : '') + n; return p(Math.floor(t / 60)) + ':' + p(Math.floor(t % 60)) + ':' + p(Math.floor((t % 1) * 30)); }
 function fmtT(t) { return fmt(t) + '.' + Math.floor((t % 1) * 10); }
 function fmt(t) { const m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
@@ -1535,7 +1561,7 @@ function camSnap() { const sc = cvs.height / 540, VW = cvs.width / sc; cam.x = P
 
 /* dialogue */
 let dq = [], dcb = null, dfull = '', dshown = 0, dtimer = 0;
-function dialog(lines, cb) { dq = lines.slice(); dcb = cb; state = 'dialog'; show('hud', false); show('touch', false); nextLine(); }
+function dialog(lines, cb) { dq = lines.slice(); dcb = cb; state = 'dialog'; show('hud', false); show('touch', false); show('hint', false); hintOn = null; nextLine(); }
 function nextLine() {
   if (!dq.length) { show('dlg', false); show('lbTop', false); const c = dcb; dcb = null; if (c) c(); return; }
   const [who, text] = dq.shift(), [name, cls] = WHO[who];
@@ -1610,7 +1636,7 @@ function frame(now) {
   render(dt);
   if (state === 'play' && (hudT += dt) > 0.1) {
     hudT = 0; $('hearts').innerHTML = [0, 1, 2].map(k => '<i class="' + (k < P.hearts ? 'on' : '') + '"></i>').join(''); $('hearts').classList.toggle('low', P.hearts === 1); $('shardN').textContent = L.got + ' / ' + L.shards.length; $('timeN').textContent = fmtTC(L.time);
-    $('score').firstChild.nodeValue = L.score; $('boostF').style.width = (L.boost * 100).toFixed(0) + '%'; if (L.boost > (L.lastBoost || 0) + 0.02) { const m = $('boostM'); m.classList.remove('pulse'); void m.offsetWidth; m.classList.add('pulse'); } L.lastBoost = L.boost; $('score').classList.toggle('zero', !L.score); $('tL').textContent = P.ground ? 'Brake' : 'Flip back'; $('tR').textContent = P.ground ? 'Push' : 'Flip'; $('boostM').classList.toggle('full', L.boost > 0.98); $('comboN').textContent = L.combo > 1 ? 'Combo \u00d7' + Math.min(3, 1 + 0.5 * (L.combo - 1)) : '';
+    hintTick(); $('score').firstChild.nodeValue = L.score; $('boostF').style.width = (L.boost * 100).toFixed(0) + '%'; if (L.boost > (L.lastBoost || 0) + 0.02) { const m = $('boostM'); m.classList.remove('pulse'); void m.offsetWidth; m.classList.add('pulse'); } L.lastBoost = L.boost; $('score').classList.toggle('zero', !L.score); $('tL').textContent = P.ground ? 'Brake' : 'Flip back'; $('tR').textContent = P.ground ? 'Push' : 'Flip'; $('boostM').classList.toggle('full', L.boost > 0.98); $('comboN').textContent = L.combo > 1 ? 'Combo \u00d7' + Math.min(3, 1 + 0.5 * (L.combo - 1)) : '';
     { const pr = parOf(L.S), k = L.time <= pr[0] ? 0 : L.time <= pr[1] ? 1 : L.time <= pr[2] ? 2 : 3; $('parN').textContent = k < 3 ? ['Gold ', 'Silver ', 'Bronze '][k] + fmt(pr[k]) : 'Past bronze time'; $('parN').classList.toggle('late', k === 3); }
     { let pc = -1; if (L.yeti && !L.lava) pc = clamp(100 - (L.yeti.x - P.x - 200) / 10, 4, 100); if (L.lava) pc = clamp((P.x - L.lava.x) / 12, 3, 100); if (pc >= 0) { $('chaseFill').style.width = pc + '%'; $('chase').classList.toggle('low', pc < 25); } }
   }
