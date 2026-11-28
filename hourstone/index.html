@@ -373,7 +373,7 @@ body.still #game { transition: filter .3s; }
 
 <div id="pause" class="ov dim hidden"><div class="panel">
   <h2>Paused</h2>
-  <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Chain tricks for a combo, and hold <kbd>Shift</kbd> to spend boost.</p>
+  <p><kbd>Space</kbd> jump. <kbd>←</kbd> brake, <kbd>→</kbd> push. <kbd>↓</kbd> tuck for speed. In the air, hold <kbd>←</kbd> or <kbd>→</kbd> to flip and <kbd>↓</kbd> to grab. Chain tricks for a combo, and hold <kbd>Shift</kbd> to spend boost. <kbd>R</kbd> restarts the stage.</p>
   <div class="row"><button class="btn go" id="pResume">Resume</button><button class="btn" id="pRestart">Restart stage</button><button class="btn" id="pQuit">Back to basecamp</button></div>
 </div></div>
 
@@ -542,8 +542,19 @@ function stalDepth(x) { const k = Math.round(x / STEP / 18) * 18, dx = Math.abs(
 const P = { x: 0, y: 0, vx: 0, vy: 0, s: 0, ground: true, rot: 0, trick: 0, grabT: 0, crouch: 0.3, crash: 0, inv: 0, coyote: 0, jumpBuf: 0, hearts: 3, t: 0 };
 const MINS = 270, MAXS = 900, MAXB = 1120, JUMPV = 640; // top speed leaves about 0.75 s of warning on screen
 let cam = { x: 0, y: 0 }, shake = 0, demo = false;
+/* after a crash, get back up close to where it happened: the nearest spot behind it with clear snow ahead */
+function safeSpot(x) {
+  for (let cx = x - 120; cx > L.cps[0]; cx -= 20) {
+    let ok = true; for (let gx = cx - 40; gx < cx + 260 && ok; gx += STEP) if (L.gap[Math.floor(gx / STEP)]) ok = false;
+    if (ok && L.obs.some(o => !o.fly && o.x > cx - 60 && o.x < cx + 340)) ok = false;
+    if (ok && L.kickers.some(([a0, a1]) => cx > a0 - 60 && cx < a1 + 60)) ok = false;
+    if (ok && Math.abs(slopeAt(cx)) > 0.6) ok = false;
+    if (ok) return cx;
+  }
+  return L.cp;
+}
 function respawn(full) {
-  const cpx = full ? L.cps[0] : L.cp;
+  const cpx = full ? L.cps[0] : Math.max(L.cp, safeSpot(P.x));
   P.x = cpx; P.y = groundAt(cpx); if (isNaN(P.y)) P.y = baseAt(cpx);
   P.s = 330; P.vx = P.s; P.vy = 0; P.ground = true; P.boosting = false; P.rot = slopeAt(cpx);
   for (const o of L.obs) if (o.vx && o.x0 > cpx) o.x = o.x0; /* moving obstacles ahead start over */ P.trick = 0; P.grabT = 0; P.crash = 0; P.inv = full ? 0 : 1.5;
@@ -1641,6 +1652,7 @@ addEventListener('keydown', e => {
   if (state === 'hub' && e.code === 'KeyI') openAlbum();
   if (state === 'hub' && ['ArrowUp', 'KeyW', 'Enter', 'KeyE', 'Space'].includes(e.code)) hubAct();
   else if (state === 'panel' && e.code === 'Escape') closePanel();
+  if (state === 'play' && e.code === 'KeyR') { startStage(L.ci, L.si, true); return; } /* quick restart */
   if (state === 'play') { if (['Space', 'ArrowUp', 'KeyW', 'KeyZ'].includes(e.code)) P.jumpBuf = 0.14; if (e.code === 'KeyP' || e.code === 'Escape') pause(true); }
   else if (state === 'paused' && (e.code === 'KeyP' || e.code === 'Escape')) pause(false);
   if (e.code === 'KeyM') setMute(!AU.muted);
